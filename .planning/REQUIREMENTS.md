@@ -79,3 +79,77 @@
 | ADAPT-08 | Phase 23 | Pending |
 | ADAPT-09 | Phase 23 | Pending |
 | ADAPT-10 | Phase 23 | Pending |
+| TRACE-01 | Phase 24 | Planned |
+| TRACE-02 | Phase 24 | Planned |
+| TRACE-03 | Phase 24 | Planned |
+| TRACE-04 | Phase 25 | Planned |
+| TRACE-05 | Phase 25 | Planned |
+| TRACE-06 | Phase 25 | Planned |
+| EVAL-01 | Phase 26 | Planned |
+| EVAL-02 | Phase 26 | Planned |
+| EVAL-03 | Phase 26 | Planned |
+| EVAL-04 | Phase 26 | Planned |
+
+---
+
+# Requirements — Milestone v8.0: Observability
+
+**Status:** Planned (builds after v7.0)
+**Milestone:** v8.0
+**Last updated:** 2026-06-07
+
+---
+
+## LLM Trace Capture (TRACE)
+
+- [ ] **TRACE-01**: Each `LLMDetector` call appends a trace entry to `chrome.storage.local` recording: model, system prompt, user prompt (truncated to 500 chars), input token count, output token count, computed USD cost, ISO timestamp, and source `"detector"`.
+- [ ] **TRACE-02**: Each `LLMRederiver` call appends a trace entry with the same schema and source `"rederiver"`.
+- [ ] **TRACE-03**: The trace store is capped at 500 entries; when full, the oldest entries are evicted (FIFO).
+- [ ] **TRACE-04**: The dashboard exposes an "Export Traces" button that downloads all stored trace entries as a `linkedin-blocker-traces-YYYY-MM-DD.json` file.
+- [ ] **TRACE-05**: `npm run trace-summary <file>` reads a trace export JSON and prints a cost breakdown table grouped by source and model (call count, total input tokens, total output tokens, total USD cost, avg cost per call).
+- [ ] **TRACE-06**: `npm run trace-summary <file>` writes/updates a `## LLM Cost Reference` section in `README.md` with the generated cost table so the README always reflects a real run.
+
+---
+
+## Future Requirements (deferred from v8.0)
+
+- Per-session grouping: group traces into "sessions" (tab open → close) so per-session cost is queryable.
+- Live trace count badge in the dashboard header.
+- Trace retention policy UI (keep last N entries vs keep last N days).
+
+## Out of Scope (v8.0)
+
+- Any changes to detection scoring or selector logic.
+- Trace data sent to a remote endpoint — local only.
+- Automatic README updates on extension run (only on-demand via `npm run trace-summary`).
+
+---
+
+# Requirements — Milestone v9.0: Eval Harness
+
+**Status:** Planned (builds after v8.0)
+**Milestone:** v9.0
+**Last updated:** 2026-06-07
+
+---
+
+## LLM Eval Runner (EVAL)
+
+- [ ] **EVAL-01**: The standard post-export JSON (existing extension export format) is the input to the eval runner; users annotate it by adding `"label": "ai" | "human"` to each post entry to create a labeled evaluation dataset.
+- [ ] **EVAL-02**: `npm run eval <labeled-posts.json>` reads the labeled dataset, feeds each post's text through the LLM classifier, and records the model's verdict alongside the ground-truth label.
+- [ ] **EVAL-03**: The eval runner computes and prints: precision, recall, F1 score, accuracy, total LLM cost, average cost per post, and total posts evaluated — as a formatted results table.
+- [ ] **EVAL-04**: Results are written to `eval/results-YYYY-MM-DD.json` (directory auto-created) and a compact summary line is printed suitable for pasting into a README or PR description.
+
+---
+
+## Future Requirements (deferred from v9.0)
+
+- CI integration: run eval against a committed fixtures file on every push (costs real money — opt-in only).
+- Heuristic-layer eval: measure heuristics-only precision/recall before LLM is called (free, fast).
+- Confusion matrix output: per-class breakdown (AI detected as human, human detected as AI, etc.).
+
+## Out of Scope (v9.0)
+
+- Bundling a golden dataset in the repo (user provides their own labeled export).
+- Any UI in the extension for labeling posts.
+- Automated re-training or threshold adjustment from eval results.

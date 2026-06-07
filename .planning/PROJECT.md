@@ -119,6 +119,26 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 - Manual selector editing is deferred to a Future Requirement (read-only this milestone).
 - LLM fallback reuses the existing Anthropic API-key/mode + prompt-caching infra (v4.0); DOM samples sanitized before any API call.
 
+### Planned: v8.0 Observability
+
+**Goal:** Every LLM call is traced — model, prompts, token counts, USD cost — stored in chrome.storage.local, exportable from the dashboard, and summarized in the README by an npm script so practitioners can see exactly what the extension costs to run.
+
+**Target features:**
+- Trace capture for LLMDetector + LLMRederiver (same schema, source field distinguishes them)
+- chrome.storage.local FIFO store (500-entry cap)
+- "Export Traces" button on dashboard → JSON download
+- `npm run trace-summary <file>` → cost breakdown table printed to stdout + `## LLM Cost Reference` section written into README.md
+
+### Planned: v9.0 Eval Harness
+
+**Goal:** Evaluate LLM classifier quality against a real labeled dataset — user annotates an extension post-export JSON with `"label": "ai" | "human"`, runs `npm run eval`, and gets precision/recall/F1/cost metrics.
+
+**Target features:**
+- No new export format — labels are added to the existing post-export JSON
+- `npm run eval <labeled-posts.json>` → calls LLM classifier, compares to labels
+- Precision, recall, F1, accuracy, total USD cost, avg cost/post printed as a table
+- Results written to `eval/results-YYYY-MM-DD.json`
+
 ---
 
 ## Out of Scope (deferred post-v5)
@@ -144,6 +164,8 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | v6.0 | UX Polish + Block Management — popup interaction fixes, batch block, threshold-hiding bug | Complete 2026-06-06 |
 | v6.1 | Popup UX Tidy-up — surface the View Dashboard button at the top of the popup | Complete 2026-06-06 |
 | v7.0 | Adaptive DOM Scraper — storage-backed candidate registry + self-healing selector adapter | In progress |
+| v8.0 | Observability — per-call LLM traces, dashboard export, README cost table | Planned |
+| v9.0 | Eval Harness — labeled-dataset eval runner, precision/recall/F1/cost metrics | Planned |
 
 ---
-*Last updated: 2026-06-06 — v7.0 started*
+*Last updated: 2026-06-07 — v8.0 and v9.0 planned*

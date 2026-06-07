@@ -17,6 +17,8 @@
 - ✅ **v6.0 UX Polish + Block Management** — Phases 18–20 (shipped 2026-06-06)
 - ✅ **v6.1 Popup UX Tidy-up** — Phase 21 (shipped 2026-06-06)
 - 🚧 **v7.0 Adaptive DOM Scraper** — Phases 22–23 (in progress)
+- 📋 **v8.0 Observability** — Phases 24–25 (planned)
+- 📋 **v9.0 Eval Harness** — Phase 26 (planned)
 
 ---
 
@@ -101,6 +103,23 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 
 - [ ] **Phase 22: Externalize Selectors to Storage** - Storage-backed ranked candidate registry seeded from selectors.ts; runtime resolution via SelectorRegistry; zero behavior change (Wave 1)
 - [ ] **Phase 23: Self-Healing Selector Adapter** - Breakage detection with 6 false-positive guards; heuristic re-derivation; LLM fallback on sanitized structural DOM; confidence-ranked candidates (Wave 2)
+
+---
+
+### 📋 v8.0 Observability (Planned)
+
+**Milestone Goal:** Every LLM call made by the extension is traced — model, prompts, token counts, USD cost — accumulated in chrome.storage.local, exportable from the dashboard, and summarized in the README by an npm script.
+
+- [ ] **Phase 24: Trace Capture & Storage** - LLM call interception in LLMDetector and LLMRederiver; trace schema; capped FIFO store in chrome.storage.local
+- [ ] **Phase 25: Dashboard Export + README Script** - "Export Traces" button on dashboard; `npm run trace-summary` script that reads a trace export and updates the README cost table
+
+### 📋 v9.0 Eval Harness (Planned)
+
+**Milestone Goal:** Evaluate LLM classifier quality against a labeled real-world dataset — user annotates an extension post-export JSON, runs an eval script, and gets precision/recall/F1/cost metrics.
+
+- [ ] **Phase 26: Eval Runner** - Labeled-JSON input format (extends existing export); eval script feeding posts through LLM classifier; precision/recall/F1/cost metrics; results written to `eval/results-YYYY-MM-DD.json`
+
+---
 
 ## Phase Details
 
@@ -207,6 +226,53 @@ Plans:
 
 ---
 
+### Phase 24: Trace Capture & Storage
+
+**Goal**: Every LLM call made by LLMDetector and LLMRederiver appends a structured trace entry to chrome.storage.local — model, prompts, token counts, cost, timestamp, source — with a 500-entry FIFO cap
+**Depends on**: Phase 23
+**Requirements**: TRACE-01, TRACE-02, TRACE-03
+**Success Criteria** (what must be TRUE):
+
+  1. Making an LLMDetector call on a post results in a new trace entry in chrome.storage.local with all required fields (model, systemPrompt, userPrompt truncated to 500 chars, inputTokens, outputTokens, costUsd, timestamp, source: "detector")
+  2. Making an LLMRederiver call results in a trace entry with source: "rederiver" and the same schema
+  3. After 501 LLM calls, the store contains exactly 500 entries (oldest evicted)
+  4. tsc clean; existing detector and rederiver tests still pass
+
+**Plans**: TBD
+
+### Phase 25: Dashboard Export + README Script
+
+**Goal**: The user can download all stored LLM traces from the dashboard as a JSON file, and `npm run trace-summary` reads that file, prints a cost breakdown table, and updates README.md with a LLM Cost Reference section
+**Depends on**: Phase 24
+**Requirements**: TRACE-04, TRACE-05, TRACE-06
+**Success Criteria** (what must be TRUE):
+
+  1. Opening the dashboard shows an "Export Traces" button; clicking it downloads a `linkedin-blocker-traces-YYYY-MM-DD.json` file containing all stored trace entries
+  2. Running `npm run trace-summary linkedin-blocker-traces-*.json` prints a cost breakdown table to stdout grouped by source and model (call count, input tokens, output tokens, total USD, avg USD/call)
+  3. After running the script, README.md contains an updated `## LLM Cost Reference` section with the generated table
+  4. The script exits non-zero with a clear error message if the input file is missing or malformed
+
+**Plans**: TBD
+
+**UI hint**: yes
+
+### Phase 26: Eval Runner
+
+**Goal**: `npm run eval <labeled-posts.json>` feeds labeled posts through the LLM classifier and prints precision, recall, F1, accuracy, total cost, and average cost per post — with results persisted to `eval/results-YYYY-MM-DD.json`
+**Depends on**: Phase 25
+**Requirements**: EVAL-01, EVAL-02, EVAL-03, EVAL-04
+**Success Criteria** (what must be TRUE):
+
+  1. A post-export JSON annotated with `"label": "ai" | "human"` fields is accepted as input without any format changes to the existing export schema
+  2. Running `npm run eval <file>` calls the LLM classifier for each labeled post and records the verdict
+  3. The script prints a results table showing precision, recall, F1, accuracy, total LLM cost (USD), and average cost per post
+  4. Results are written to `eval/results-YYYY-MM-DD.json` (directory auto-created if absent)
+  5. The script exits non-zero with a clear error if the input file is missing, has no label fields, or the API key is not configured
+
+**Plans**: TBD
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -234,3 +300,6 @@ Plans:
 | 21. Dashboard Button Reposition | v6.1 | 1/1 | Complete | 2026-06-06 |
 | 22. Externalize Selectors to Storage | v7.0 | 0/TBD | Not started | - |
 | 23. Self-Healing Selector Adapter | v7.0 | 0/TBD | Not started | - |
+| 24. Trace Capture & Storage | v8.0 | 0/TBD | Planned | - |
+| 25. Dashboard Export + README Script | v8.0 | 0/TBD | Planned | - |
+| 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
