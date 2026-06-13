@@ -296,4 +296,12 @@ export interface StorageSchema {
   selectorRegistry?: SelectorRegistrySchema;
   /** Set of selector targets that produced zero DOM matches in the current content-script session. Written by content script; read by dashboard health view. */
   selectorSessionMisses?: SelectorTarget[];
+  /** ADAPT-05: epoch ms of most recent LLM rederive call, used for the ≥5-min cool-off check. */
+  llbRederiveLastCallMs?: number;
+  /** ADAPT-05: count of LLM rederive calls since UTC midnight, for the daily cap enforcement. */
+  llbRederiveCallsToday?: number;
+  /** ADAPT-05: 'YYYY-MM-DD' UTC string for date-rollover reset of llbRederiveCallsToday. */
+  llbRederiveDateKey?: string;
+  /** ADAPT-05: single-flight latch — true while an LLM rederive fetch is in-flight. */
+  llbRederiveInFlight?: boolean;
 }
