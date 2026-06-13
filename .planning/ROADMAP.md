@@ -199,11 +199,13 @@ Plans:
 **Depends on**: Phase 21
 **Requirements**: SELECTOR-01, SELECTOR-02, SELECTOR-03, SELECTOR-04, SELECTOR-05, SELECTOR-06, SELECTOR-07, SELECTOR-08, SELECTOR-09, SELECTOR-10
 **Success Criteria** (what must be TRUE):
+
   1. Selectors are resolved from storage at runtime, not imported directly from selectors.ts — observer.ts and exclusions.ts contain no direct selector string imports
   2. The extension behaves identically to v6.1 on a live LinkedIn feed: the same posts are hidden, the same accounts are flagged, and no new console errors appear (regression-safe)
   3. A winning selector match rotates its candidate to position 0 in its list and the change persists across page reloads
   4. Opening the popup or dashboard shows a read-only selector health view listing each target's active selector, source badge (seed/heuristic/llm), and a warning when a critical selector has not matched recently
   5. Triggering "Reset to defaults" from the popup/dashboard restores all registry entries to the selectors.ts seed values and the health view reflects the change immediately
+
 **Plans**: TBD
 
 **UI hint**: yes
@@ -214,11 +216,13 @@ Plans:
 **Depends on**: Phase 22
 **Requirements**: ADAPT-01, ADAPT-02, ADAPT-03, ADAPT-04, ADAPT-05, ADAPT-06, ADAPT-07, ADAPT-08, ADAPT-09, ADAPT-10
 **Success Criteria** (what must be TRUE):
+
   1. Breakage detection does not trigger on a logged-out LinkedIn page, a skeleton-loader state, a non-feed URL, or a genuinely empty feed — all 6 false-positive guards (URL gate, container present, minimum session activity, no-posts placeholder, auth check, 30s rolling debounce) are verified by fixture tests
   2. When total breakage is detected on an active feed, the heuristic re-deriver proposes candidates locally without any API call; no candidate is written to storage until it passes the full validation gate (minimum match count, author-link ratio, post-text presence, sponsored-contamination rejection, feed-context containment)
   3. No post content, user names, headlines, photo URLs, or any PII leaves the browser during the LLM fallback — only a structural DOM skeleton with all text/href/src/aria-label stripped is sent to the Anthropic API
   4. LLM fallback is only reached when heuristics produce no valid candidate and an API key is configured; it is rate-bounded by a single-flight latch, a minimum 5-minute cool-off persisted across service-worker restarts, and a per-day hard cap
   5. The LLM response is strictly validated before use: selectors matching body/html/* are rejected, overly-broad selectors (outside a 2–50 match range) are rejected, and the selector string is never passed to eval
+
 **Plans**: TBD
 **Note — open decision (resolve at plan time):** LLM call location is now confirmed: the Anthropic fetch must live in the **service worker** (background/index.ts) because CORS blocks content-script direct fetches from linkedin.com. The existing LLMDetector pattern (content script sends SCORE_POST message → service worker fetches and responds) must be replicated for LLMRederiver. This is a code-verified fact from src/content/detector/llm.ts and src/background/index.ts.
 
@@ -238,9 +242,13 @@ Plans:
   3. After 501 LLM calls, the store contains exactly 500 entries (oldest evicted)
   4. tsc clean; existing detector and rederiver tests still pass
 
-**Plans**: 2 plans
-Plans:
+**Plans**: 2 plansPlans:
+**Wave 1**
+
 - [ ] 24-01-PLAN.md — TraceEntry schema + cache-aware pricing.ts + FIFO traceStore (TRACE-01/02/03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 24-02-PLAN.md — Wire trace capture into scorePost/rederiveSelector SW handlers + refresh-on-load pricing (TRACE-01/02/03)
 
 ### Phase 25: Dashboard Export + README Script
