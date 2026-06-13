@@ -245,7 +245,7 @@ Plans:
 **Plans**: 2 plansPlans:
 **Wave 1**
 
-- [ ] 24-01-PLAN.md — TraceEntry schema + cache-aware pricing.ts + FIFO traceStore (TRACE-01/02/03)
+- [x] 24-01-PLAN.md — TraceEntry schema + cache-aware pricing.ts + FIFO traceStore (TRACE-01/02/03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -311,6 +311,6 @@ Plans:
 | 21. Dashboard Button Reposition | v6.1 | 1/1 | Complete | 2026-06-06 |
 | 22. Externalize Selectors to Storage | v7.0 | 0/TBD | Not started | - |
 | 23. Self-Healing Selector Adapter | v7.0 | 4/4 | Complete    | 2026-06-13 |
-| 24. Trace Capture & Storage | v8.0 | 0/TBD | Planned | - |
+| 24. Trace Capture & Storage | v8.0 | 1/2 | In Progress|  |
 | 25. Dashboard Export + README Script | v8.0 | 0/TBD | Planned | - |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
