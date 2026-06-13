@@ -26,7 +26,16 @@ const fetchMock = vi.fn();
 function okResponse(candidates: Array<{ selector: string; rationale: string }>) {
   return {
     ok: true,
-    json: async () => ({ content: [{ text: JSON.stringify({ candidates }) }] }),
+    json: async () => ({
+      content: [{ text: JSON.stringify({ candidates }) }],
+      // usage is required by Phase 24 trace recording (Plan 02); supply minimal values
+      usage: {
+        input_tokens: 100,
+        output_tokens: 50,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      },
+    }),
     text: async () => '',
   };
 }
@@ -47,6 +56,7 @@ function makeChrome() {
   return {
     runtime: {
       onInstalled: { addListener: vi.fn() },
+      onStartup: { addListener: vi.fn() },
       onMessage: {
         addListener: vi.fn((fn: MsgListener) => {
           messageListener = fn;

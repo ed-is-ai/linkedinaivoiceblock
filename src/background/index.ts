@@ -373,7 +373,16 @@ async function rederiveSelector(
       throw new Error(`API ${response.status}: ${body}`);
     }
 
-    const data = (await response.json()) as { content: Array<{ text: string }> };
+    // D-02: widen cast to also read the 4-bucket usage breakdown
+    const data = (await response.json()) as {
+      content: Array<{ text: string }>;
+      usage: {
+        input_tokens: number;
+        output_tokens: number;
+        cache_creation_input_tokens?: number;
+        cache_read_input_tokens?: number;
+      };
+    };
     const raw = data.content[0]?.text ?? '';
     const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
 
@@ -382,6 +391,24 @@ async function rederiveSelector(
       if (!isRederiveModelOutput(parsed)) {
         throw new Error('LLM response failed schema validation');
       }
+
+      // TRACE-02: append success trace with real token/cost breakdown (D-04)
+      const { costUsd, unpriced } = computeCostUsd('claude-haiku-4-5-20251001', data.usage);
+      const successEntry: TraceEntry = {
+        source: 'rederiver',
+        model: 'claude-haiku-4-5-20251001',
+        systemPrompt: REDERIVE_SYSTEM_PROMPT,
+        userPrompt: userContent.slice(0, 500),
+        inputTokens: data.usage.input_tokens,
+        outputTokens: data.usage.output_tokens,
+        cacheCreationTokens: data.usage.cache_creation_input_tokens ?? 0,
+        cacheReadTokens: data.usage.cache_read_input_tokens ?? 0,
+        costUsd,
+        unpriced,
+        timestamp: new Date().toISOString(),
+      };
+      await appendTrace(successEntry);
+
       return { candidates: parsed.candidates };
     } catch (err) {
       lastErr = err as Error;
@@ -436,6 +463,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       // a daily-cap slot or start the 5-min cool-off (review finding #3).
       const keyResult = await chrome.storage.local.get(['anthropicApiKey']);
       if (!keyResult.anthropicApiKey) {
+        // D-03: no-key is an attempted LLM call — append an error trace
+        const noKeyEntry: TraceEntry = {
+          source: 'rederiver',
+          model: 'claude-haiku-4-5-20251001',
+          systemPrompt: REDERIVE_SYSTEM_PROMPT,
+          userPrompt: '',
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheCreationTokens: 0,
+          cacheReadTokens: 0,
+          costUsd: 0,
+          unpriced: false,
+          timestamp: new Date().toISOString(),
+          error: 'No API key configured',
+        };
+        await appendTrace(noKeyEntry);
         sendResponse({ error: 'No API key configured' });
         return;
       }
@@ -452,6 +495,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         );
         sendResponse({ result: candidates });
       } catch (err) {
+        // D-03: HTTP errors, schema-validation failures produce an error trace
+        const errorEntry: TraceEntry = {
+          source: 'rederiver',
+          model: 'claude-haiku-4-5-20251001',
+          systemPrompt: REDERIVE_SYSTEM_PROMPT,
+          userPrompt: '',
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheCreationTokens: 0,
+          cacheReadTokens: 0,
+          costUsd: 0,
+          unpriced: false,
+          timestamp: new Date().toISOString(),
+          error: (err as Error).message,
+        };
+        await appendTrace(errorEntry);
         sendResponse({ error: (err as Error).message });
       } finally {
         await releaseRateLimitLatch();
