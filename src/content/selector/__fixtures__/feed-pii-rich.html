@@ -1,0 +1,20 @@
+<!-- PII-rich feed: real names in text, /in/<slug> hrefs, media.licdn.com srcs,
+     author aria-labels and title/alt. The sanitizer (buildDomSkeleton) must strip
+     all of these for the D4 cross-check; only structure/data-*/role survive. -->
+<div data-component-type="LazyColumn">
+  <div data-urn="urn:li:activity:7001" aria-label="John Doe posted this">
+    <img src="https://media.licdn.com/dms/image/john-doe.jpg" alt="John Doe headshot" />
+    <a href="https://www.linkedin.com/in/john-doe/" aria-label="John Doe profile"><strong>John Doe</strong></a>
+    <span data-testid="expandable-text-box" title="post body">Personal note: I visited my parents in Boston last weekend and it was lovely.</span>
+  </div>
+  <div data-urn="urn:li:activity:7002" aria-label="Jane Roe posted this">
+    <img src="https://media.licdn.com/dms/image/jane-roe.jpg" alt="Jane Roe headshot" />
+    <a href="https://www.linkedin.com/in/jane-roe/" aria-label="Jane Roe profile"><strong>Jane Roe</strong></a>
+    <span data-testid="expandable-text-box" title="post body">My email is jane.roe@example.com if anyone wants the slides from my talk.</span>
+  </div>
+  <div data-urn="urn:li:activity:7003" aria-label="Sam Patel posted this">
+    <img src="https://media.licdn.com/dms/image/sam-patel.jpg" alt="Sam Patel headshot" />
+    <a href="https://www.linkedin.com/in/sam-patel/" aria-label="Sam Patel profile"><strong>Sam Patel</strong></a>
+    <span data-testid="expandable-text-box" title="post body">Grateful for my team in Austin who shipped the release while I was away.</span>
+  </div>
+</div>
