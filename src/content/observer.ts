@@ -10,16 +10,8 @@
  * INFRA-04: All selector strings are imported from ./selectors.
  */
 
-import {
-  FEED_CONTAINER,
-  FEED_CONTAINER_FALLBACK,
-  POST_URN_ATTR,
-  POST_AUTHOR_NAME,
-  POST_BODY_TEXT,
-  POST_AUTHOR_LINK,
-  RESHARE_INDICATOR,
-  SELECTORS_VERSION,
-} from './selectors';
+import { SELECTORS_VERSION } from './selectors';
+import { resolve, updateCandidate } from './selector-registry';
 import type { ObservedPost } from '../shared/types';
 
 // ---------------------------------------------------------------------------
@@ -45,8 +37,8 @@ const BASE_DELAY_MS = 500;
 async function waitForFeedContainer(): Promise<Element | null> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const el =
-      document.querySelector(FEED_CONTAINER) ??
-      document.querySelector(FEED_CONTAINER_FALLBACK);
+      document.querySelector(resolve('FEED_CONTAINER')) ??
+      document.querySelector(resolve('FEED_CONTAINER_FALLBACK'));
     if (el) return el;
     await new Promise<void>((resolve) =>
       setTimeout(resolve, BASE_DELAY_MS * Math.min(attempt + 1, 4))
@@ -64,10 +56,10 @@ async function waitForFeedContainer(): Promise<Element | null> {
 // ---------------------------------------------------------------------------
 
 function extractPostData(card: Element, urn: string): ObservedPost {
-  const innerCard = card.querySelector(RESHARE_INDICATOR);
+  const innerCard = card.querySelector(resolve('RESHARE_INDICATOR'));
   const sourceEl = innerCard ?? card;
 
-  const authorAnchor = ([...sourceEl.querySelectorAll(POST_AUTHOR_LINK)] as HTMLAnchorElement[])
+  const authorAnchor = ([...sourceEl.querySelectorAll(resolve('POST_AUTHOR_LINK'))] as HTMLAnchorElement[])
     .find(a => (a.textContent ?? '').trim().length > 0) ?? null;
   const authorProfileUrl = authorAnchor?.href ?? '';
   const authorName = (
@@ -80,7 +72,7 @@ function extractPostData(card: Element, urn: string): ObservedPost {
   const slugMatch = /\/in\/([^/?#]+)/.exec(authorProfileUrl);
   const authorId = slugMatch?.[1] ?? '';
 
-  const postText = (sourceEl.querySelector(POST_BODY_TEXT)?.textContent ?? '').replace(/\s+/g, ' ').trim();
+  const postText = (sourceEl.querySelector(resolve('POST_BODY_TEXT'))?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   return { urn, authorId, authorName, authorProfileUrl, postText, postNode: card };
 }
@@ -113,10 +105,13 @@ function dispatchFromBox(box: Element, onPost: (post: ObservedPost) => void): vo
 
   if (!outermost) return;
 
-  const urn = outermost.getAttribute(POST_URN_ATTR) ?? '';
+  const urnAttrSelector = resolve('POST_URN_ATTR');
+  const urn = outermost.getAttribute(urnAttrSelector) ?? '';
   if (!urn || processedPosts.has(urn)) return;
 
   processedPosts.add(urn);
+  // Wire winner rotation (fire-and-forget)
+  updateCandidate('POST_URN_ATTR', urnAttrSelector).catch(() => {});
   onPost(extractPostData(outermost, urn));
 }
 
@@ -126,10 +121,11 @@ function dispatchFromBox(box: Element, onPost: (post: ObservedPost) => void): vo
 
 function processElement(el: Element, onPost: (post: ObservedPost) => void): void {
   // Dispatch from any text-box spans in this element or its descendants.
-  if (el.matches(POST_BODY_TEXT)) {
+  const postBodyTextSelector = resolve('POST_BODY_TEXT');
+  if (el.matches(postBodyTextSelector)) {
     dispatchFromBox(el, onPost);
   } else {
-    for (const box of el.querySelectorAll(POST_BODY_TEXT)) {
+    for (const box of el.querySelectorAll(postBodyTextSelector)) {
       dispatchFromBox(box, onPost);
     }
   }
@@ -158,7 +154,7 @@ function attachObserver(
   observer.observe(document.body, { childList: true, subtree: true });
 
   // Initial scan: dispatch any posts already in the DOM.
-  for (const box of container.querySelectorAll(POST_BODY_TEXT)) {
+  for (const box of container.querySelectorAll(resolve('POST_BODY_TEXT'))) {
     dispatchFromBox(box, onPost);
   }
 
