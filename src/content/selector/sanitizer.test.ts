@@ -117,11 +117,19 @@ describe('buildDomSkeleton — D4 PII boundary', () => {
 
   // ── truncation ────────────────────────────────────────────────────────────
   it('truncates output at 4000 chars and appends truncation marker for overlong input', () => {
-    // Build a deeply nested structure that will exceed 4000 chars when serialized
-    const longAttr = 'x'.repeat(200);
+    // Build deeply nested structure with MAX_SIBLINGS=3 children each having long data-* values.
+    // After sibling capping (3 per level) and depth capping (6 levels), at MAX_DEPTH=6 and
+    // MAX_SIBLINGS=3 we get at most 3^6 = 729 leaf elements. We need the serialized tag+attrs
+    // to exceed 4000 chars total. Use long data-* attribute values (data-* values are preserved).
+    // 3 top-level divs × 3 spans each, with a 600-char data-* value = ~3×(600+20)×3 = ~5580 chars > 4000.
+    const longVal = 'a'.repeat(600);
     let html = '<div>';
-    for (let i = 0; i < 25; i++) {
-      html += `<div data-long="${longAttr}"><span data-x="${longAttr}">text</span></div>`;
+    for (let i = 0; i < 3; i++) {
+      html += `<div data-uid="${longVal}">`;
+      for (let j = 0; j < 3; j++) {
+        html += `<span data-uid="${longVal}">text</span>`;
+      }
+      html += '</div>';
     }
     html += '</div>';
     document.body.innerHTML = html;
