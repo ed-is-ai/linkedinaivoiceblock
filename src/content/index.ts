@@ -1,5 +1,6 @@
 import { SELECTORS_VERSION } from './selectors';
 import { startObserving } from './observer';
+import { seedIfNeeded, load } from './selector-registry';
 import { HeuristicDetector } from './detector/heuristic';
 import { LLMDetector } from './detector/llm';
 import { checkExclusions } from './exclusions';
@@ -208,6 +209,11 @@ async function writeDailyStats(): Promise<void> {
 async function init(): Promise<void> {
   const { anthropicApiKey, dismissedAccounts = [], flaggedAccounts = {}, settings } =
     await storageGet(['anthropicApiKey', 'dismissedAccounts', 'flaggedAccounts', 'settings']);
+
+  // Warm the selector registry cache before starting observation
+  await seedIfNeeded();
+  await load();
+
   const autoHideThreshold = settings?.autoHideThreshold ?? 60;
   currentThreshold = autoHideThreshold;
   for (const id of dismissedAccounts) dismissedSet.add(id);
