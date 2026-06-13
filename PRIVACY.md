@@ -1,6 +1,6 @@
 # Privacy Policy — LinkedIn Blocker
 
-**Last updated:** 2026-05-30
+**Last updated:** 2026-06-13
 
 LinkedIn Blocker is a Chrome extension that detects and hides AI-generated posts in your LinkedIn feed. This policy explains what data the extension stores, where it is stored, and how you can delete it.
 
@@ -41,6 +41,12 @@ When an API key is set, post text is sent to **Anthropic's API** (`api.anthropic
 ```
 chrome.storage.local.remove('anthropicApiKey')
 ```
+
+### Automatic selector repair (self-healing)
+
+LinkedIn frequently changes its page structure, which can break the extension's ability to find posts. When the extension detects that it can no longer locate any posts on an active feed, it first tries to repair itself locally with no network access. If that fails **and** you have set an Anthropic API key, it may send a **sanitized structural description of the feed layout** to Anthropic's API (`api.anthropic.com`) to help re-derive a working selector.
+
+This structural skeleton contains **only** HTML tag names, `data-*`/`role` attributes, and element nesting. All post text, author names, headlines, profile links (`href`), image URLs (`src`), and accessibility labels (`aria-label`) are **stripped before the request is sent** — **no post content or personally identifiable information leaves your browser** during selector repair. These repair calls are strictly rate-limited (at most a few per day) and never happen without an API key configured.
 
 ---
 
