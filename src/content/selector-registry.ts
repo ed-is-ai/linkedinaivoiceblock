@@ -286,6 +286,108 @@ export async function updateCandidate(
 }
 
 /**
+ * Source weights for candidate confidence ordering (ADAPT-08).
+ * seed < heuristic < llm < user — an adapted/user candidate outranks the seed
+ * at equal match/recency so a proven repair stays at the front.
+ */
+const SOURCE_WEIGHTS: Record<CandidateSource, number> = {
+  seed: 0.6,
+  heuristic: 0.8,
+  llm: 0.9,
+  user: 1.0,
+};
+
+/**
+ * Score a candidate for confidence ordering (ADAPT-08).
+ *
+ * confidence = (matchCount + 1) × recency × sourceWeight
+ *   - matchCount + 1 so a never-matched new candidate still ranks above 0.
+ *   - recency: 1.0 for a match in the last instant, decaying linearly toward a
+ *     0.1 floor across 30 days; 0.3 when the candidate has never matched.
+ *   - sourceWeight: seed 0.6 < heuristic 0.8 < llm 0.9 < user 1.0.
+ */
+export function candidateConfidence(c: SelectorCandidate): number {
+  const matchCount = c.matchCount ?? 0;
+  const sourceWeight = SOURCE_WEIGHTS[c.source];
+  let recency: number;
+  if (c.lastMatchedAt) {
+    const ageMs = Date.now() - new Date(c.lastMatchedAt).getTime();
+    recency = Math.max(0.1, 1.0 - (ageMs / THIRTY_DAYS_MS) * 0.9);
+  } else {
+    recency = 0.3; // never matched — lower confidence
+  }
+  return (matchCount + 1) * recency * sourceWeight;
+}
+
+/**
+ * Insert a new adapted candidate at index 0 for a target (ADAPT-07).
+ *
+ * Called by the heal orchestrator (23-04) AFTER validateCandidate passes — this is
+ * the only new selector-write surface and it lives in SelectorRegistry per CLAUDE.md
+ * constraint #1.
+ *
+ * Behavior:
+ *   - If the value already exists (at any index), delegate to updateCandidate() which
+ *     handles the index-0 matchCount bump and the >0 rotate-to-front — never duplicates.
+ *   - If brand-new, unshift it at index 0 so the previously-active candidate moves to
+ *     index 1 (retain-prior so detection auto-recovers if LinkedIn reverts).
+ *   - Enforce the 10-candidate cap (SELECTOR-05) without ever evicting the seed.
+ *   - Update lastAdaptedAt and persist once (single storage write).
+ */
+export async function insertCandidate(
+  target: SelectorTarget,
+  value: string,
+  source: CandidateSource
+): Promise<void> {
+  if (!_cache) {
+    return; // No-op if cache is not warm
+  }
+
+  const entry = _cache.targets[target];
+  if (!entry) {
+    return;
+  }
+
+  // Existing value (front or later) — delegate to updateCandidate (bump or rotate, no dup)
+  const existing = entry.candidates.findIndex((c) => c.value === value);
+  if (existing >= 0) {
+    await updateCandidate(target, value);
+    return;
+  }
+
+  // Brand-new candidate — prepend so the prior active retains at index 1 (ADAPT-07)
+  const now = new Date().toISOString();
+  entry.candidates.unshift({
+    value,
+    source,
+    lastMatchedAt: null,
+    lastVerifiedAt: now,
+    addedAt: now,
+    failCount: 0,
+    matchCount: 0,
+  });
+
+  // Enforce cap <= 10, never evicting seed
+  if (entry.candidates.length > 10) {
+    const seedIdx = entry.candidates.findIndex((c) => c.source === 'seed');
+    const truncated = entry.candidates.slice(0, 10);
+    if (seedIdx >= 10) {
+      // Seed was evicted by truncation — preserve it at the end of the kept list
+      const seedCandidate = entry.candidates[seedIdx];
+      if (seedCandidate && truncated.length > 0) {
+        truncated[truncated.length - 1] = seedCandidate;
+      }
+    }
+    entry.candidates = truncated;
+  }
+
+  _cache.lastAdaptedAt = now;
+
+  // Single persist write (only SelectorRegistry writes selectors — CLAUDE.md #1)
+  await storageSet({ selectorRegistry: _cache }).catch(() => {});
+}
+
+/**
  * Record a per-session miss for a target.
  * Sync write-once-per-miss: if not already recorded, add to the set and fire-and-forget storageSet.
  */
