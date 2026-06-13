@@ -110,7 +110,7 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 
 **Milestone Goal:** Every LLM call made by the extension is traced — model, prompts, token counts, USD cost — accumulated in chrome.storage.local, exportable from the dashboard, and summarized in the README by an npm script.
 
-- [ ] **Phase 24: Trace Capture & Storage** - LLM call interception in LLMDetector and LLMRederiver; trace schema; capped FIFO store in chrome.storage.local
+- [x] **Phase 24: Trace Capture & Storage** - LLM call interception in LLMDetector and LLMRederiver; trace schema; capped FIFO store in chrome.storage.local (completed 2026-06-13)
 - [ ] **Phase 25: Dashboard Export + README Script** - "Export Traces" button on dashboard; `npm run trace-summary` script that reads a trace export and updates the README cost table
 
 ### 📋 v9.0 Eval Harness (Planned)
@@ -249,7 +249,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 24-02-PLAN.md — Wire trace capture into scorePost/rederiveSelector SW handlers + refresh-on-load pricing (TRACE-01/02/03)
+- [x] 24-02-PLAN.md — Wire trace capture into scorePost/rederiveSelector SW handlers + refresh-on-load pricing (TRACE-01/02/03)
 
 ### Phase 25: Dashboard Export + README Script
 
@@ -311,6 +311,6 @@ Plans:
 | 21. Dashboard Button Reposition | v6.1 | 1/1 | Complete | 2026-06-06 |
 | 22. Externalize Selectors to Storage | v7.0 | 0/TBD | Not started | - |
 | 23. Self-Healing Selector Adapter | v7.0 | 4/4 | Complete    | 2026-06-13 |
-| 24. Trace Capture & Storage | v8.0 | 1/2 | In Progress|  |
+| 24. Trace Capture & Storage | v8.0 | 2/2 | Complete   | 2026-06-13 |
 | 25. Dashboard Export + README Script | v8.0 | 0/TBD | Planned | - |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
