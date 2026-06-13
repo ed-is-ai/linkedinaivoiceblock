@@ -299,7 +299,7 @@ Plans:
 | 20. Batch Block | v6.0 | 1/1 | Complete | 2026-06-06 |
 | 21. Dashboard Button Reposition | v6.1 | 1/1 | Complete | 2026-06-06 |
 | 22. Externalize Selectors to Storage | v7.0 | 0/TBD | Not started | - |
-| 23. Self-Healing Selector Adapter | v7.0 | 0/TBD | Not started | - |
+| 23. Self-Healing Selector Adapter | v7.0 | 1/4 | In Progress|  |
 | 24. Trace Capture & Storage | v8.0 | 0/TBD | Planned | - |
 | 25. Dashboard Export + README Script | v8.0 | 0/TBD | Planned | - |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
