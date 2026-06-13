@@ -178,6 +178,66 @@ export interface StoredPost {
   hiddenAt: number;
 }
 
+// ---------------------------------------------------------------------------
+// Phase 24: Trace Capture & Storage
+// ---------------------------------------------------------------------------
+
+/**
+ * A single LLM call trace entry stored in chrome.storage.local.
+ * Written by the service worker on every LLM call (detector and rederiver), including
+ * failed attempts (D-03). Stored newest-first under llbTraces, capped at 500 entries (TRACE-03).
+ *
+ * Security note (T-24-01): This interface has NO apiKey/anthropicApiKey/x-api-key field —
+ * the API key is structurally un-storable in a trace.
+ *
+ * Note (T-24-02): userPrompt is bounded to 500 chars by the Plan 02 caller before
+ * appendTrace() is invoked. The full system prompt is stored without truncation (TRACE-01).
+ */
+export interface TraceEntry {
+  /** The Anthropic model ID used for this call (e.g. 'claude-sonnet-4-6') */
+  model: string;
+  /** Full system prompt text — no truncation (TRACE-01, D-04) */
+  systemPrompt: string;
+  /**
+   * User prompt text, truncated to 500 chars by the caller (Plan 02) before appendTrace().
+   * For detector calls: post text. For rederiver calls: the sanitized DOM skeleton.
+   */
+  userPrompt: string;
+  /** Non-cached input token count from the Anthropic usage object */
+  inputTokens: number;
+  /** Output token count from the Anthropic usage object */
+  outputTokens: number;
+  /**
+   * Cache-creation token count from cache_creation_input_tokens in the Anthropic usage object.
+   * Stored so costUsd can be recomputed against updated prices (D-07).
+   */
+  cacheCreationTokens: number;
+  /**
+   * Cache-read token count from cache_read_input_tokens in the Anthropic usage object.
+   * Stored so costUsd can be recomputed against updated prices (D-07).
+   */
+  cacheReadTokens: number;
+  /** Cache-aware USD cost computed at capture time (D-05). 0 on failed calls (D-03) or unknown model (D-08). */
+  costUsd: number;
+  /** ISO 8601 timestamp of the call (e.g. new Date().toISOString()) */
+  timestamp: string;
+  /** Which LLM pipeline produced this trace entry */
+  source: 'detector' | 'rederiver';
+  /** Error message if the call failed (HTTP 4xx/5xx, parse error, no API key). Absent on success. (D-03) */
+  error?: string;
+  /** True when the model is not in MODEL_PRICING — signals that costUsd is 0 due to unknown pricing (D-08). */
+  unpriced?: boolean;
+}
+
+/**
+ * Cache-aware model pricing table.
+ * Index signature maps model IDs to their per-million-token rates.
+ * undefined for models not in the pricing table (triggers D-08 unknown-model path).
+ */
+export type ModelPricing = {
+  [model: string]: { inputPerMTok: number; outputPerMTok: number } | undefined;
+};
+
 /**
  * Enumeration of all selector targets that can be adapted and stored in the registry.
  * These correspond to the selector constants exported from src/content/selectors.ts.
@@ -304,4 +364,8 @@ export interface StorageSchema {
   llbRederiveDateKey?: string;
   /** ADAPT-05: single-flight latch — true while an LLM rederive fetch is in-flight. */
   llbRederiveInFlight?: boolean;
+  /** Newest-first array of LLM call traces. Capped at 500 entries (TRACE-03). SW writes; Phase 25 dashboard reads. */
+  llbTraces?: TraceEntry[];
+  /** Cache-aware model pricing table. SW overwrites from MODEL_PRICING constant on every load (D-06). */
+  llbModelPricing?: ModelPricing;
 }
