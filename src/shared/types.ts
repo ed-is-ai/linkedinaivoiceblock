@@ -179,6 +179,92 @@ export interface StoredPost {
 }
 
 /**
+ * Enumeration of all selector targets that can be adapted and stored in the registry.
+ * These correspond to the selector constants exported from src/content/selectors.ts.
+ *
+ * Note: Some targets (POST_URN_ATTR, POST_URN_ATTR_FALLBACK, COMPANY_PAGE_MARKER)
+ * are used with getAttribute() or String.includes(), not querySelector().
+ * The registry returns these as attribute-name or URL-pattern strings (not DOM selectors).
+ */
+export type SelectorTarget =
+  | 'FEED_CONTAINER'
+  | 'FEED_CONTAINER_FALLBACK'
+  | 'POST_CARD'
+  | 'POST_URN_ATTR'
+  | 'POST_URN_ATTR_FALLBACK'
+  | 'POST_BODY_TEXT'
+  | 'POST_AUTHOR_NAME'
+  | 'POST_AUTHOR_LINK'
+  | 'SPONSORED_MARKER'
+  | 'COMPANY_PAGE_MARKER'
+  | 'RESHARE_INDICATOR'
+  | 'COMMENT_EXPAND_BUTTON'
+  | 'OPEN_TO_WORK_MARKER'
+  | 'COMMENT_TEXT'
+  | 'AUTHOR_HEADLINE'
+  | 'CONNECTION_DEGREE';
+
+/**
+ * Origin of a selector candidate in the registry.
+ * Tracks whether a selector was seeded from src/content/selectors.ts (seed),
+ * derived heuristically (heuristic), produced by an LLM (llm), or manually set by user (user).
+ */
+export type CandidateSource = 'seed' | 'heuristic' | 'llm' | 'user';
+
+/**
+ * A single selector candidate for a given target, with metadata for winner rotation and TTL eviction.
+ *
+ * The registry maintains a rank-ordered list of candidates per target.
+ * Index 0 is the active selector — used for all querySelector() / getAttribute() calls.
+ * Higher indices are fallbacks, rotated to the front on successful match (winner rotation).
+ */
+export interface SelectorCandidate {
+  /** Selector string, attribute name, or URL pattern — returned as-is by resolve() */
+  value: string;
+  /** Origin of this candidate (seed from src/content/selectors.ts, or adapted) */
+  source: CandidateSource;
+  /** ISO 8601 timestamp of the last successful DOM match, or null if never matched */
+  lastMatchedAt: string | null;
+  /** ISO 8601 timestamp of last verification (matches SELECTOR-01 metadata field) */
+  lastVerifiedAt: string | null;
+  /** ISO 8601 timestamp when this candidate was added to the registry */
+  addedAt: string;
+  /** Consecutive failed query attempts (incremented on querySelectorAll(value) returning empty; reset to 0 on match) */
+  failCount: number;
+  /** Cumulative number of successful DOM matches for this candidate (incremented on match) */
+  matchCount: number;
+}
+
+/**
+ * A ranked list of selector candidates for a single target.
+ * Index 0 is the active selector; subsequent indices are fallbacks.
+ * The list is capped at 10 entries (SELECTOR-05).
+ */
+export interface TargetEntry {
+  /** Rank-ordered selector candidates; index 0 = active */
+  candidates: SelectorCandidate[];
+}
+
+/**
+ * Complete selector registry schema stored in chrome.storage.local under the 'selectorRegistry' key.
+ *
+ * The registry is seeded from src/content/selectors.ts constants on first load or version bump,
+ * and subsequently adapted through winner rotation (Phase 23+) and TTL-based candidate eviction.
+ *
+ * Versioning: When src/content/selectors.ts SELECTORS_VERSION changes, the registry is migrated
+ * additively — new targets are added from the seed, existing adapted candidates are preserved,
+ * and the seed value is appended as a last-resort fallback.
+ */
+export interface SelectorRegistrySchema {
+  /** Version string matching src/content/selectors.ts SELECTORS_VERSION. Used to trigger migrations. */
+  version: string;
+  /** Map of all selector targets to their candidate lists. Every SelectorTarget must have an entry. */
+  targets: Record<SelectorTarget, TargetEntry>;
+  /** ISO 8601 timestamp of the last adaptation event (winner rotation or eviction), or null if seed-only */
+  lastAdaptedAt: string | null;
+}
+
+/**
  * Typed schema for chrome.storage.local.
  *
  * Phase 3 expands this with dismissedAccounts. Phase 6 adds settings and dailyStats.
@@ -206,4 +292,8 @@ export interface StorageSchema {
   dailyStats?: DailyStats[];
   /** Newest-first array of hidden posts saved for review. Capped at 200 entries; content script writes, popup Phase 8 reads. */
   storedPosts?: StoredPost[];
+  /** Selector registry: versioned, rank-ordered candidate lists per target. Seeded from src/content/selectors.ts on first load or version bump. */
+  selectorRegistry?: SelectorRegistrySchema;
+  /** Set of selector targets that produced zero DOM matches in the current content-script session. Written by content script; read by dashboard health view. */
+  selectorSessionMisses?: SelectorTarget[];
 }
