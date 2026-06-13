@@ -1,7 +1,10 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import type { FlaggedAccount, DailyStats, StoredPost } from '../shared/types';
+import type { FlaggedAccount, DailyStats, StoredPost, SelectorRegistrySchema, SelectorTarget } from '../shared/types';
 import { buildJsonExport, buildCsvExport, buildPostsCsvExport, deriveCleanseCount, filterCleansed } from './dataManagement';
+import SelectorView from './SelectorView';
+import { buildSeedRegistry } from '../content/selector-registry';
+import { storageSet } from '../shared/storage';
 
 
 function NetPostsChart({ stats, timeWindow }: { stats: DailyStats[], timeWindow: 7 | 30 }) {
@@ -76,9 +79,11 @@ function App() {
   const [cleanseDate, setCleanseDate] = useState<string>('');
   const [cleansePreview, setCleansePreview] = useState<{ accountCount: number; postCount: number } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectorRegistry, setSelectorRegistry] = useState<SelectorRegistrySchema | null>(null);
+  const [sessionMisses, setSessionMisses] = useState<Set<SelectorTarget>>(new Set());
 
   useEffect(() => {
-    chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'dismissedAccounts']).then((result) => {
+    chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'dismissedAccounts', 'selectorRegistry', 'selectorSessionMisses']).then((result: Record<string, any>) => {
       const accts = Object.values(
         (result.flaggedAccounts ?? {}) as Record<string, FlaggedAccount>
       );
@@ -86,9 +91,25 @@ function App() {
       setStats((result.dailyStats ?? []) as DailyStats[]);
       setPosts((result.storedPosts ?? []) as StoredPost[]);
       setDismissed((result.dismissedAccounts ?? []) as string[]);
+      setSelectorRegistry((result.selectorRegistry as SelectorRegistrySchema) ?? null);
+      setSessionMisses(new Set((result.selectorSessionMisses ?? []) as SelectorTarget[]));
     }).catch(() => {
       setLoadError('Could not load data. Try reopening the dashboard.');
     });
+  }, []);
+
+  useEffect(() => {
+    function handleStorageChange(changes: Record<string, chrome.storage.StorageChange>, area: string) {
+      if (area !== 'local') return;
+      if (changes['selectorRegistry']) {
+        setSelectorRegistry((changes['selectorRegistry'].newValue as SelectorRegistrySchema) ?? null);
+      }
+      if (changes['selectorSessionMisses']) {
+        setSessionMisses(new Set((changes['selectorSessionMisses'].newValue as SelectorTarget[]) ?? []));
+      }
+    }
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    return () => chrome.storage.onChanged.removeListener(handleStorageChange);
   }, []);
 
   function triggerDownload(content: string, filename: string, mimeType: string): void {
@@ -130,6 +151,10 @@ function App() {
     setDismissed([]);
     setCleanseDate('');
     setCleansePreview(null);
+  }
+
+  async function handleResetSelectors(): Promise<void> {
+    await storageSet({ selectorRegistry: buildSeedRegistry() });
   }
 
   // All-time totals derived from flaggedAccounts (complete history)
@@ -216,6 +241,13 @@ function App() {
           )}
         </div>
       </div>
+
+      <SelectorView
+        registry={selectorRegistry}
+        sessionMisses={sessionMisses}
+        onReset={handleResetSelectors}
+        error={loadError}
+      />
 
       <div style={s.card}>
         <div style={s.cardHeading}>Data management</div>
