@@ -17,11 +17,7 @@
  * per INFRA-04 and CLAUDE.md critical constraint #1.
  */
 
-import {
-  SPONSORED_MARKER,
-  COMPANY_PAGE_MARKER,
-  OPEN_TO_WORK_MARKER,
-} from './selectors';
+import { resolve } from './selector-registry';
 import { isNonEnglish } from './detector/language';
 import type { PostData } from '../shared/types';
 
@@ -65,13 +61,13 @@ export function checkExclusions(postData: PostData, postNode: Element): Exclusio
   // Priority 1: Sponsored / Promoted post (DETECT-02)
   // Uses querySelector on the post node — the SPONSORED_MARKER selector targets
   // aria-label attributes that survive LinkedIn class renames.
-  if (postNode.querySelector(SPONSORED_MARKER)) {
+  if (postNode.querySelector(resolve('SPONSORED_MARKER'))) {
     return { excluded: true, reason: 'sponsored' };
   }
 
   // Priority 2: Company page author (DETECT-03)
   // Company pages have /company/ in the profile URL; individual profiles use /in/.
-  if (postData.authorProfileUrl.includes(COMPANY_PAGE_MARKER)) {
+  if (postData.authorProfileUrl.includes(resolve('COMPANY_PAGE_MARKER'))) {
     return { excluded: true, reason: 'company-page' };
   }
 
@@ -83,6 +79,6 @@ export function checkExclusions(postData: PostData, postNode: Element): Exclusio
 
   // Priority 4: Open to Work passthrough (D-12.4)
   // Not an exclusion — the +20 threshold adjustment is applied by the caller in Plan 04.
-  const openToWork = !!postNode.querySelector(OPEN_TO_WORK_MARKER);
+  const openToWork = !!postNode.querySelector(resolve('OPEN_TO_WORK_MARKER'));
   return { excluded: false, openToWork };
 }
