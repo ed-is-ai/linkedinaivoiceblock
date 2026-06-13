@@ -1,12 +1,15 @@
 /**
- * LinkedIn Blocker — Selector Registry
+ * LinkedIn Blocker — Selector Seed Values
  *
- * !! THIS IS THE ONLY FILE IN THE PROJECT THAT MAY CONTAIN LINKEDIN DOM SELECTORS !!
+ * !! ALL HARD-CODED LINKEDIN SELECTOR STRINGS LIVE IN THIS FILE AND ONLY HERE !!
  *
- * Per INFRA-04 and CLAUDE.md critical constraint #1:
- *   - All LinkedIn DOM selectors are defined here and ONLY here.
- *   - Changing one constant in this file is sufficient to fix any selector breakage site-wide.
- *   - No other file in the project may contain a LinkedIn selector string.
+ * Seed-vs-Runtime Model (Phase 22):
+ *   - This file defines the DEFAULT/seed selector values for all LinkedIn DOM targets.
+ *   - At runtime, the content script reads selectors EXCLUSIVELY through SelectorRegistry,
+ *     which hydrates from chrome.storage.local and falls back to these seed values.
+ *   - Only SelectorRegistry may write selector strings to storage (for runtime adaptation).
+ *   - Changing one constant in this file sets the default for any selector breakage recovery.
+ *   - No other file in the project may directly import or contain a LinkedIn selector string.
  *
  * Inspection date: 2026-05-25 (see .planning/phases/01-foundation/DOM-INSPECTION.md)
  *

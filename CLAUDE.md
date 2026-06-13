@@ -43,7 +43,7 @@ Check `.planning/STATE.md` for the active phase and what's in progress.
 
 ## Critical Constraints
 
-1. **No CSS class names as selectors** — LinkedIn rebuilds class names on every deploy. Use `data-*` attributes, `aria-label`, `role`, and semantic elements exclusively. All selectors live in one file: the selector registry.
+1. **No CSS class names as selectors** — LinkedIn rebuilds class names on every deploy. Use `data-*` attributes, `aria-label`, `role`, and semantic elements exclusively. All hard-coded LinkedIn selector strings live in `selectors.ts` and only there. At runtime the content script reads selectors exclusively through `SelectorRegistry`, which hydrates from `chrome.storage.local` and falls back to the `selectors.ts` seed. Only `SelectorRegistry` may write selector strings to storage.
 2. **No `element.remove()`** — breaks React's virtual DOM. Use CSS class toggle (`.llb-hidden { display: none !important }`).
 3. **No programmatic block clicks** — ToS risk. Use LinkedIn's deep link: `linkedin.com/in/{slug}/overlay/report-or-block/`.
 4. **Service worker is stateless** — it terminates after ~30s idle. All state to `chrome.storage.local` immediately.
@@ -71,3 +71,13 @@ Domain research is in `.planning/research/`:
 - `ARCHITECTURE.md` — Component map, data flow, build order
 - `PITFALLS.md` — LinkedIn DOM instability, MV3 gotchas, ToS considerations
 - `SUMMARY.md` — Synthesised recommendations
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
