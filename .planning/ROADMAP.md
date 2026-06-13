@@ -238,7 +238,10 @@ Plans:
   3. After 501 LLM calls, the store contains exactly 500 entries (oldest evicted)
   4. tsc clean; existing detector and rederiver tests still pass
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 24-01-PLAN.md — TraceEntry schema + cache-aware pricing.ts + FIFO traceStore (TRACE-01/02/03)
+- [ ] 24-02-PLAN.md — Wire trace capture into scorePost/rederiveSelector SW handlers + refresh-on-load pricing (TRACE-01/02/03)
 
 ### Phase 25: Dashboard Export + README Script
 
