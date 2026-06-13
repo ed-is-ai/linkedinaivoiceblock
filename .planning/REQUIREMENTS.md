@@ -79,9 +79,9 @@
 | ADAPT-08 | Phase 23 | Complete |
 | ADAPT-09 | Phase 23 | Complete |
 | ADAPT-10 | Phase 23 | Complete |
-| TRACE-01 | Phase 24 | Planned |
-| TRACE-02 | Phase 24 | Planned |
-| TRACE-03 | Phase 24 | Planned |
+| TRACE-01 | Phase 24 | Complete |
+| TRACE-02 | Phase 24 | Complete |
+| TRACE-03 | Phase 24 | Complete |
 | TRACE-04 | Phase 25 | Planned |
 | TRACE-05 | Phase 25 | Planned |
 | TRACE-06 | Phase 25 | Planned |
