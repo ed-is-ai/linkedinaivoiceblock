@@ -261,14 +261,22 @@ async function checkRateLimit(): Promise<{
  * ADAPT-05 / Pitfall 1: write the latch + incremented count + last-call time BEFORE
  * the fetch starts, so a SW restart mid-flight cannot leave the latch unheld or the
  * count un-incremented.
+ *
+ * Returns false if a concurrent invocation (e.g. a second tab) already holds the latch.
+ * chrome.storage has no compare-and-swap, so this re-read narrows — but cannot fully
+ * close — the check-then-acquire race; it shrinks the window to the gap between this
+ * read and write (review finding #2).
  */
-async function acquireRateLimitLatch(todayKey: string, callsToday: number): Promise<void> {
+async function acquireRateLimitLatch(todayKey: string, callsToday: number): Promise<boolean> {
+  const recheck = await chrome.storage.local.get(['llbRederiveInFlight']);
+  if (recheck.llbRederiveInFlight) return false;
   await chrome.storage.local.set({
     llbRederiveInFlight: true,
     llbRederiveLastCallMs: Date.now(),
     llbRederiveCallsToday: callsToday + 1,
     llbRederiveDateKey: todayKey,
   });
+  return true;
 }
 
 /** ADAPT-05: always called in finally — releases the single-flight latch. */
@@ -369,7 +377,19 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ error: `rate-limited: ${rl.reason}` });
         return;
       }
-      await acquireRateLimitLatch(rl.todayKey, rl.callsToday);
+      // Verify the API key BEFORE acquiring the latch so a keyless attempt does not burn
+      // a daily-cap slot or start the 5-min cool-off (review finding #3).
+      const keyResult = await chrome.storage.local.get(['anthropicApiKey']);
+      if (!keyResult.anthropicApiKey) {
+        sendResponse({ error: 'No API key configured' });
+        return;
+      }
+      // Best-effort single-flight acquire — bail if another tab grabbed the latch (finding #2)
+      const acquired = await acquireRateLimitLatch(rl.todayKey, rl.callsToday);
+      if (!acquired) {
+        sendResponse({ error: 'rate-limited: single-flight latch held' });
+        return;
+      }
       try {
         const { candidates } = await rederiveSelector(
           message.target as string,

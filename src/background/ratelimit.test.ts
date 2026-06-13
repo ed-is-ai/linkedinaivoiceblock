@@ -202,14 +202,17 @@ describe('REDERIVE_SELECTOR — daily cap of 5 (ADAPT-05)', () => {
 // ── No API key + finally-release on error ────────────────────────────────────
 
 describe('REDERIVE_SELECTOR — error handling', () => {
-  it('throws No API key before fetch and still releases the latch (finally)', async () => {
+  it('does not acquire the latch or burn a rate slot when no API key is configured', async () => {
     // rate-limit allows (empty state) but no apiKey configured
     const { sendResponse } = sendRederive();
     await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(sendResponse).toHaveBeenCalledWith({ error: 'No API key configured' });
-    expect(store.llbRederiveInFlight).toBe(false); // latch released even on throw
+    // finding #3: a keyless attempt must not consume a daily slot or start the cool-off
+    expect(store.llbRederiveInFlight).not.toBe(true);
+    expect(store.llbRederiveCallsToday).toBeUndefined();
+    expect(store.llbRederiveLastCallMs).toBeUndefined();
   });
 
   it('retries a malformed response once (2 attempts) then responds with an error', async () => {

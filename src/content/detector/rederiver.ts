@@ -34,7 +34,13 @@ export class LLMRederiver {
             reject(chrome.runtime.lastError);
             return;
           }
-          if (response?.error) {
+          if (!response) {
+            // SW closed the channel without responding — reject instead of throwing
+            // on `response.result`, which would leave the promise unsettled (finding #4).
+            reject(new Error('No response from service worker'));
+            return;
+          }
+          if (response.error) {
             reject(new Error(response.error as string));
             return;
           }

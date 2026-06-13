@@ -27,7 +27,6 @@ let lastUrl = location.href;
 // --- Breakage-detection state (Phase 23, ADAPT-01) -------------------------
 // Self-healing fires only after a sustained zero-match window on an active feed,
 // guarded by the Core-4 checks. All of this resets on SPA navigation (reinit).
-let currentContainer: Element | null = null; // active feed container the observer is watching
 let _zeroMatchWindowStart: number | null = null; // epoch ms the current zero-match run began
 let _postsSeenThisSession = 0; // posts dispatched since the last reinit
 let _healInProgress = false; // content-side single-flight guard
@@ -209,15 +208,27 @@ function onZeroPostsFound(container: Element): void {
     });
 }
 
+/** Resolve the live feed container fresh from the DOM (never a captured reference). */
+function liveFeedContainer(): Element | null {
+  return (
+    document.querySelector(resolve('FEED_CONTAINER')) ??
+    document.querySelector(resolve('FEED_CONTAINER_FALLBACK'))
+  );
+}
+
 /** Evaluate the zero-match window after a mutation batch (or on the safety interval). */
 function checkBreakage(): void {
-  if (!currentContainer) return;
-  const hasPosts = currentContainer.querySelectorAll(resolve('POST_BODY_TEXT')).length > 0;
+  // Re-resolve the live container every time: LinkedIn replaces the LazyColumn on virtual
+  // scroll WITHOUT a URL change, so a captured reference would go stale and report zero
+  // posts on a healthy feed, firing a false-positive heal (review finding #1).
+  const container = liveFeedContainer();
+  if (!container) return;
+  const hasPosts = container.querySelectorAll(resolve('POST_BODY_TEXT')).length > 0;
   if (hasPosts) {
     _zeroMatchWindowStart = null; // posts present — feed is healthy
     return;
   }
-  onZeroPostsFound(currentContainer);
+  onZeroPostsFound(container);
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +321,6 @@ async function reinit(): Promise<void> {
   _zeroMatchWindowStart = null;
   _postsSeenThisSession = 0;
   _healInProgress = false;
-  currentContainer = null;
   if (_breakageInterval !== null) {
     clearInterval(_breakageInterval);
     _breakageInterval = null;
@@ -318,7 +328,6 @@ async function reinit(): Promise<void> {
 
   const container = await waitForFeedContainer();
   if (container && storedOnPost) {
-    currentContainer = container;
     currentObserver = attachObserver(container, storedOnPost);
   }
 }
