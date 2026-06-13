@@ -24,17 +24,38 @@ const s: Record<string, JSX.CSSProperties> = {
     padding: '20px 24px',
     marginBottom: 16,
   },
+  headingContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+    cursor: 'pointer',
+    padding: '4px 0',
+  },
+  trafficLight: {
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    flexShrink: 0,
+  },
+  chevron: {
+    display: 'inline-block',
+    width: 0,
+    height: 0,
+    marginLeft: 4,
+    transition: 'transform 0.2s',
+  },
   cardHeading: {
     fontSize: 13,
     fontWeight: 600,
     color: '#374151',
-    marginBottom: 12,
+    margin: 0,
   },
   headingStale: {
     fontSize: 13,
     fontWeight: 600,
-    color: '#dc2626',
-    marginBottom: 12,
+    color: '#374151',
+    margin: 0,
   },
   errorMsg: {
     fontSize: 12,
@@ -223,6 +244,7 @@ export default function SelectorView({
   onReset,
   error,
 }: Readonly<SelectorViewProps>): JSX.Element {
+  const [expanded, setExpanded] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [writing, setWriting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
@@ -246,22 +268,67 @@ export default function SelectorView({
     FEED_ESSENTIAL.has(target)
   ).length;
 
-  // Determine heading text and style
-  const hasStaleEssential = feedEssentialMissCount > 0;
+  // Determine heading text
   const headingText =
-    hasStaleEssential
+    feedEssentialMissCount > 0
       ? `Selector Health (${feedEssentialMissCount} stale)`
       : 'Selector Health';
-  const headingStyle = hasStaleEssential ? s.headingStale : s.cardHeading;
+
+  // Determine traffic light status based on selector health
+  let trafficLightColor = '#10b981'; // green by default
+  if (feedEssentialMissCount > 0) {
+    trafficLightColor = '#dc2626'; // red if essential targets missing
+  } else if (registry) {
+    // Check if any selector was matched in the last 3 hours
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const targets = Object.values(registry.targets);
+    const hasRecentMatch = targets.some(
+      (entry) => entry.candidates[0]?.lastMatchedAt && entry.candidates[0].lastMatchedAt >= threeHoursAgo
+    );
+    if (!hasRecentMatch) {
+      trafficLightColor = '#f59e0b'; // yellow if no recent matches
+    }
+  }
+
+  // Helper to render heading with chevron
+  const renderHeading = (light: string) => (
+    <div
+      style={s.headingContainer}
+      onClick={() => setExpanded(!expanded)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setExpanded(!expanded);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
+      <div style={{ ...s.trafficLight, background: light }} />
+      <div style={s.cardHeading}>{headingText}</div>
+      <span
+        style={{
+          ...s.chevron,
+          transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          borderLeft: '4px solid transparent',
+          borderRight: '4px solid transparent',
+          borderTop: '5px solid #374151',
+          marginLeft: 'auto',
+        }}
+      />
+    </div>
+  );
 
   // Error state
   if (error) {
     return (
       <div style={s.card}>
-        <div style={headingStyle}>{headingText}</div>
-        <div style={s.errorMsg}>
-          Could not load selector health. Try reopening the dashboard.
-        </div>
+        {renderHeading('#9ca3af')}
+        {expanded && (
+          <div style={s.errorMsg}>
+            Could not load selector health. Try reopening the dashboard.
+          </div>
+        )}
       </div>
     );
   }
@@ -270,8 +337,10 @@ export default function SelectorView({
   if (!registry) {
     return (
       <div style={s.card}>
-        <div style={headingStyle}>{headingText}</div>
-        <div style={s.loadingMsg}>Loading selector health…</div>
+        {renderHeading('#9ca3af')}
+        {expanded && (
+          <div style={s.loadingMsg}>Loading selector health…</div>
+        )}
       </div>
     );
   }
@@ -284,101 +353,105 @@ export default function SelectorView({
 
   return (
     <div style={s.card}>
-      <div style={headingStyle}>{headingText}</div>
+      {renderHeading(trafficLightColor)}
 
-      {/* Column headers */}
-      <div style={s.columnHeader}>
-        <div style={s.columnHeaderTarget}>Target</div>
-        <div style={s.columnHeaderSelector}>Active selector</div>
-        <div style={s.columnHeaderSource}>Source</div>
-        <div style={s.columnHeaderLastMatched}>Last matched</div>
-      </div>
-
-      {/* Data rows */}
-      {targets.map(([target, entry]) => {
-        const candidate = entry.candidates[0];
-        if (!candidate) return null;
-
-        const isMissing = sessionMisses.has(target);
-        const isEssential = FEED_ESSENTIAL.has(target);
-        const isMissingEssential = isMissing && isEssential;
-
-        const rowStyle = isMissingEssential ? s.rowStaleEssential : s.row;
-        const targetStyle = isMissingEssential
-          ? { ...s.target, color: '#dc2626' }
-          : s.target;
-        const selectorStyle = isMissingEssential ? s.selectorStale : s.selector;
-        const lastMatchedStyle = isMissing && !isEssential
-          ? s.lastMatchedStaleContextual
-          : s.lastMatched;
-
-        const lastMatchedValue = candidate.lastMatchedAt
-          ? candidate.lastMatchedAt.substring(0, 10)
-          : '—';
-
-        // Determine badge style
-        let badgeStyle: JSX.CSSProperties = { ...s.badge, ...s.badgeSeed };
-        if (candidate.source === 'heuristic') {
-          badgeStyle = { ...s.badge, ...s.badgeHeuristic };
-        } else if (candidate.source === 'llm') {
-          badgeStyle = { ...s.badge, ...s.badgeLlm };
-        } else if (candidate.source === 'user') {
-          badgeStyle = { ...s.badge, ...s.badgeUser };
-        }
-
-        return (
-          <div key={target} style={rowStyle}>
-            <div style={targetStyle}>{target}</div>
-            <div style={selectorStyle} title={candidate.value}>
-              {candidate.value}
-            </div>
-            <div style={s.source}>
-              <div style={badgeStyle}>{candidate.source}</div>
-            </div>
-            <div style={lastMatchedStyle}>
-              {lastMatchedValue}
-              {isMissing && !isEssential && (
-                <span style={s.notSeenAnnotation}>(not seen this session)</span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* HR divider */}
-      <hr style={s.hrDivider} />
-
-      {/* Reset control */}
-      {!confirming ? (
-        <button
-          style={s.resetIdleBtn}
-          onClick={() => setConfirming(true)}
-        >
-          Reset to defaults
-        </button>
-      ) : (
+      {expanded && (
         <>
-          <div style={s.confirmStrip}>
-            <p style={s.confirmMessage}>
-              Reset all selectors to bundled defaults?
-            </p>
-            <div style={s.buttonRow}>
-              <button
-                style={s.cancelBtn}
-                onClick={() => setConfirming(false)}
-              >
-                Cancel
-              </button>
-              <button
-                style={writing ? s.resetNowBtnDisabled : s.resetNowBtn}
-                disabled={writing}
-                onClick={handleConfirmReset}
-              >
-                {writing ? 'Resetting…' : 'Reset now'}
-              </button>
-            </div>
+          {/* Column headers */}
+          <div style={s.columnHeader}>
+            <div style={s.columnHeaderTarget}>Target</div>
+            <div style={s.columnHeaderSelector}>Active selector</div>
+            <div style={s.columnHeaderSource}>Source</div>
+            <div style={s.columnHeaderLastMatched}>Last matched</div>
           </div>
-          {resetError && <div style={s.resetErrorMsg}>{resetError}</div>}
+
+          {/* Data rows */}
+          {targets.map(([target, entry]) => {
+            const candidate = entry.candidates[0];
+            if (!candidate) return null;
+
+            const isMissing = sessionMisses.has(target);
+            const isEssential = FEED_ESSENTIAL.has(target);
+            const isMissingEssential = isMissing && isEssential;
+
+            const rowStyle = isMissingEssential ? s.rowStaleEssential : s.row;
+            const targetStyle = isMissingEssential
+              ? { ...s.target, color: '#dc2626' }
+              : s.target;
+            const selectorStyle = isMissingEssential ? s.selectorStale : s.selector;
+            const lastMatchedStyle = isMissing && !isEssential
+              ? s.lastMatchedStaleContextual
+              : s.lastMatched;
+
+            const lastMatchedValue = candidate.lastMatchedAt
+              ? candidate.lastMatchedAt.substring(0, 10)
+              : '—';
+
+            // Determine badge style
+            let badgeStyle: JSX.CSSProperties = { ...s.badge, ...s.badgeSeed };
+            if (candidate.source === 'heuristic') {
+              badgeStyle = { ...s.badge, ...s.badgeHeuristic };
+            } else if (candidate.source === 'llm') {
+              badgeStyle = { ...s.badge, ...s.badgeLlm };
+            } else if (candidate.source === 'user') {
+              badgeStyle = { ...s.badge, ...s.badgeUser };
+            }
+
+            return (
+              <div key={target} style={rowStyle}>
+                <div style={targetStyle}>{target}</div>
+                <div style={selectorStyle} title={candidate.value}>
+                  {candidate.value}
+                </div>
+                <div style={s.source}>
+                  <div style={badgeStyle}>{candidate.source}</div>
+                </div>
+                <div style={lastMatchedStyle}>
+                  {lastMatchedValue}
+                  {isMissing && !isEssential && (
+                    <span style={s.notSeenAnnotation}>(not seen this session)</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* HR divider */}
+          <hr style={s.hrDivider} />
+
+          {/* Reset control */}
+          {!confirming ? (
+            <button
+              style={s.resetIdleBtn}
+              onClick={() => setConfirming(true)}
+            >
+              Reset to defaults
+            </button>
+          ) : (
+            <>
+              <div style={s.confirmStrip}>
+                <p style={s.confirmMessage}>
+                  Reset all selectors to bundled defaults?
+                </p>
+                <div style={s.buttonRow}>
+                  <button
+                    style={s.cancelBtn}
+                    onClick={() => setConfirming(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    style={writing ? s.resetNowBtnDisabled : s.resetNowBtn}
+                    disabled={writing}
+                    onClick={handleConfirmReset}
+                  >
+                    {writing ? 'Resetting…' : 'Reset now'}
+                  </button>
+                </div>
+              </div>
+              {resetError && <div style={s.resetErrorMsg}>{resetError}</div>}
+            </>
+          )}
         </>
       )}
     </div>

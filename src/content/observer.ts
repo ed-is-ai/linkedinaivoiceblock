@@ -36,10 +36,18 @@ const BASE_DELAY_MS = 500;
 
 async function waitForFeedContainer(): Promise<Element | null> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const el =
-      document.querySelector(resolve('FEED_CONTAINER')) ??
-      document.querySelector(resolve('FEED_CONTAINER_FALLBACK'));
-    if (el) return el;
+    const feedContainerSelector = resolve('FEED_CONTAINER');
+    let el = document.querySelector(feedContainerSelector);
+    if (el) {
+      updateCandidate('FEED_CONTAINER', feedContainerSelector).catch(() => {});
+      return el;
+    }
+    const feedContainerFallbackSelector = resolve('FEED_CONTAINER_FALLBACK');
+    el = document.querySelector(feedContainerFallbackSelector);
+    if (el) {
+      updateCandidate('FEED_CONTAINER_FALLBACK', feedContainerFallbackSelector).catch(() => {});
+      return el;
+    }
     await new Promise<void>((resolve) =>
       setTimeout(resolve, BASE_DELAY_MS * Math.min(attempt + 1, 4))
     );
@@ -56,11 +64,20 @@ async function waitForFeedContainer(): Promise<Element | null> {
 // ---------------------------------------------------------------------------
 
 function extractPostData(card: Element, urn: string): ObservedPost {
-  const innerCard = card.querySelector(resolve('RESHARE_INDICATOR'));
+  const reshareIndicatorSelector = resolve('RESHARE_INDICATOR');
+  const innerCard = card.querySelector(reshareIndicatorSelector);
+  if (innerCard) {
+    updateCandidate('RESHARE_INDICATOR', reshareIndicatorSelector).catch(() => {});
+  }
   const sourceEl = innerCard ?? card;
 
-  const authorAnchor = ([...sourceEl.querySelectorAll(resolve('POST_AUTHOR_LINK'))] as HTMLAnchorElement[])
+  const postAuthorLinkSelector = resolve('POST_AUTHOR_LINK');
+  const authorAnchor = ([...sourceEl.querySelectorAll(postAuthorLinkSelector)] as HTMLAnchorElement[])
     .find(a => (a.textContent ?? '').trim().length > 0) ?? null;
+  if (authorAnchor) {
+    updateCandidate('POST_AUTHOR_LINK', postAuthorLinkSelector).catch(() => {});
+  }
+
   const authorProfileUrl = authorAnchor?.href ?? '';
   const authorName = (
     authorAnchor?.querySelector('strong')?.textContent?.trim() ||
@@ -72,7 +89,12 @@ function extractPostData(card: Element, urn: string): ObservedPost {
   const slugMatch = /\/in\/([^/?#]+)/.exec(authorProfileUrl);
   const authorId = slugMatch?.[1] ?? '';
 
-  const postText = (sourceEl.querySelector(resolve('POST_BODY_TEXT'))?.textContent ?? '').replace(/\s+/g, ' ').trim();
+  const postBodyTextSelector = resolve('POST_BODY_TEXT');
+  const postBodyEl = sourceEl.querySelector(postBodyTextSelector);
+  if (postBodyEl) {
+    updateCandidate('POST_BODY_TEXT', postBodyTextSelector).catch(() => {});
+  }
+  const postText = (postBodyEl?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   return { urn, authorId, authorName, authorProfileUrl, postText, postNode: card };
 }
@@ -104,6 +126,9 @@ function dispatchFromBox(box: Element, onPost: (post: ObservedPost) => void): vo
   }
 
   if (!outermost) return;
+
+  // Track POST_CARD as matched
+  updateCandidate('POST_CARD', 'div[componentkey]').catch(() => {});
 
   const urnAttrSelector = resolve('POST_URN_ATTR');
   const urn = outermost.getAttribute(urnAttrSelector) ?? '';
