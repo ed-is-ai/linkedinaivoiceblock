@@ -1,10 +1,20 @@
 console.log('[LLB] service worker started');
 
-import type { DetectionResult } from '../shared/types';
+import type { DetectionResult, TraceEntry } from '../shared/types';
+import { MODEL_PRICING, computeCostUsd } from '../shared/pricing';
+import { appendTrace } from '../shared/traceStore';
+import { storageSet } from '../shared/storage';
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('[LLB] extension installed');
   chrome.action.setBadgeBackgroundColor({ color: '#0077B5' });
+  // D-06: overwrite, not preserve — pricing constant wins on every load
+  storageSet({ llbModelPricing: MODEL_PRICING }).catch(() => {});
+});
+
+// D-06: overwrite, not preserve — re-seed pricing on browser startup so code edits propagate
+chrome.runtime.onStartup.addListener(() => {
+  storageSet({ llbModelPricing: MODEL_PRICING }).catch(() => {});
 });
 
 // ---------------------------------------------------------------------------
