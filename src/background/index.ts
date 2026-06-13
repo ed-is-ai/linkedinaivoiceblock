@@ -131,13 +131,39 @@ async function scorePost(postText: string): Promise<DetectionResult> {
     throw new Error(`API ${response.status}: ${body}`);
   }
 
-  const data = await response.json() as { content: Array<{ text: string }> };
+  // D-02: widen cast to also read the 4-bucket usage breakdown
+  const data = await response.json() as {
+    content: Array<{ text: string }>;
+    usage: {
+      input_tokens: number;
+      output_tokens: number;
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+    };
+  };
   const raw = data.content[0]?.text ?? '';
   const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
   const parsed = JSON.parse(jsonStr) as { score: number; signals: Record<string, number> };
 
   const score = Math.min(100, Math.max(0, Math.round(parsed.score)));
   const breakdown: Record<string, number> = parsed.signals ?? {};
+
+  // TRACE-01: append success trace with real token/cost breakdown (D-04)
+  const { costUsd, unpriced } = computeCostUsd('claude-sonnet-4-6', data.usage);
+  const successEntry: TraceEntry = {
+    source: 'detector',
+    model: 'claude-sonnet-4-6',
+    systemPrompt: SYSTEM_PROMPT,
+    userPrompt: postText.slice(0, 500),
+    inputTokens: data.usage.input_tokens,
+    outputTokens: data.usage.output_tokens,
+    cacheCreationTokens: data.usage.cache_creation_input_tokens ?? 0,
+    cacheReadTokens: data.usage.cache_read_input_tokens ?? 0,
+    costUsd,
+    unpriced,
+    timestamp: new Date().toISOString(),
+  };
+  await appendTrace(successEntry);
 
   return {
     score,
@@ -373,9 +399,28 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message?.type === 'SCORE_POST') {
-    scorePost(message.postText as string)
+    const postText = message.postText as string;
+    scorePost(postText)
       .then(result => sendResponse({ result }))
-      .catch(err => sendResponse({ error: (err as Error).message }));
+      .catch(async (err: Error) => {
+        // D-03: all attempts produce a trace — error trace has tokens 0, costUsd 0
+        const errorEntry: TraceEntry = {
+          source: 'detector',
+          model: 'claude-sonnet-4-6',
+          systemPrompt: SYSTEM_PROMPT,
+          userPrompt: postText.slice(0, 500),
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheCreationTokens: 0,
+          cacheReadTokens: 0,
+          costUsd: 0,
+          unpriced: false,
+          timestamp: new Date().toISOString(),
+          error: err.message,
+        };
+        await appendTrace(errorEntry);
+        sendResponse({ error: err.message });
+      });
     return true; // keep channel open for async response
   }
 
