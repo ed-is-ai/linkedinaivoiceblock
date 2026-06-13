@@ -23,16 +23,16 @@
 
 ## Adaptive Self-Healing (Wave 2 — recover broken selectors)
 
-- [ ] **ADAPT-01**: The system detects total scraping breakage — zero post-card matches over an active-feed window — guarded against false positives (feed-URL gate, feed-container present, minimum session activity, no-posts placeholder, auth check, rolling debounce) so skeleton/logged-out/non-feed/empty states do not trigger healing.
-- [ ] **ADAPT-02**: On breakage, structural heuristics re-derive candidate selectors locally (no API call) from stable DOM anchors (role/aria/semantic/href/structure).
-- [ ] **ADAPT-03**: No re-derived candidate is trusted or written until it passes a validation gate (minimum match count, author-link ratio, post-text presence, sponsored-contamination rejection, feed-context containment).
-- [ ] **ADAPT-04**: When heuristics produce no valid candidate and an API key is configured, an LLM (Claude) fallback proposes ranked candidates from a sanitized **structural** DOM skeleton (all text/href/src/aria-label stripped — no post content or PII leaves the browser), validated through the same gate.
-- [ ] **ADAPT-05**: LLM fallback is rate-bounded — single-flight latch, ≥5-minute cool-off persisted across service-worker restarts, and a per-day hard cap — and is only reached after heuristics fail.
-- [ ] **ADAPT-06**: LLM responses are strictly validated before use (reject overly-broad selectors such as `body`/`html`/`*`; bounded match count; selector treated as a plain string, never evaluated) to prevent prompt-injection via page content.
-- [ ] **ADAPT-07**: A recovered winning candidate is prepended and persisted, with the previously-active candidate retained so detection auto-recovers if LinkedIn reverts.
-- [ ] **ADAPT-08**: Candidates within a target are ordered by a confidence signal (match count × recency × source weight), not pure insertion order.
-- [ ] **ADAPT-09**: Fixture-DOM tests cover partial breakage, logged-out, skeleton-loader, heal-to-wrong-element rejection, and the reset round-trip; the LLM live-key path is verified by a manual (non-CI) test.
-- [ ] **ADAPT-10**: If the LLM fallback ships, `PRIVACY.md` discloses that a sanitized structural description of the feed layout (no text/PII) may be sent to the Anthropic API to repair broken selectors.
+- [x] **ADAPT-01**: The system detects total scraping breakage — zero post-card matches over an active-feed window — guarded against false positives (feed-URL gate, feed-container present, minimum session activity, no-posts placeholder, auth check, rolling debounce) so skeleton/logged-out/non-feed/empty states do not trigger healing.
+- [x] **ADAPT-02**: On breakage, structural heuristics re-derive candidate selectors locally (no API call) from stable DOM anchors (role/aria/semantic/href/structure).
+- [x] **ADAPT-03**: No re-derived candidate is trusted or written until it passes a validation gate (minimum match count, author-link ratio, post-text presence, sponsored-contamination rejection, feed-context containment).
+- [x] **ADAPT-04**: When heuristics produce no valid candidate and an API key is configured, an LLM (Claude) fallback proposes ranked candidates from a sanitized **structural** DOM skeleton (all text/href/src/aria-label stripped — no post content or PII leaves the browser), validated through the same gate.
+- [x] **ADAPT-05**: LLM fallback is rate-bounded — single-flight latch, ≥5-minute cool-off persisted across service-worker restarts, and a per-day hard cap — and is only reached after heuristics fail.
+- [x] **ADAPT-06**: LLM responses are strictly validated before use (reject overly-broad selectors such as `body`/`html`/`*`; bounded match count; selector treated as a plain string, never evaluated) to prevent prompt-injection via page content.
+- [x] **ADAPT-07**: A recovered winning candidate is prepended and persisted, with the previously-active candidate retained so detection auto-recovers if LinkedIn reverts.
+- [x] **ADAPT-08**: Candidates within a target are ordered by a confidence signal (match count × recency × source weight), not pure insertion order.
+- [x] **ADAPT-09**: Fixture-DOM tests cover partial breakage, logged-out, skeleton-loader, heal-to-wrong-element rejection, and the reset round-trip; the LLM live-key path is verified by a manual (non-CI) test.
+- [x] **ADAPT-10**: If the LLM fallback ships, `PRIVACY.md` discloses that a sanitized structural description of the feed layout (no text/PII) may be sent to the Anthropic API to repair broken selectors.
 
 ---
 
@@ -69,16 +69,16 @@
 | SELECTOR-08 | Phase 22 | Pending |
 | SELECTOR-09 | Phase 22 | Pending |
 | SELECTOR-10 | Phase 22 | Pending |
-| ADAPT-01 | Phase 23 | Pending |
-| ADAPT-02 | Phase 23 | Pending |
-| ADAPT-03 | Phase 23 | Pending |
-| ADAPT-04 | Phase 23 | Pending |
-| ADAPT-05 | Phase 23 | Pending |
-| ADAPT-06 | Phase 23 | Pending |
-| ADAPT-07 | Phase 23 | Pending |
-| ADAPT-08 | Phase 23 | Pending |
-| ADAPT-09 | Phase 23 | Pending |
-| ADAPT-10 | Phase 23 | Pending |
+| ADAPT-01 | Phase 23 | Complete |
+| ADAPT-02 | Phase 23 | Complete |
+| ADAPT-03 | Phase 23 | Complete |
+| ADAPT-04 | Phase 23 | Complete |
+| ADAPT-05 | Phase 23 | Complete |
+| ADAPT-06 | Phase 23 | Complete |
+| ADAPT-07 | Phase 23 | Complete |
+| ADAPT-08 | Phase 23 | Complete |
+| ADAPT-09 | Phase 23 | Complete |
+| ADAPT-10 | Phase 23 | Complete |
 | TRACE-01 | Phase 24 | Planned |
 | TRACE-02 | Phase 24 | Planned |
 | TRACE-03 | Phase 24 | Planned |
