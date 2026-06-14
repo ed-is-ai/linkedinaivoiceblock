@@ -271,7 +271,13 @@ function App() {
           )
         }
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-          <button style={s.actionBtn} onClick={handleExportTraces}>Export Traces</button>
+          <button
+            style={traces.length === 0 ? { ...s.actionBtn, opacity: 0.5, cursor: 'not-allowed' } : s.actionBtn}
+            onClick={handleExportTraces}
+            disabled={traces.length === 0}
+          >
+            Export Traces{traces.length > 0 ? ` (${traces.length})` : ''}
+          </button>
         </div>
         <hr style={{ margin: '16px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
         <div style={s.statLabel}>Cleanse data before:</div>
