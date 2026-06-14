@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import type { FlaggedAccount, DailyStats, StoredPost, SelectorRegistrySchema, SelectorTarget } from '../shared/types';
-import { buildJsonExport, buildCsvExport, buildPostsCsvExport, deriveCleanseCount, filterCleansed } from './dataManagement';
+import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegistrySchema, SelectorTarget } from '../shared/types';
+import { buildJsonExport, buildCsvExport, buildPostsCsvExport, buildTracesExport, deriveCleanseCount, filterCleansed } from './dataManagement';
 import SelectorView from './SelectorView';
 import { buildSeedRegistry } from '../content/selector-registry';
 import { storageSet } from '../shared/storage';
@@ -75,6 +75,7 @@ function App() {
   const [accounts, setAccounts] = useState<FlaggedAccount[]>([]);
   const [stats, setStats] = useState<DailyStats[]>([]);
   const [posts, setPosts] = useState<StoredPost[]>([]);
+  const [traces, setTraces] = useState<TraceEntry[]>([]);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [cleanseDate, setCleanseDate] = useState<string>('');
   const [cleansePreview, setCleansePreview] = useState<{ accountCount: number; postCount: number } | null>(null);
@@ -83,13 +84,14 @@ function App() {
   const [sessionMisses, setSessionMisses] = useState<Set<SelectorTarget>>(new Set());
 
   useEffect(() => {
-    chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'dismissedAccounts', 'selectorRegistry', 'selectorSessionMisses']).then((result: Record<string, any>) => {
+    chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'dismissedAccounts', 'selectorRegistry', 'selectorSessionMisses', 'llbTraces']).then((result: Record<string, any>) => {
       const accts = Object.values(
         (result.flaggedAccounts ?? {}) as Record<string, FlaggedAccount>
       );
       setAccounts(accts);
       setStats((result.dailyStats ?? []) as DailyStats[]);
       setPosts((result.storedPosts ?? []) as StoredPost[]);
+      setTraces((result.llbTraces ?? []) as TraceEntry[]);
       setDismissed((result.dismissedAccounts ?? []) as string[]);
       setSelectorRegistry((result.selectorRegistry as SelectorRegistrySchema) ?? null);
       setSessionMisses(new Set((result.selectorSessionMisses ?? []) as SelectorTarget[]));
@@ -135,6 +137,11 @@ function App() {
   function handleExportPostsCsv(): void {
     const today = new Date().toISOString().slice(0, 10);
     triggerDownload(buildPostsCsvExport(posts), `linkedin-blocker-posts-${today}.csv`, 'text/csv');
+  }
+
+  function handleExportTraces(): void {
+    const today = new Date().toISOString().slice(0, 10);
+    triggerDownload(buildTracesExport(traces), `linkedin-blocker-traces-${today}.json`, 'application/json');
   }
 
   async function handleClean(): Promise<void> {
@@ -263,6 +270,9 @@ function App() {
             </div>
           )
         }
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button style={s.actionBtn} onClick={handleExportTraces}>Export Traces</button>
+        </div>
         <hr style={{ margin: '16px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
         <div style={s.statLabel}>Cleanse data before:</div>
         <input
