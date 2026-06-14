@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: executing
-last_updated: "2026-06-14T13:13:31.350Z"
+last_updated: "2026-06-14T13:21:06.385Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 23
-  completed_plans: 20
+  completed_plans: 21
   percent: 80
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-14
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
@@ -81,8 +81,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Phase 25.1 context gathered — 25.1-CONTEXT.md written. Capture below-FLAG_THRESHOLD posts (index.ts:323), new unflaggedPosts FIFO store (cap 200, dedupe by URN), separate opt-in (off by default), stored UNLABELED, exported as a new top-level unflaggedPosts[] array. NOTE: amends 26-CONTEXT D-07/D-08 — the eval walker must read unflaggedPosts[] too.
-**Next action:** /gsd-plan-phase 25.1, then /gsd-plan-phase 26 (incorporating the unflaggedPosts[] input amendment). Resume file: .planning/phases/25.1-capture-and-export-unflagged-posts-for-eval-negatives/25.1-CONTEXT.md
+**Last action:** Executed 25.1-02 — persistUnflaggedPost FIFO helper (GREEN, TDD) + opt-in gated capture hook in content/index.ts before below-threshold early return. 247 tests pass, tsc clean.
+**Next action:** Execute 25.1-03. Resume file: .planning/phases/25.1-capture-and-export-unflagged-posts-for-eval-negatives/25.1-03-PLAN.md
 
 ## Performance Metrics
 
