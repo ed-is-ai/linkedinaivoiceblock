@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: executing
-last_updated: "2026-06-14T21:12:49.909Z"
-last_activity: 2026-06-14 -- Phase 26 planning complete
+last_updated: "2026-06-14T21:24:09.632Z"
+last_activity: 2026-06-14
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 29
-  completed_plans: 27
+  completed_plans: 28
   percent: 91
 ---
 
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 26 — eval runner
+**Current focus:** Phase 26 — eval-runner
 
 ---
 
 ## Current Position
 
-Phase: 26
-Plan: Not started
+Phase: 26 (eval-runner) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-06-14 -- Phase 26 planning complete
+Last activity: 2026-06-14
 Note: Phase 25 family fully CLOSED — Phase 25 (verified passed, UAT complete), Phase 25.1 (verified 8/8, UAT 5/5), Phase 25.2 (verified 11/11, symmetric three-array export shipped). Phase 26 (eval-runner) already has 26-CONTEXT.md and consumes the new top-level flaggedPosts[]/unflaggedPosts[] arrays. Next: discuss/plan Phase 26.
 
 ## Accumulated Context
@@ -95,3 +95,4 @@ None.
 | Phase 25.1 P04 | 6m | 3 tasks | 3 files |
 | Phase Phase 25.1 PP06 | 4m | 2 tasks tasks | 2 files files |
 | Phase 25.1 P05 | 3m | 1 tasks | 1 files |
+| Phase 26-eval-runner P01 | 8m | 3 tasks | 3 files |
