@@ -277,7 +277,7 @@ Plans:
 ### Phase 25.1: Capture and export unflagged posts for eval negatives (INSERTED)
 
 **Goal:** The detector's below-FLAG_THRESHOLD posts (the clear human-looking negatives dropped today at content/index.ts:323) are captured UNLABELED to a new capped `unflaggedPosts` store, gated behind a new opt-in (OFF by default), and included in the dashboard Export JSON as a new top-level `unflaggedPosts[]` array — supplying real human-negatives for the Phase 26 eval.
-**Requirements**: CAPTURE-01, CAPTURE-02, EXPORT-01
+**Requirements**: CAPTURE-01, CAPTURE-02, EXPORT-04
 **Depends on:** Phase 25
 **Plans:** 4/4 plans complete
 
@@ -288,10 +288,10 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 - [x] 25.1-02-PLAN.md — persistUnflaggedPost FIFO helper + gated below-threshold capture hook before the L323 early return (CAPTURE-01, CAPTURE-02)
-- [x] 25.1-03-PLAN.md — Additive top-level unflaggedPosts[] in buildJsonExport + test (EXPORT-01)
+- [x] 25.1-03-PLAN.md — Additive top-level unflaggedPosts[] in buildJsonExport + test (EXPORT-04)
 
 **Wave 3** *(blocked on Wave 2)*
-- [x] 25.1-04-PLAN.md — Dashboard load+export wiring; popup opt-in toggle + merge-safe settings; 26-CONTEXT unflaggedPosts[] amendment (EXPORT-01, CAPTURE-02)
+- [x] 25.1-04-PLAN.md — Dashboard load+export wiring; popup opt-in toggle + merge-safe settings; 26-CONTEXT unflaggedPosts[] amendment (EXPORT-04, CAPTURE-02)
 
 ### Phase 26: Eval Runner
 
