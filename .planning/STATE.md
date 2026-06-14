@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: executing
-last_updated: "2026-06-14T17:47:07.040Z"
+last_updated: "2026-06-14T17:50:09.628Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 10
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 25
-  completed_plans: 24
-  percent: 80
+  completed_plans: 25
+  percent: 90
 ---
 
 # State — LinkedIn Blocker
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
-Last activity: 2026-06-14 -- 25.1-06 complete: CAPTURE-01/02 + EXPORT-04 defined in REQUIREMENTS.md, ROADMAP reconciled (gap 2 closed)
+Last activity: 2026-06-14 -- 25.1-05 complete: widened Export JSON gate (CR-01 BLOCKER closed); clean/unflagged-only feeds can now export
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
 
 ## Accumulated Context
@@ -82,8 +82,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Executed 25.1-06 (gap closure) — defined CAPTURE-01, CAPTURE-02, EXPORT-04 in REQUIREMENTS.md v9.0 milestone with traceability rows; reconciled ROADMAP Phase 25.1 refs from EXPORT-01 to EXPORT-04 (785d8f0 / e86ecb6). Docs-only; gap 2 (REQUIREMENTS ORPHAN) closed.
-**Next action:** Plan and execute Phase 26 (eval runner). Phase 25.1 complete.
+**Last action:** Executed 25.1-05 (gap closure) — widened dashboard Export JSON button gate to `accounts.length > 0 || posts.length > 0 || unflagged.length > 0`, closing CR-01 (BLOCKER); type-check + 251 tests pass (a5eb0e2).
+**Next action:** Re-verify Phase 25.1 (CR-01 closed). Then plan and execute Phase 26 (eval runner).
 
 ## Performance Metrics
 
@@ -93,3 +93,4 @@ None.
 | Phase 25.1 P03 | 102s | 1 task | 2 files |
 | Phase 25.1 P04 | 6m | 3 tasks | 3 files |
 | Phase Phase 25.1 PP06 | 4m | 2 tasks tasks | 2 files files |
+| Phase 25.1 P05 | 3m | 1 tasks | 1 files |
