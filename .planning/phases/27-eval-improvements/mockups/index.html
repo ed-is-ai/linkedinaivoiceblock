@@ -22,23 +22,23 @@
 <div class="page">
   <h1>Evals dashboard — mockup options</h1>
   <div class="crumb">Three design directions for a future in-extension "Evals" page.</div>
-  <div class="note"><b>Status:</b> throwaway mockups only. Phase 27 ships the <b>CLI-first</b> eval (npm run eval / eval-label / eval-compare). These sketch what a later phase's dashboard page could look like once the pure eval core lives in <code>src/shared/eval/</code> and can be reused by both the CLI and the page. Pick a direction (or mix) before that phase is planned.</div>
+  <div class="note"><b>Decision:</b> ship <b>Option A</b> (single-page console) as the Phase 28 layout. The data model is built to support <b>Option C</b>'s run-history + compare view from day one (see <a href="./DATA-MODEL.md">DATA-MODEL.md</a>), so C can be added later as pure UI — no data migration. Phase 27 ships the <b>CLI-first</b> eval (npm run eval / eval-label / eval-compare) and emits a run record that the dashboard reuses directly.</div>
 
-  <a class="opt" href="./evals-option-a-console.html">
-    <h2>Option A — Single-page console →</h2>
-    <p>Everything in one scrollable column: run controls, metrics, threshold sweep, error analysis, labeling, compare. Mirrors the existing Feed Health dashboard 1:1.</p>
+  <a class="opt" style="border-color:#0a66c2;border-width:2px" href="./evals-option-a-console.html">
+    <h2>✅ Option A — Single-page console (SELECTED) →</h2>
+    <p>Everything in one scrollable column: run controls, metrics, threshold sweep, error analysis, labeling, compare. Mirrors the existing Feed Health dashboard 1:1. Its "Compare to previous run" card is powered by the same run-history store Option C would use.</p>
     <div class="tags"><b>Best for:</b> lowest build cost, familiarity · <b>Trade-off:</b> long page as features grow</div>
   </a>
 
   <a class="opt" href="./evals-option-b-tabs.html">
-    <h2>Option B — Tabbed workspace →</h2>
+    <h2>Option B — Tabbed workspace (reference) →</h2>
     <p>One tab per deliverable: Run · Label · Results · Compare. Each view is focused; labeling becomes a dedicated click-to-label queue with a progress bar.</p>
     <div class="tags"><b>Best for:</b> clean separation, scales well · <b>Trade-off:</b> more navigation, hides cross-view context</div>
   </a>
 
   <a class="opt" href="./evals-option-c-runhistory.html">
-    <h2>Option C — Run history / compare-first →</h2>
-    <p>Master–detail: left sidebar lists every stored run; right pane shows the selected run with a live Δ column against a pinned comparison run. Built around tracking quality over time.</p>
+    <h2>Option C — Run history / compare-first (data ready, UI deferred) →</h2>
+    <p>Master–detail: left sidebar lists every stored run; right pane shows the selected run with a live Δ column against a pinned comparison run. The data structures behind this (<code>EvalRunStore</code>, <code>EvalRunSummary</code>, <code>compareRuns</code>) are defined in <a href="./DATA-MODEL.md">DATA-MODEL.md</a> and land in Phase 27, so this view is a later UI-only addition over Option A.</p>
     <div class="tags"><b>Best for:</b> the diff-over-time use case (D-07) · <b>Trade-off:</b> widest layout, heaviest to build</div>
   </a>
 </div>

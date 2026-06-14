@@ -353,11 +353,10 @@ Plans:
 **Goal:** Bring the eval workflow into the extension as a dedicated "Evals" dashboard page — run heuristic/LLM evals against the labeled dataset already in `chrome.storage.local`, label posts with clicks instead of editing JSON, and read metrics / error analysis / run-over-run diffs in the UI instead of the terminal. The LLM path routes through the existing service-worker `SCORE_POST` relay; the heuristic path runs `HeuristicDetector` in-page.
 **Depends on:** Phase 27 (specifically the pure eval core extracted to `src/shared/eval/`, which both the CLI and this page consume).
 **Status:** Future / not yet planned. Deferred from Phase 27 to keep that phase CLI-first.
-**Design mockups (3 directions):** `.planning/phases/27-eval-improvements/mockups/index.html`
-  - Option A — single-page console (lowest build cost)
-  - Option B — tabbed workspace (Run · Label · Results · Compare)
-  - Option C — run-history / compare-first master–detail (optimised for diffing over time)
-**Open decisions for planning:** which layout direction (or hybrid); cost guardrail for one-click LLM runs over large datasets; whether eval runs persist to `chrome.storage.local` or download.
+**Layout:** **Option A — single-page console (SELECTED).** See `.planning/phases/27-eval-improvements/mockups/index.html`.
+**Data model:** `.planning/phases/27-eval-improvements/mockups/DATA-MODEL.md` — canonical `EvalRun` record + `EvalRunSummary`/`compareRuns`/`EvalRunStore`. Phase 27 emits a conformant per-run record and houses the shared run/comparison types in `src/shared/eval/`, so **Option C (run-history + diff) becomes a pure UI addition later — no data migration.**
+**Phase 28 net-new work:** `EvalRunStore` persistence to `chrome.storage.local` (capped FIFO, mirrors `llbTraces`) + the Option A page UI. Option C is an optional later UI over the same types.
+**Open decisions for planning:** cost guardrail for one-click LLM runs over large datasets; whether eval runs persist to `chrome.storage.local`, download, or both.
 
 **Plans:** TBD (run /gsd-plan-phase 28 to break down)
 
