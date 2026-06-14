@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 25
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-13
+Plan: 2 plans (25-01 dashboard export button, 25-02 trace-summary script + README)
+Status: Planned — ready to execute
+Last activity: 2026-06-14
 
 ## Accumulated Context
 
@@ -70,6 +70,6 @@ None.
 
 ## Session Continuity
 
-**Last updated:** 2026-06-13
-**Last action:** Phase 22 closed out. All 5 plans executed; 22-04 (dashboard Selector Health panel + inline-confirm reset) human-verified and approved, 22-04-SUMMARY.md written. Phase 23 (Self-Healing Selector Adapter) is fully planned (23-01..23-04 + 23-AI-SPEC) and ready to execute. Phase 23 groundwork committed: full updateCandidate runtime match-tracking in observer.ts + collapsible/traffic-light health-staleness UI in SelectorView.tsx.
-**Next action:** `/gsd-execute-phase 23`
+**Last updated:** 2026-06-14
+**Last action:** Phase 25 planned. Skipped research + UI-SPEC (locked CONTEXT, trivial button clone). gsd-pattern-mapper produced 25-PATTERNS.md; gsd-planner produced 2 plans (25-01 Export Traces button + buildTracesExport pure builder, TRACE-04; 25-02 trace-summary tsx script + idempotent README ## LLM Cost Reference, TRACE-05/06), both wave 1, disjoint files. gsd-plan-checker PASSED (0 blockers); its lone warning — require() in node -e under "type":"module" — was empirically confirmed a false positive (Node defaults --eval to CJS), no edit made.
+**Next action:** `/gsd-execute-phase 25`
