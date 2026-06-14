@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: ready_to_plan
-last_updated: 2026-06-14T11:30:00.000Z
+status: Ready to discuss
+last_updated: "2026-06-14T12:32:35.329Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 9
@@ -11,7 +11,6 @@ progress:
   total_plans: 19
   completed_plans: 19
   percent: 89
-stopped_at: Phases 18–25 complete (v7.0 Adaptive DOM Scraper + v8.0 Observability done). Phase 26 (Eval Runner, v9.0) is the only remaining phase.
 ---
 
 # State — LinkedIn Blocker
