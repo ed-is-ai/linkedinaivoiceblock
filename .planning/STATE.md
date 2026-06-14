@@ -4,7 +4,7 @@ milestone: v9.0
 milestone_name: Eval Harness
 status: ready_to_plan
 last_updated: 2026-06-14T20:40:05.357Z
-last_activity: 2026-06-14 -- Phase 25.2 execution started
+last_activity: 2026-06-14 -- Phase 25.2 complete (2/2, verified 11/11); phase 25 family closed
 progress:
   total_phases: 11
   completed_phases: 9
@@ -31,7 +31,7 @@ Phase: 26
 Plan: Not started
 Status: Ready to plan
 Last activity: 2026-06-14
-Note: Phase 25.1 COMPLETE (verified 8/8, UAT 5/5). Phase 25.2 inserted between 25.1 and 26 (symmetric export redesign: blockedAccounts + flaggedPosts + unflaggedPosts) — UAT-driven follow-on from 25.1. Phase 26 (eval-runner) already has 26-CONTEXT.md. Recommended order: discuss/plan/execute 25.2, then plan 26.
+Note: Phase 25 family fully CLOSED — Phase 25 (verified passed, UAT complete), Phase 25.1 (verified 8/8, UAT 5/5), Phase 25.2 (verified 11/11, symmetric three-array export shipped). Phase 26 (eval-runner) already has 26-CONTEXT.md and consumes the new top-level flaggedPosts[]/unflaggedPosts[] arrays. Next: discuss/plan Phase 26.
 
 ## Accumulated Context
 

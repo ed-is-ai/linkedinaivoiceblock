@@ -353,4 +353,5 @@ Plans:
 | 24. Trace Capture & Storage | v8.0 | 2/2 | Complete    | 2026-06-13 |
 | 25. Dashboard Export + README Script | v8.0 | 2/2 | Complete    | 2026-06-14 |
 | 25.1. Capture & Export Unflagged Posts | v9.0 | 6/6 | Complete    | 2026-06-14 |
+| 25.2. Symmetric Export Redesign | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
