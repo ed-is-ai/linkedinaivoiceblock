@@ -119,6 +119,7 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 
 - [x] **Phase 26: Eval Runner** - Labeled-JSON input format (extends existing export); eval script feeding posts through LLM classifier; precision/recall/F1/cost metrics; results written to `eval/results-YYYY-MM-DD.json` (completed 2026-06-14)
 - [ ] **Phase 27: Eval Improvements** - Align eval with the shipped detector engine (heuristic/LLM selectable); error analysis (FP/FN at best-F1); labeling workflow; results viewer + run comparison
+- [ ] **Phase 28: Evals Dashboard (future)** - In-extension "Evals" dashboard page reusing the pure eval core extracted to `src/shared/eval/`: run heuristic/LLM evals from storage, click-to-label, view metrics + error analysis, diff runs over time. Mockups: `.planning/phases/27-eval-improvements/mockups/`
 
 ---
 
@@ -346,6 +347,19 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [ ] 27-03-PLAN.md — Results viewer / run comparison CLI (npm run eval-compare) (EVAL-09)
+
+### Phase 28: Evals Dashboard (future)
+
+**Goal:** Bring the eval workflow into the extension as a dedicated "Evals" dashboard page — run heuristic/LLM evals against the labeled dataset already in `chrome.storage.local`, label posts with clicks instead of editing JSON, and read metrics / error analysis / run-over-run diffs in the UI instead of the terminal. The LLM path routes through the existing service-worker `SCORE_POST` relay; the heuristic path runs `HeuristicDetector` in-page.
+**Depends on:** Phase 27 (specifically the pure eval core extracted to `src/shared/eval/`, which both the CLI and this page consume).
+**Status:** Future / not yet planned. Deferred from Phase 27 to keep that phase CLI-first.
+**Design mockups (3 directions):** `.planning/phases/27-eval-improvements/mockups/index.html`
+  - Option A — single-page console (lowest build cost)
+  - Option B — tabbed workspace (Run · Label · Results · Compare)
+  - Option C — run-history / compare-first master–detail (optimised for diffing over time)
+**Open decisions for planning:** which layout direction (or hybrid); cost guardrail for one-click LLM runs over large datasets; whether eval runs persist to `chrome.storage.local` or download.
+
+**Plans:** TBD (run /gsd-plan-phase 28 to break down)
 
 ---
 

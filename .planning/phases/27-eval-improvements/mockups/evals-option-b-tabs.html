@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evals — Option B: Tabbed workspace</title>
+<style>
+  :root{
+    --blue:#0a66c2; --ink:#1a1a1a; --label:#6b7280; --sub:#9ca3af;
+    --border:#e5e7eb; --track:#f3f4f6; --amber:#f59e0b; --red:#dc2626; --green:#059669;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+  .page{max-width:760px;margin:40px auto;padding:0 24px}
+  .mockup-note{font-size:11px;color:var(--sub);background:#fff8e1;border:1px solid #f4d35e;border-radius:6px;padding:8px 12px;margin-bottom:20px}
+  h1{font-size:22px;font-weight:700;margin:0 0 6px}
+  .crumb{font-size:13px;color:var(--label);margin-bottom:20px}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px}
+  .tab{padding:10px 18px;font-size:14px;color:var(--label);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  .tab .dot{display:inline-block;min-width:18px;text-align:center;font-size:11px;background:var(--track);border-radius:10px;padding:0 6px;margin-left:6px;color:#374151;font-weight:600}
+  .panel{display:none}
+  .panel.active{display:block}
+  .card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:16px}
+  .card-heading{font-size:13px;font-weight:600;color:#374151;margin-bottom:12px}
+  .label{font-size:13px;color:var(--label);margin-bottom:6px}
+  .sub{font-size:12px;color:var(--sub);margin-top:4px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .toggle{padding:6px 16px;border:1px solid #d1d5db;border-radius:20px;background:#fff;cursor:pointer;font-size:13px}
+  .toggle.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:600}
+  select{padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;background:#fff}
+  .btn{padding:6px 16px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px}
+  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .metric{background:var(--track);border-radius:8px;padding:14px}
+  .metric .v{font-size:28px;font-weight:700;color:var(--blue);line-height:1.1}
+  .metric .k{font-size:11px;color:var(--label);margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--track)}
+  th{color:var(--label);font-weight:600}
+  tr.best td{background:#eff6ff;font-weight:600}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;margin:0 4px 4px 0;background:var(--track);color:#374151}
+  .pill.hot{background:#fee2e2;color:#991b1b}
+  .lbl-card{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
+  .lbl-card .pt{font-size:13px;color:#374151;margin-bottom:10px}
+  .lbl-card .meta{font-size:11px;color:var(--sub);margin-bottom:10px}
+  .seg{display:inline-flex;border:1px solid #d1d5db;border-radius:6px;overflow:hidden}
+  .seg button{border:none;background:#fff;padding:6px 16px;font-size:12px;cursor:pointer;font-weight:600}
+  .seg button.ai{color:var(--red)} .seg button.human{color:var(--green)}
+  .seg button.sel-ai{background:var(--red);color:#fff} .seg button.sel-human{background:var(--green);color:#fff}
+  .prog{height:6px;background:var(--track);border-radius:3px;overflow:hidden;margin:4px 0 14px}
+  .prog>div{height:100%;background:var(--blue);width:62%}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mockup-note">THROWAWAY MOCKUP · Option B — Tabbed workspace · future "Evals" dashboard page (deferred from Phase 27, CLI-first ships first)</div>
+  <h1>LinkedIn Blocker — Evals</h1>
+  <div class="crumb">One tab per Phase 27 deliverable. Focused views; scales as features grow.</div>
+
+  <div class="tabs">
+    <div class="tab">Run</div>
+    <div class="tab active">Label <span class="dot">18</span></div>
+    <div class="tab">Results</div>
+    <div class="tab">Compare</div>
+  </div>
+
+  <!-- LABEL PANEL (active) -->
+  <div class="panel active">
+    <div class="card">
+      <div class="card-heading">Labeling — 18 unlabeled posts</div>
+      <div class="sub">112 of 130 labeled</div>
+      <div class="prog"><div></div></div>
+      <div class="row"><button class="btn">Auto: flagged→AI · unflagged→Human</button><span class="sub">Dry-run shows counts before writing to storage</span></div>
+    </div>
+
+    <div class="lbl-card">
+      <div class="pt">"Excited to announce I'm joining @company as Head of Growth! 🚀 Grateful for this incredible journey and the amazing people who believed in me."</div>
+      <div class="meta">unflaggedPosts[7] · heuristic score 58 · author @sam-builds</div>
+      <div class="seg"><button class="ai">AI</button><button class="human sel-human">Human</button></div>
+    </div>
+    <div class="lbl-card">
+      <div class="pt">"Unpopular opinion: most productivity advice is noise. Here's what actually moved the needle for me this year — and it's not what you think. 🧵"</div>
+      <div class="meta">flaggedPosts[3] · heuristic score 67 · author @growth-guru</div>
+      <div class="seg"><button class="ai sel-ai">AI</button><button class="human">Human</button></div>
+    </div>
+    <div class="lbl-card">
+      <div class="pt">"Just wrapped a 3-hour deep-dive on retrieval pipelines with the team. Detailed notes in the comments for anyone interested."</div>
+      <div class="meta">unflaggedPosts[12] · heuristic score 31 · author @dev-marcus</div>
+      <div class="seg"><button class="ai">AI</button><button class="human">Human</button></div>
+    </div>
+  </div>
+
+  <!-- (inactive panels rendered below for visual reference) -->
+  <div class="panel" style="display:block;opacity:.45;pointer-events:none;margin-top:32px">
+    <div class="crumb" style="font-weight:600">▾ Run tab (preview)</div>
+    <div class="card">
+      <div class="card-heading">Run an eval</div>
+      <div class="label">Engine</div>
+      <div class="row" style="margin-bottom:12px"><button class="toggle active">Heuristic</button><button class="toggle">LLM (~$0.07)</button></div>
+      <div class="row"><select><option>chrome.storage.local — 130 labeled</option></select><button class="btn primary">▶ Run</button></div>
+    </div>
+    <div class="crumb" style="font-weight:600">▾ Results tab (preview)</div>
+    <div class="card">
+      <div class="metrics">
+        <div class="metric"><div class="v">0.86</div><div class="k">F1</div></div>
+        <div class="metric"><div class="v">0.89</div><div class="k">Precision</div></div>
+        <div class="metric"><div class="v">0.83</div><div class="k">Recall</div></div>
+        <div class="metric"><div class="v">60</div><div class="k">Best thr.</div></div>
+      </div>
+      <table style="margin-top:14px">
+        <tr><th>Threshold</th><th>P</th><th>R</th><th>F1</th></tr>
+        <tr><td>50</td><td>0.82</td><td>0.89</td><td>0.85</td></tr>
+        <tr class="best"><td>60 ◀</td><td>0.89</td><td>0.83</td><td>0.86</td></tr>
+        <tr><td>70</td><td>0.93</td><td>0.72</td><td>0.81</td></tr>
+      </table>
+      <div class="card-heading" style="margin-top:16px">Top false positive</div>
+      <div class="sub">score 64 · true human · @jane-recruiter</div>
+      <div style="margin-top:6px"><span class="pill hot">buzzwords +28</span><span class="pill hot">cta +18</span><span class="pill">em-dash +12</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
