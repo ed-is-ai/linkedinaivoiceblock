@@ -12,24 +12,11 @@
  *     wrapper that captures process.exit throws.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
-// fs mock — no real disk access
-// ---------------------------------------------------------------------------
-
-vi.mock('fs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('fs')>();
-  return {
-    ...actual,
-    readFileSync: vi.fn(),
-    writeFileSync: vi.fn(),
-    mkdirSync: vi.fn(),
-  };
-});
-
-// ---------------------------------------------------------------------------
-// fetch stub — no real network calls
+// fetch stub — no real network calls (the guard tests below exit before any
+// scoring, but keep the stub so an accidental classifyPost never hits the wire)
 // ---------------------------------------------------------------------------
 
 const fetchMock = vi.fn();
@@ -40,10 +27,15 @@ beforeEach(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Import the pure functions under test (after mocks are set up)
+// Imports under test. The eval CLI reads input through the real fs, so the
+// EVAL-05 guard tests below drive it with real temp files rather than mocking
+// the `fs` module (eval.ts's `fs` import does not pick up a vi.mock('fs')).
 // ---------------------------------------------------------------------------
 
-import { collectLabeled, computeMetrics, safe } from './eval';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { collectLabeled, computeMetrics, safe, loadExport, main } from './eval';
 
 // ---------------------------------------------------------------------------
 // EVAL-01: Walker
@@ -222,5 +214,144 @@ describe('safe()', () => {
   it('converts Infinity to 0', () => {
     expect(safe(Infinity)).toBe(0);
     expect(safe(-Infinity)).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// EVAL-05: bad-input exit codes — loadExport() + main() guard paths
+//
+// process.exit is stubbed to throw a sentinel so execution halts at each guard
+// exactly as it would in the real CLI, and the thrown code is asserted.
+// ---------------------------------------------------------------------------
+
+const EXIT = '__exit__';
+
+/** Create a real temp dir for fixture files and clean it up after each test. */
+function useTempDir() {
+  const ctx = { dir: '' };
+  beforeEach(() => {
+    ctx.dir = mkdtempSync(join(tmpdir(), 'llb-eval-'));
+  });
+  afterEach(() => {
+    rmSync(ctx.dir, { recursive: true, force: true });
+  });
+  return ctx;
+}
+
+/**
+ * Stub process.exit to throw a sentinel so execution halts at each guard, plus
+ * silence stderr (and optionally stdout). Spies are (re)created per test so each
+ * one gets a fresh call history.
+ */
+function stubExitAndStreams(streams: { stdout?: boolean } = {}) {
+  const spies: {
+    exit: ReturnType<typeof vi.spyOn>;
+    stderr: ReturnType<typeof vi.spyOn>;
+    stdout?: ReturnType<typeof vi.spyOn>;
+  } = { exit: undefined as never, stderr: undefined as never };
+  beforeEach(() => {
+    spies.exit = vi.spyOn(process, 'exit').mockImplementation((code?: number): never => {
+      throw new Error(`${EXIT}${code}`);
+    });
+    spies.stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    if (streams.stdout) {
+      spies.stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    }
+  });
+  afterEach(() => {
+    spies.exit.mockRestore();
+    spies.stderr.mockRestore();
+    spies.stdout?.mockRestore();
+  });
+  return spies;
+}
+
+describe('loadExport (EVAL-05 — file/parse/shape guards)', () => {
+  const tmp = useTempDir();
+  const spies = stubExitAndStreams();
+
+  const writeFixture = (name: string, content: string): string => {
+    const p = join(tmp.dir, name);
+    writeFileSync(p, content, 'utf8');
+    return p;
+  };
+
+  it('exits 1 when the file cannot be read', () => {
+    const missing = join(tmp.dir, 'does-not-exist.json');
+    expect(() => loadExport(missing)).toThrow(`${EXIT}1`);
+    expect(spies.stderr).toHaveBeenCalledWith(expect.stringContaining('Could not read or parse file'));
+  });
+
+  it('exits 1 on unparseable JSON', () => {
+    const p = writeFixture('bad.json', 'this is not json');
+    expect(() => loadExport(p)).toThrow(`${EXIT}1`);
+  });
+
+  it('exits 1 on valid JSON that is `null` (CR-01 regression)', () => {
+    const p = writeFixture('null.json', 'null');
+    expect(() => loadExport(p)).toThrow(`${EXIT}1`);
+    expect(spies.stderr).toHaveBeenCalledWith(expect.stringContaining('Could not read or parse file'));
+  });
+
+  it('exits 1 on valid JSON that is an array (non-object shape)', () => {
+    const p = writeFixture('array.json', '[]');
+    expect(() => loadExport(p)).toThrow(`${EXIT}1`);
+  });
+
+  it('exits 1 when flaggedPosts / unflaggedPosts are not both arrays', () => {
+    const p = writeFixture('partial.json', JSON.stringify({ flaggedPosts: [] }));
+    expect(() => loadExport(p)).toThrow(`${EXIT}1`);
+    expect(spies.stderr).toHaveBeenCalledWith(expect.stringContaining('flaggedPosts'));
+  });
+
+  it('returns the two arrays on a well-formed export', () => {
+    const p = writeFixture(
+      'good.json',
+      JSON.stringify({ flaggedPosts: [{ text: 't', label: 'ai' }], unflaggedPosts: [] }),
+    );
+    const out = loadExport(p);
+    expect(out.flaggedPosts).toHaveLength(1);
+    expect(out.unflaggedPosts).toHaveLength(0);
+  });
+});
+
+describe('main (EVAL-05 — argv / api-key / no-label guards)', () => {
+  const tmp = useTempDir();
+  const spies = stubExitAndStreams({ stdout: true });
+  const origArgv = process.argv;
+  const origKey = process.env['ANTHROPIC_API_KEY'];
+
+  afterEach(() => {
+    process.argv = origArgv;
+    if (origKey === undefined) delete process.env['ANTHROPIC_API_KEY'];
+    else process.env['ANTHROPIC_API_KEY'] = origKey;
+  });
+
+  const writeFixture = (content: object): string => {
+    const p = join(tmp.dir, 'export.json');
+    writeFileSync(p, JSON.stringify(content), 'utf8');
+    return p;
+  };
+
+  it('exits 1 when no input file argument is supplied', async () => {
+    process.argv = ['node', 'eval.ts'];
+    await expect(main()).rejects.toThrow(`${EXIT}1`);
+    expect(spies.stderr).toHaveBeenCalledWith(expect.stringContaining('Usage:'));
+  });
+
+  it('exits 1 when ANTHROPIC_API_KEY is not set', async () => {
+    const p = writeFixture({ flaggedPosts: [], unflaggedPosts: [] });
+    process.argv = ['node', 'eval.ts', p];
+    delete process.env['ANTHROPIC_API_KEY'];
+    await expect(main()).rejects.toThrow(`${EXIT}1`);
+    expect(spies.stderr).toHaveBeenCalledWith(expect.stringContaining('ANTHROPIC_API_KEY'));
+  });
+
+  it('exits 1 when the export contains no labeled posts', async () => {
+    const p = writeFixture({ flaggedPosts: [{ text: 'no label' }], unflaggedPosts: [] });
+    process.argv = ['node', 'eval.ts', p];
+    process.env['ANTHROPIC_API_KEY'] = 'sk-test';
+    await expect(main()).rejects.toThrow(`${EXIT}1`);
+    expect(spies.stderr).toHaveBeenCalledWith(expect.stringContaining('No labeled posts'));
   });
 });
