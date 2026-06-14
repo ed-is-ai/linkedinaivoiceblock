@@ -57,7 +57,18 @@ interface GroupStats {
 
 const groups = new Map<string, GroupStats>();
 
-for (const entry of parsed.traces) {
+for (const rawEntry of parsed.traces) {
+  // Guard against null / non-object elements in untrusted input (CR-01).
+  // parsed.traces is cast from JSON.parse, so elements may be null/primitives at runtime.
+  if (rawEntry === null || typeof rawEntry !== 'object') {
+    process.stderr.write(`Warning: skipping non-object trace entry: ${JSON.stringify(rawEntry as unknown)}\n`);
+    continue;
+  }
+
+  // rawEntry is declared TraceEntry, but the JSON is untrusted — after the
+  // object guard above it is safe to treat as a (possibly partial) TraceEntry.
+  const entry = rawEntry;
+
   const key = `${entry.source}\0${entry.model}`;
   if (!groups.has(key)) {
     groups.set(key, {
@@ -76,19 +87,25 @@ for (const entry of parsed.traces) {
     // Failed call — track separately, exclude from token/USD columns
     g.failed += 1;
   } else {
+    // Coerce untrusted numeric fields — non-finite values must not propagate
+    // NaN into the table / README (WR-01).
+    const safe = (n: number): number => (Number.isFinite(n) ? n : 0);
+    const inputTokens = safe(entry.inputTokens);
+    const outputTokens = safe(entry.outputTokens);
+
     // Successful call — recompute cost via shared module (D-01/D-01a)
     const usage = {
-      input_tokens: entry.inputTokens,
-      output_tokens: entry.outputTokens,
-      cache_creation_input_tokens: entry.cacheCreationTokens,
-      cache_read_input_tokens: entry.cacheReadTokens,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      cache_creation_input_tokens: safe(entry.cacheCreationTokens),
+      cache_read_input_tokens: safe(entry.cacheReadTokens),
     };
     const { costUsd } = computeCostUsd(entry.model, usage);
 
     g.calls += 1;
-    g.inputTokens += entry.inputTokens;
-    g.outputTokens += entry.outputTokens;
-    g.totalUsd += costUsd;
+    g.inputTokens += inputTokens;
+    g.outputTokens += outputTokens;
+    g.totalUsd += safe(costUsd);
   }
 }
 
