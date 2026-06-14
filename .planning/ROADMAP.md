@@ -279,12 +279,12 @@ Plans:
 **Goal:** The detector's below-FLAG_THRESHOLD posts (the clear human-looking negatives dropped today at content/index.ts:323) are captured UNLABELED to a new capped `unflaggedPosts` store, gated behind a new opt-in (OFF by default), and included in the dashboard Export JSON as a new top-level `unflaggedPosts[]` array — supplying real human-negatives for the Phase 26 eval.
 **Requirements**: CAPTURE-01, CAPTURE-02, EXPORT-01
 **Depends on:** Phase 25
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
 
 **Wave 1**
-- [ ] 25.1-01-PLAN.md — UnflaggedPost type + unflaggedPosts StorageSchema key + captureUnflaggedPosts Settings field (CAPTURE-01)
+- [x] 25.1-01-PLAN.md — UnflaggedPost type + unflaggedPosts StorageSchema key + captureUnflaggedPosts Settings field (CAPTURE-01)
 
 **Wave 2** *(blocked on Wave 1)*
 - [ ] 25.1-02-PLAN.md — persistUnflaggedPost FIFO helper + gated below-threshold capture hook before the L323 early return (CAPTURE-01, CAPTURE-02)
@@ -339,5 +339,5 @@ Plans:
 | 23. Self-Healing Selector Adapter | v7.0 | 4/4 | Complete    | 2026-06-13 |
 | 24. Trace Capture & Storage | v8.0 | 2/2 | Complete    | 2026-06-13 |
 | 25. Dashboard Export + README Script | v8.0 | 2/2 | Complete    | 2026-06-14 |
-| 25.1. Capture & Export Unflagged Posts | v9.0 | 0/4 | Planned | - |
+| 25.1. Capture & Export Unflagged Posts | v9.0 | 1/4 | In Progress|  |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |

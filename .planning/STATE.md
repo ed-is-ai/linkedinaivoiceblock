@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: executing
-last_updated: "2026-06-14T13:08:30.742Z"
-last_activity: 2026-06-14 -- Phase 25.1 planning complete
+last_updated: "2026-06-14T13:13:31.350Z"
+last_activity: 2026-06-14
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 23
-  completed_plans: 19
+  completed_plans: 20
   percent: 80
 ---
 
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 25.1 — capture & export unflagged posts (eval negatives), then Phase 26 eval runner
+**Current focus:** Phase 25.1 — capture-and-export-unflagged-posts-for-eval-negatives
 
 ---
 
 ## Current Position
 
-Phase: 25.1
-Plan: Not planned yet (INSERTED) — no plans
+Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-14 -- Phase 25.1 planning complete
+Last activity: 2026-06-14
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
 
 ## Accumulated Context
