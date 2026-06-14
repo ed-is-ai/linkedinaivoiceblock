@@ -255,16 +255,16 @@ function App() {
         <div style={s.cardHeading}>Data management</div>
         {loadError && <div style={s.errorMsg}>{loadError}</div>}
         <div style={s.statLabel}>Export data</div>
-        {accounts.length === 0
-          ? <div style={s.statSub}>No flagged accounts yet — browse LinkedIn to collect data.</div>
-          : (
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button style={s.actionBtn} onClick={handleExportJson}>Export JSON</button>
-              <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts CSV</button>
-            </div>
-          )
-        }
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        {accounts.length === 0 && (
+          <div style={s.statSub}>No flagged accounts yet — browse LinkedIn to collect data.</div>
+        )}
+        <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+          {accounts.length > 0 && (
+            <button style={s.actionBtn} onClick={handleExportJson}>Export JSON</button>
+          )}
+          {accounts.length > 0 && (
+            <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts CSV</button>
+          )}
           <button
             style={traces.length === 0 ? { ...s.actionBtn, opacity: 0.5, cursor: 'not-allowed' } : s.actionBtn}
             onClick={handleExportTraces}
