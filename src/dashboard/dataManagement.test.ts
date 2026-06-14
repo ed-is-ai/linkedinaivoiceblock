@@ -7,7 +7,7 @@ import {
   buildPostsCsvExport,
   buildTracesExport,
 } from './dataManagement';
-import type { FlaggedAccount, StoredPost, TraceEntry } from '../shared/types';
+import type { FlaggedAccount, StoredPost, TraceEntry, UnflaggedPost } from '../shared/types';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -68,6 +68,19 @@ describe('csvEscape', () => {
   });
 });
 
+function makeUnflagged(overrides: Partial<UnflaggedPost> = {}): UnflaggedPost {
+  return {
+    urn: 'urn:li:activity:99',
+    authorId: 'user99',
+    authorName: 'Unflagged User',
+    score: 30,
+    text: 'A perfectly normal post.',
+    seenAt: 1748600000000,
+    engineUsed: 'heuristic',
+    ...overrides,
+  };
+}
+
 // ─── buildJsonExport ─────────────────────────────────────────────────────────
 
 describe('buildJsonExport', () => {
@@ -117,6 +130,43 @@ describe('buildJsonExport', () => {
     const parsed = JSON.parse(buildJsonExport([], []));
     expect(parsed).not.toHaveProperty('dailyStats');
     expect(parsed).not.toHaveProperty('dismissedAccounts');
+  });
+
+  it('two-arg call yields a top-level unflaggedPosts equal to []', () => {
+    const parsed = JSON.parse(buildJsonExport([], []));
+    expect(parsed).toHaveProperty('unflaggedPosts');
+    expect(parsed.unflaggedPosts).toEqual([]);
+  });
+
+  it('three-arg call with one UnflaggedPost yields unflaggedPosts of length 1 with correct fields', () => {
+    const post = makeUnflagged({ seenAt: 1748600000000, label: 'negative' });
+    const parsed = JSON.parse(buildJsonExport([], [], [post]));
+    expect(parsed.unflaggedPosts).toHaveLength(1);
+    const entry = parsed.unflaggedPosts[0];
+    expect(entry.urn).toBe('urn:li:activity:99');
+    expect(entry.authorId).toBe('user99');
+    expect(entry.authorName).toBe('Unflagged User');
+    expect(entry.score).toBe(30);
+    expect(entry.text).toBe('A perfectly normal post.');
+    expect(entry.seenAt).toBe(new Date(1748600000000).toISOString());
+    expect(entry.label).toBe('negative');
+  });
+
+  it('three-arg call without label does NOT include label key in exported entry', () => {
+    const post = makeUnflagged();
+    const parsed = JSON.parse(buildJsonExport([], [], [post]));
+    expect(parsed.unflaggedPosts[0]).not.toHaveProperty('label');
+  });
+
+  it('unflaggedPosts is a top-level sibling of flaggedAccounts, not nested under an account', () => {
+    const account = makeAccount();
+    const unflagged = makeUnflagged();
+    const parsed = JSON.parse(buildJsonExport([account], [], [unflagged]));
+    // unflaggedPosts at top level
+    expect(parsed).toHaveProperty('unflaggedPosts');
+    expect(parsed.unflaggedPosts).toHaveLength(1);
+    // NOT nested under flaggedAccounts[0]
+    expect(parsed.flaggedAccounts[0]).not.toHaveProperty('unflaggedPosts');
   });
 });
 
