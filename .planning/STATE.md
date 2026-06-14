@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: executing
-last_updated: "2026-06-14T13:25:18.765Z"
+status: verifying
+last_updated: "2026-06-14T13:32:12.013Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 10
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 23
-  completed_plans: 22
-  percent: 80
+  completed_plans: 23
+  percent: 90
 ---
 
 # State — LinkedIn Blocker
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — EXECUTING
-Plan: 4 of 4
-Status: Ready to execute
+Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — COMPLETE
+Plan: 4 of 4 (all executed)
+Status: Phase 25.1 complete. Next: plan and execute Phase 26 (eval runner).
 Last activity: 2026-06-14
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
 
@@ -82,8 +82,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Executed 25.1-03 — additive unflaggedPosts[] array in buildJsonExport (TDD, RED acc23a6 / GREEN fa37509). 37 tests pass, tsc clean.
-**Next action:** Execute 25.1-04. Resume file: .planning/phases/25.1-capture-and-export-unflagged-posts-for-eval-negatives/25.1-04-PLAN.md
+**Last action:** Executed 25.1-04 — dashboard unflaggedPosts wiring, popup captureUnflaggedPosts toggle with merge-safe settings, 26-CONTEXT amendment (f3fec92 / 0453090 / ac36508). 251 tests pass, tsc clean.
+**Next action:** Plan and execute Phase 26 (eval runner). Phase 25.1 complete.
 
 ## Performance Metrics
 
@@ -91,3 +91,4 @@ None.
 |-------|------|----------|-------|
 | Phase 25 P02 | 900 | 2 tasks | 4 files |
 | Phase 25.1 P03 | 102s | 1 task | 2 files |
+| Phase 25.1 P04 | 6m | 3 tasks | 3 files |
