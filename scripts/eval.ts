@@ -127,6 +127,45 @@ export function collectLabeled(
 }
 
 // ---------------------------------------------------------------------------
+// Export loader (exportable for tests — EVAL-05 bad-input contract)
+// ---------------------------------------------------------------------------
+
+export interface LabeledExport {
+  flaggedPosts: unknown[];
+  unflaggedPosts: unknown[];
+}
+
+/**
+ * Read + parse the labeled Export JSON and validate its top-level shape.
+ * Writes a clear stderr message and exits non-zero on any failure:
+ * unreadable/unparseable file, valid-but-non-object JSON (CR-01: `null`, an
+ * array, a bare number), or missing `flaggedPosts`/`unflaggedPosts` arrays.
+ */
+export function loadExport(filePath: string): LabeledExport {
+  let json: unknown;
+  try {
+    const raw = readFileSync(resolve(filePath), 'utf8');
+    json = JSON.parse(raw);
+  } catch {
+    process.stderr.write(`Error: Could not read or parse file: ${filePath}\n`);
+    process.exit(1);
+  }
+
+  if (typeof json !== 'object' || json === null || Array.isArray(json)) {
+    process.stderr.write(`Error: Could not read or parse file: ${filePath}\n`);
+    process.exit(1);
+  }
+
+  const obj = json as Record<string, unknown>;
+  if (!Array.isArray(obj['flaggedPosts']) || !Array.isArray(obj['unflaggedPosts'])) {
+    process.stderr.write('Error: JSON must contain "flaggedPosts" and "unflaggedPosts" arrays.\n');
+    process.exit(1);
+  }
+
+  return { flaggedPosts: obj['flaggedPosts'], unflaggedPosts: obj['unflaggedPosts'] };
+}
+
+// ---------------------------------------------------------------------------
 // CLI entry guard — only runs when invoked directly (not when imported by tests)
 // ---------------------------------------------------------------------------
 
@@ -137,7 +176,7 @@ if (isMain) {
   await main();
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   // 1. argv guard
   const filePath = process.argv[2];
   if (!filePath) {
@@ -145,15 +184,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // 2. File read + JSON parse
-  let parsed: { exportedAt?: string; flaggedPosts: unknown[]; unflaggedPosts: unknown[] };
-  try {
-    const raw = readFileSync(resolve(filePath), 'utf8');
-    parsed = JSON.parse(raw) as typeof parsed;
-  } catch {
-    process.stderr.write(`Error: Could not read or parse file: ${filePath}\n`);
-    process.exit(1);
-  }
+  // 2. File read + JSON parse + shape/array validation (CR-01 guarded in loadExport)
+  const parsed = loadExport(filePath);
 
   // 3. API key guard (EVAL-05, T-26-04 — key never printed)
   const apiKey = process.env['ANTHROPIC_API_KEY'];
@@ -162,16 +194,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // 4. Array guard
-  if (!Array.isArray(parsed.flaggedPosts) || !Array.isArray(parsed.unflaggedPosts)) {
-    process.stderr.write('Error: JSON must contain "flaggedPosts" and "unflaggedPosts" arrays.\n');
-    process.exit(1);
-  }
-
-  // 5. Walk flaggedPosts + unflaggedPosts only (D-07 / Phase 25.2 — top-level post-centric arrays)
+  // 4. Walk flaggedPosts + unflaggedPosts only (D-07 / Phase 25.2 — top-level post-centric arrays)
   const { labeled: labeledPosts, skipped } = collectLabeled(parsed.flaggedPosts, parsed.unflaggedPosts);
 
-  // 6. No-label guard
+  // 5. No-label guard
   if (labeledPosts.length === 0) {
     process.stderr.write(
       `Error: No labeled posts found (${skipped} unlabeled entries skipped). ` +
@@ -184,7 +210,7 @@ async function main(): Promise<void> {
   const labeled = labeledPosts.length;
   process.stdout.write(`\nEval: ${labeled} labeled posts (${skipped} unlabeled skipped, ${total} total).\n\n`);
 
-  // 7. Sequential scoring loop — one LLM call per labeled post (D-08)
+  // 6. Sequential scoring loop — one LLM call per labeled post (D-08)
   const scored: ScoredEntry[] = [];
   let totalCostUsd = 0;
   let errored = 0;
