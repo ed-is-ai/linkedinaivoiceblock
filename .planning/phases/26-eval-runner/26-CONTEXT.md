@@ -36,7 +36,21 @@ Requirements: EVAL-01, EVAL-02, EVAL-03, EVAL-04 (+ the ROADMAP SC#5 error-exit 
 - **D-08:** The runner walks `flaggedAccounts[].posts[]`, reads each post's `text` + added `label`, and **re-scores the text fresh through the LLM** (EVAL-02). The stored `score` in the export is **ignored** — the point is to test the *current* classifier, not replay capture-time scores.
 - **D-09:** Posts **missing a `label`** are skipped and reported (count surfaced). If **no** post carries a label, the run **exits non-zero** with a clear message (EVAL-05). Positive class for metrics = **`ai`**.
 
-> **Amendment — Phase 25.1 D-07/D-08 (added 2026-06-14):**
+> **Amendment — Phase 25.2 (added 2026-06-14, SUPERSEDES the 25.1 amendment below):**
+> The Export JSON was restructured in Phase 25.2 into top-level post-centric arrays. The eval input walker MUST read BOTH of the following **top-level** sources:
+> 1. `flaggedPosts[]` — NEW top-level post-centric array of **positives** (sourced from hidden `storedPosts`), shape `{ urn, authorId, authorName, text, score, hiddenAt }` + optional user-added `label`.
+> 2. `unflaggedPosts[]` — top-level array of **negatives**, shape `{ urn, authorId, authorName, text, score, seenAt, engineUsed }` + optional user-added `label`.
+>
+> Do NOT walk `flaggedAccounts[].posts[]` for eval input — Phase 25.2 keeps that nested array for human readability but it **duplicates** `flaggedPosts[]`. Reading it too would double-count positives. Use `flaggedPosts[]` only.
+>
+> Per Phase 25.1 D-06 / 25.2 D-03, both arrays are stored **UNLABELED** by default; the user must add `"label": "ai"` (positives) / `"label": "human"` (negatives) before running the eval. Unlabeled entries are **skipped** (consistent with D-09 above). Positive class for metrics = `ai`.
+>
+> The stored `score` field is **ignored** on both arrays — the eval re-scores each post's text fresh through the LLM (per D-08).
+>
+> Source: Phase 25.2 D-01/D-03/D-07 (symmetric-export-redesign). This replaces the 25.1 walker contract (which read `flaggedAccounts[].posts[]` + `unflaggedPosts[]`).
+>
+> ---
+> **Superseded — Phase 25.1 D-07/D-08 (added 2026-06-14):**
 > The eval input walker MUST read BOTH of the following sources from the Export JSON:
 > 1. `flaggedAccounts[].posts[]` — the original flagged-post input (per D-07 above).
 > 2. `unflaggedPosts[]` — a NEW top-level sibling array produced by `buildJsonExport` (Phase 25.1).
