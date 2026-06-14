@@ -6,8 +6,9 @@ import {
   deriveCleanseCount,
   filterCleansed,
   buildPostsCsvExport,
+  buildTracesExport,
 } from './dataManagement';
-import type { FlaggedAccount, StoredPost } from '../shared/types';
+import type { FlaggedAccount, StoredPost, TraceEntry } from '../shared/types';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 
@@ -310,5 +311,55 @@ describe('buildPostsCsvExport', () => {
     const result = buildPostsCsvExport(posts);
     const lines = result.split('\r\n');
     expect(lines).toHaveLength(4); // header + 3 rows
+  });
+});
+
+// ─── buildTracesExport ───────────────────────────────────────────────────────
+
+function makeTrace(overrides: Partial<TraceEntry> = {}): TraceEntry {
+  return {
+    model: 'claude-sonnet-4-6',
+    systemPrompt: 'sys',
+    userPrompt: 'user',
+    inputTokens: 100,
+    outputTokens: 50,
+    cacheCreationTokens: 0,
+    cacheReadTokens: 0,
+    costUsd: 0.001,
+    timestamp: new Date(1748600000000).toISOString(),
+    source: 'detector',
+    ...overrides,
+  };
+}
+
+describe('buildTracesExport', () => {
+  it('returns valid JSON with exportedAt and traces keys', () => {
+    const parsed = JSON.parse(buildTracesExport([]));
+    expect(parsed).toHaveProperty('exportedAt');
+    expect(parsed).toHaveProperty('traces');
+  });
+
+  it('empty traces array produces traces: []', () => {
+    const parsed = JSON.parse(buildTracesExport([]));
+    expect(parsed.traces).toEqual([]);
+  });
+
+  it('preserves trace entry fields verbatim', () => {
+    const trace = makeTrace({ error: 'network error' });
+    const parsed = JSON.parse(buildTracesExport([trace]));
+    expect(parsed.traces[0].model).toBe('claude-sonnet-4-6');
+    expect(parsed.traces[0].inputTokens).toBe(100);
+    expect(parsed.traces[0].source).toBe('detector');
+    expect(parsed.traces[0].error).toBe('network error');
+  });
+
+  it('output is pretty-printed with 2-space indentation', () => {
+    const result = buildTracesExport([]);
+    // Pretty-printed JSON contains newlines and leading spaces
+    expect(result).toContain('\n');
+    expect(result).toContain('  ');
+    // Verify it matches the exact formatting of JSON.stringify with 2-space indent
+    const parsed = JSON.parse(result);
+    expect(result).toBe(JSON.stringify(parsed, null, 2));
   });
 });

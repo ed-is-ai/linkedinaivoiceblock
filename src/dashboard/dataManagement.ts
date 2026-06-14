@@ -1,4 +1,4 @@
-import type { FlaggedAccount, StoredPost } from '../shared/types';
+import type { FlaggedAccount, StoredPost, TraceEntry } from '../shared/types';
 
 export function csvEscape(value: string | number): string {
   const str = String(value);
@@ -89,6 +89,14 @@ export function filterCleansed(
   const keptPosts = posts.filter(p => p.hiddenAt >= cutoffMs);
 
   return { keptAccounts, keptPosts };
+}
+
+export function buildTracesExport(traces: TraceEntry[]): string {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    traces,
+  };
+  return JSON.stringify(payload, null, 2);
 }
 
 export function buildPostsCsvExport(posts: StoredPost[]): string {
