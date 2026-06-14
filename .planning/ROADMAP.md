@@ -269,7 +269,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 25-01-PLAN.md — Dashboard Export Traces button + buildTracesExport pure builder (TRACE-04)
+- [x] 25-01-PLAN.md — Dashboard Export Traces button + buildTracesExport pure builder (TRACE-04)
 - [ ] 25-02-PLAN.md — trace-summary script: recompute costs via computeCostUsd, grouped table, idempotent README LLM Cost Reference section (TRACE-05, TRACE-06)
 
 **UI hint**: yes
@@ -319,5 +319,5 @@ Plans:
 | 22. Externalize Selectors to Storage | v7.0 | 0/TBD | Not started | - |
 | 23. Self-Healing Selector Adapter | v7.0 | 4/4 | Complete    | 2026-06-13 |
 | 24. Trace Capture & Storage | v8.0 | 2/2 | Complete    | 2026-06-13 |
-| 25. Dashboard Export + README Script | v8.0 | 0/TBD | Planned | - |
+| 25. Dashboard Export + README Script | v8.0 | 1/2 | In Progress|  |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
