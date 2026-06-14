@@ -168,4 +168,4 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | v9.0 | Eval Harness — labeled-dataset eval runner, precision/recall/F1/cost metrics | Planned |
 
 ---
-*Last updated: 2026-06-07 — v8.0 and v9.0 planned*
+*Last updated: 2026-06-14 — Phase 25 complete: "Export Traces" dashboard button + `npm run trace-summary` cost report (TRACE-04/05/06 validated). v8.0 Observability feature set is now built (Phases 24–25). Note: Phase 22 (v7.0 Externalize Selectors to Storage) remains outstanding — milestones executed out of order.*
