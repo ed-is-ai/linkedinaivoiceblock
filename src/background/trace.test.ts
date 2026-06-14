@@ -147,6 +147,8 @@ describe('SCORE_POST — success trace (TRACE-01)', () => {
 
     const { sendResponse } = sendScorePost('Hello world post');
     await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+    // trace write is fire-and-forget (lands after sendResponse) — wait for it
+    await vi.waitFor(() => expect((store.llbTraces as TraceEntry[] | undefined)?.length).toBe(1));
 
     // Check trace was appended
     const traces = store.llbTraces as TraceEntry[] | undefined;
@@ -190,6 +192,8 @@ describe('REDERIVE_SELECTOR — success trace (TRACE-02)', () => {
 
     const { sendResponse } = sendRederive();
     await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+    // trace write is fire-and-forget (lands after sendResponse) — wait for it
+    await vi.waitFor(() => expect((store.llbTraces as TraceEntry[] | undefined)?.length).toBe(1));
 
     const traces = store.llbTraces as TraceEntry[] | undefined;
     expect(traces).toBeDefined();
@@ -214,6 +218,8 @@ describe('SCORE_POST — failure trace (D-03)', () => {
 
     const { sendResponse } = sendScorePost('Some post text');
     await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+    // error trace write is fire-and-forget (lands after sendResponse) — wait for it
+    await vi.waitFor(() => expect((store.llbTraces as TraceEntry[] | undefined)?.length).toBe(1));
 
     // sendResponse should carry the error
     expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ error: expect.any(String) }));
@@ -245,6 +251,8 @@ describe('T-24-04 — api key absence', () => {
 
     const { sendResponse } = sendScorePost('Test post');
     await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+    // trace write is fire-and-forget (lands after sendResponse) — wait for it
+    await vi.waitFor(() => expect((store.llbTraces as TraceEntry[] | undefined)?.length ?? 0).toBeGreaterThan(0));
 
     const traces = store.llbTraces as TraceEntry[] | undefined;
     expect(traces).toBeDefined();
@@ -274,6 +282,12 @@ describe('TRACE-03 — FIFO cap after 501 successful SCORE_POST calls', () => {
       // Wait for each call to complete before the next
       await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
     }
+
+    // trace writes are fire-and-forget + serialized — wait for the chain to drain to the cap
+    await vi.waitFor(
+      () => expect((store.llbTraces as TraceEntry[] | undefined)?.length).toBe(500),
+      { timeout: 10_000 },
+    );
 
     const traces = store.llbTraces as TraceEntry[] | undefined;
     expect(traces).toBeDefined();

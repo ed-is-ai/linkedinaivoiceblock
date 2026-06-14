@@ -17,6 +17,66 @@ chrome.runtime.onStartup.addListener(() => {
   storageSet({ llbModelPricing: MODEL_PRICING }).catch(() => {});
 });
 
+/** Anthropic /v1/messages `usage` shape — cache buckets optional, whole object may be absent. */
+interface AnthropicUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+}
+
+/**
+ * Build a TraceEntry and persist it FIRE-AND-FORGET (Phase 24).
+ *
+ * A trace is observability only — it MUST NEVER alter control flow, reject the caller,
+ * or block sendResponse. So appendTrace is never awaited here (it self-serializes and
+ * never rejects). Pass `usage` for a success trace (real tokens + cache-aware cost) or
+ * `error` for a failure trace (tokens/cost zeroed). `usage` may be undefined when a 200
+ * response omits it — cost degrades to 0 rather than throwing. userPrompt is truncated
+ * to 500 chars here (D-04), centralising what used to be five near-identical blocks.
+ */
+function recordTrace(opts: {
+  source: 'detector' | 'rederiver';
+  model: string;
+  systemPrompt: string;
+  userPrompt: string;
+  usage?: AnthropicUsage;
+  error?: string;
+}): void {
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let cacheCreationTokens = 0;
+  let cacheReadTokens = 0;
+  let costUsd = 0;
+  let unpriced = false;
+
+  if (opts.usage) {
+    inputTokens = opts.usage.input_tokens ?? 0;
+    outputTokens = opts.usage.output_tokens ?? 0;
+    cacheCreationTokens = opts.usage.cache_creation_input_tokens ?? 0;
+    cacheReadTokens = opts.usage.cache_read_input_tokens ?? 0;
+    ({ costUsd, unpriced } = computeCostUsd(opts.model, opts.usage));
+  }
+
+  const entry: TraceEntry = {
+    source: opts.source,
+    model: opts.model,
+    systemPrompt: opts.systemPrompt,
+    userPrompt: opts.userPrompt.slice(0, 500),
+    inputTokens,
+    outputTokens,
+    cacheCreationTokens,
+    cacheReadTokens,
+    costUsd,
+    unpriced,
+    timestamp: new Date().toISOString(),
+    ...(opts.error !== undefined ? { error: opts.error } : {}),
+  };
+
+  // Fire-and-forget — a trace write must never break the response path.
+  void appendTrace(entry);
+}
+
 // ---------------------------------------------------------------------------
 // Storage-driven badge — counts pending flagged accounts (D-09, D-10, D-11)
 // Badge reflects live queue size; decrements automatically on dismiss.
@@ -131,15 +191,10 @@ async function scorePost(postText: string): Promise<DetectionResult> {
     throw new Error(`API ${response.status}: ${body}`);
   }
 
-  // D-02: widen cast to also read the 4-bucket usage breakdown
+  // D-02: read the usage breakdown (optional — a 200 may omit it; recordTrace degrades to 0)
   const data = await response.json() as {
     content: Array<{ text: string }>;
-    usage: {
-      input_tokens: number;
-      output_tokens: number;
-      cache_creation_input_tokens?: number;
-      cache_read_input_tokens?: number;
-    };
+    usage?: AnthropicUsage;
   };
   const raw = data.content[0]?.text ?? '';
   const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
@@ -148,22 +203,14 @@ async function scorePost(postText: string): Promise<DetectionResult> {
   const score = Math.min(100, Math.max(0, Math.round(parsed.score)));
   const breakdown: Record<string, number> = parsed.signals ?? {};
 
-  // TRACE-01: append success trace with real token/cost breakdown (D-04)
-  const { costUsd, unpriced } = computeCostUsd('claude-sonnet-4-6', data.usage);
-  const successEntry: TraceEntry = {
+  // TRACE-01: record success trace (fire-and-forget — must never break scoring)
+  recordTrace({
     source: 'detector',
     model: 'claude-sonnet-4-6',
     systemPrompt: SYSTEM_PROMPT,
-    userPrompt: postText.slice(0, 500),
-    inputTokens: data.usage.input_tokens,
-    outputTokens: data.usage.output_tokens,
-    cacheCreationTokens: data.usage.cache_creation_input_tokens ?? 0,
-    cacheReadTokens: data.usage.cache_read_input_tokens ?? 0,
-    costUsd,
-    unpriced,
-    timestamp: new Date().toISOString(),
-  };
-  await appendTrace(successEntry);
+    userPrompt: postText,
+    usage: data.usage,
+  });
 
   return {
     score,
@@ -373,15 +420,10 @@ async function rederiveSelector(
       throw new Error(`API ${response.status}: ${body}`);
     }
 
-    // D-02: widen cast to also read the 4-bucket usage breakdown
+    // D-02: read the usage breakdown (optional — a 200 may omit it; recordTrace degrades to 0)
     const data = (await response.json()) as {
       content: Array<{ text: string }>;
-      usage: {
-        input_tokens: number;
-        output_tokens: number;
-        cache_creation_input_tokens?: number;
-        cache_read_input_tokens?: number;
-      };
+      usage?: AnthropicUsage;
     };
     const raw = data.content[0]?.text ?? '';
     const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
@@ -392,22 +434,14 @@ async function rederiveSelector(
         throw new Error('LLM response failed schema validation');
       }
 
-      // TRACE-02: append success trace with real token/cost breakdown (D-04)
-      const { costUsd, unpriced } = computeCostUsd('claude-haiku-4-5-20251001', data.usage);
-      const successEntry: TraceEntry = {
+      // TRACE-02: record success trace (fire-and-forget — must not enter the retry loop)
+      recordTrace({
         source: 'rederiver',
         model: 'claude-haiku-4-5-20251001',
         systemPrompt: REDERIVE_SYSTEM_PROMPT,
-        userPrompt: userContent.slice(0, 500),
-        inputTokens: data.usage.input_tokens,
-        outputTokens: data.usage.output_tokens,
-        cacheCreationTokens: data.usage.cache_creation_input_tokens ?? 0,
-        cacheReadTokens: data.usage.cache_read_input_tokens ?? 0,
-        costUsd,
-        unpriced,
-        timestamp: new Date().toISOString(),
-      };
-      await appendTrace(successEntry);
+        userPrompt: userContent,
+        usage: data.usage,
+      });
 
       return { candidates: parsed.candidates };
     } catch (err) {
@@ -429,23 +463,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const postText = message.postText as string;
     scorePost(postText)
       .then(result => sendResponse({ result }))
-      .catch(async (err: Error) => {
-        // D-03: all attempts produce a trace — error trace has tokens 0, costUsd 0
-        const errorEntry: TraceEntry = {
+      .catch((err: Error) => {
+        // D-03: all attempts produce a trace — error trace has tokens 0, costUsd 0.
+        // Synchronous catch: recordTrace is fire-and-forget so sendResponse always runs.
+        recordTrace({
           source: 'detector',
           model: 'claude-sonnet-4-6',
           systemPrompt: SYSTEM_PROMPT,
-          userPrompt: postText.slice(0, 500),
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheCreationTokens: 0,
-          cacheReadTokens: 0,
-          costUsd: 0,
-          unpriced: false,
-          timestamp: new Date().toISOString(),
+          userPrompt: postText,
           error: err.message,
-        };
-        await appendTrace(errorEntry);
+        });
         sendResponse({ error: err.message });
       });
     return true; // keep channel open for async response
@@ -463,22 +490,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       // a daily-cap slot or start the 5-min cool-off (review finding #3).
       const keyResult = await chrome.storage.local.get(['anthropicApiKey']);
       if (!keyResult.anthropicApiKey) {
-        // D-03: no-key is an attempted LLM call — append an error trace
-        const noKeyEntry: TraceEntry = {
+        // D-03: no-key is an attempted LLM call — record an error trace (fire-and-forget)
+        recordTrace({
           source: 'rederiver',
           model: 'claude-haiku-4-5-20251001',
           systemPrompt: REDERIVE_SYSTEM_PROMPT,
           userPrompt: '',
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheCreationTokens: 0,
-          cacheReadTokens: 0,
-          costUsd: 0,
-          unpriced: false,
-          timestamp: new Date().toISOString(),
           error: 'No API key configured',
-        };
-        await appendTrace(noKeyEntry);
+        });
         sendResponse({ error: 'No API key configured' });
         return;
       }
@@ -495,22 +514,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         );
         sendResponse({ result: candidates });
       } catch (err) {
-        // D-03: HTTP errors, schema-validation failures produce an error trace
-        const errorEntry: TraceEntry = {
+        // D-03: HTTP errors / schema-validation failures produce an error trace (fire-and-forget)
+        recordTrace({
           source: 'rederiver',
           model: 'claude-haiku-4-5-20251001',
           systemPrompt: REDERIVE_SYSTEM_PROMPT,
           userPrompt: '',
-          inputTokens: 0,
-          outputTokens: 0,
-          cacheCreationTokens: 0,
-          cacheReadTokens: 0,
-          costUsd: 0,
-          unpriced: false,
-          timestamp: new Date().toISOString(),
           error: (err as Error).message,
-        };
-        await appendTrace(errorEntry);
+        });
         sendResponse({ error: (err as Error).message });
       } finally {
         await releaseRateLimitLatch();
