@@ -9,7 +9,7 @@ import { expandComments, resetExpansionBudget } from './detector/comment-expand'
 import { extractProfileSignals } from './detector/signals/profile';
 import { storageGet, storageSet } from '../shared/storage';
 import { persistFlaggedAccount } from '../shared/queue';
-import { persistStoredPost } from '../shared/postStore';
+import { persistStoredPost, persistUnflaggedPost } from '../shared/postStore';
 import { AI_LANGUAGE_SIGNALS } from '../shared/signals';
 import type { Detector, PostData, ObservedPost, DailyStats } from '../shared/types';
 
@@ -215,6 +215,7 @@ async function init(): Promise<void> {
   await load();
 
   const autoHideThreshold = settings?.autoHideThreshold ?? 60;
+  const captureUnflaggedPosts = settings?.captureUnflaggedPosts ?? false;
   currentThreshold = autoHideThreshold;
   for (const id of dismissedAccounts) dismissedSet.add(id);
   for (const [id, entry] of Object.entries(flaggedAccounts)) {
@@ -320,6 +321,9 @@ async function init(): Promise<void> {
         console.log(`[LLB] ${mergedScore.toString().padStart(3)} | ${result.engineUsed} | ${authorName || '<unknown>'} | ${signals}\n${postText}`);
       }
 
+      if (captureUnflaggedPosts && mergedScore < FLAG_THRESHOLD) {
+        persistUnflaggedPost({ urn, authorId: authorId || urn, authorName, score: mergedScore, text: postText, engineUsed: result.engineUsed }).catch(() => {});
+      }
       if (mergedScore < FLAG_THRESHOLD) return;
 
       // Skip dismissed authors (Phase 5 writes dismissedAccounts; Phase 3 reads defensively)
