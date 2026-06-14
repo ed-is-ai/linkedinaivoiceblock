@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: ready_to_plan
-last_updated: 2026-06-14T19:28:38.430Z
+status: planning
+last_updated: "2026-06-14T19:33:26.818Z"
 last_activity: 2026-06-14
 progress:
-  total_phases: 10
+  total_phases: 11
   completed_phases: 9
   total_plans: 25
   completed_plans: 25
-  percent: 90
-stopped_at: Phase 25.1 complete (6/6) — ready to discuss Phase 26
+  percent: 82
 ---
 
 # State — LinkedIn Blocker
@@ -27,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 26
+Phase: 25.2
 Plan: Not started
-Status: Ready to plan
+Status: Ready to discuss/plan
 Last activity: 2026-06-14
-Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
+Note: Phase 25.1 COMPLETE (verified 8/8, UAT 5/5). Phase 25.2 inserted between 25.1 and 26 (symmetric export redesign: blockedAccounts + flaggedPosts + unflaggedPosts) — UAT-driven follow-on from 25.1. Phase 26 (eval-runner) already has 26-CONTEXT.md. Recommended order: discuss/plan/execute 25.2, then plan 26.
 
 ## Accumulated Context
 
@@ -40,6 +39,7 @@ Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts �
 - Phase 18.1 inserted after Phase 18: Dashboard Data Display (URGENT)
 - Phases 22–23 added: v7.0 Adaptive DOM Scraper
 - Phase 25.1 inserted after Phase 25: Capture and export unflagged posts for eval negatives (URGENT)
+- Phase 25.2 inserted after Phase 25: Symmetric export redesign (blockedAccounts + flaggedPosts + unflaggedPosts) (URGENT)
 
 ### Key Decisions
 

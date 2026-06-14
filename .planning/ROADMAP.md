@@ -293,6 +293,16 @@ Plans:
 **Wave 3** *(blocked on Wave 2)*
 - [x] 25.1-04-PLAN.md — Dashboard load+export wiring; popup opt-in toggle + merge-safe settings; 26-CONTEXT unflaggedPosts[] amendment (EXPORT-04, CAPTURE-02)
 
+### Phase 25.2: Symmetric export redesign (blockedAccounts + flaggedPosts + unflaggedPosts) (INSERTED)
+
+**Goal:** Restructure the dashboard Export JSON into three symmetric arrays — `blockedAccounts` (current `flaggedAccounts` format, filtered to blocked accounts only), `flaggedPosts` (NEW, post-centric: all posts above the current threshold), and `unflaggedPosts` (below threshold, already shipped in 25.1) — giving the Phase 26 eval a richer, post-centric dataset.
+**Requirements**: TBD (run /gsd-discuss-phase 25.2)
+**Depends on:** Phase 25.1
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 25.2 to break down)
+
 ### Phase 26: Eval Runner
 
 **Goal**: `npm run eval <labeled-posts.json>` feeds labeled posts through the LLM classifier and prints precision, recall, F1, accuracy, total cost, and average cost per post — with results persisted to `eval/results-YYYY-MM-DD.json`
