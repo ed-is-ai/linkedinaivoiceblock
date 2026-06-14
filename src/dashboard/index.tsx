@@ -270,7 +270,7 @@ function App() {
             onClick={handleExportTraces}
             disabled={traces.length === 0}
           >
-            Export Traces{traces.length > 0 ? ` (${traces.length})` : ''}
+            Export LLM call traces{traces.length > 0 ? ` (${traces.length})` : ''}
           </button>
         </div>
         <hr style={{ margin: '16px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
