@@ -13,6 +13,8 @@
     "generate-icons": "node scripts/generate-icons.js",
     "trace-summary": "tsx scripts/trace-summary.ts",
     "eval": "tsx scripts/eval.ts",
+    "eval-label": "tsx scripts/eval-label.ts",
+    "eval-compare": "tsx scripts/eval-compare.ts",
     "package": "npm run build && node scripts/package-zip.js",
     "test": "vitest run",
     "test:watch": "vitest",
