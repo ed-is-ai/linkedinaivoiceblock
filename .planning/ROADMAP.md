@@ -117,7 +117,7 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 
 **Milestone Goal:** Evaluate LLM classifier quality against a labeled real-world dataset — user annotates an extension post-export JSON, runs an eval script, and gets precision/recall/F1/cost metrics.
 
-- [ ] **Phase 26: Eval Runner** - Labeled-JSON input format (extends existing export); eval script feeding posts through LLM classifier; precision/recall/F1/cost metrics; results written to `eval/results-YYYY-MM-DD.json`
+- [x] **Phase 26: Eval Runner** - Labeled-JSON input format (extends existing export); eval script feeding posts through LLM classifier; precision/recall/F1/cost metrics; results written to `eval/results-YYYY-MM-DD.json` (completed 2026-06-14)
 
 ---
 
@@ -210,7 +210,7 @@ Plans:
 
 Plans:
 - [x] 26-01-PLAN.md — Extract classifier into src/shared/classifier.ts + refactor service worker (wave 1)
-- [ ] 26-02-PLAN.md — Eval CLI: threshold sweep, metrics, cost, results persistence, npm run eval (wave 2)
+- [x] 26-02-PLAN.md — Eval CLI: threshold sweep, metrics, cost, results persistence, npm run eval (wave 2)
 
 **UI hint**: yes
 
@@ -358,4 +358,4 @@ Plans:
 | 25. Dashboard Export + README Script | v8.0 | 2/2 | Complete    | 2026-06-14 |
 | 25.1. Capture & Export Unflagged Posts | v9.0 | 6/6 | Complete    | 2026-06-14 |
 | 25.2. Symmetric Export Redesign | v9.0 | 2/2 | Complete    | 2026-06-14 |
-| 26. Eval Runner | v9.0 | 1/2 | In Progress|  |
+| 26. Eval Runner | v9.0 | 2/2 | Complete   | 2026-06-14 |

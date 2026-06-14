@@ -135,10 +135,10 @@
 
 ## LLM Eval Runner (EVAL)
 
-- [ ] **EVAL-01**: The standard post-export JSON (existing extension export format) is the input to the eval runner; users annotate it by adding `"label": "ai" | "human"` to each post entry to create a labeled evaluation dataset.
+- [x] **EVAL-01**: The standard post-export JSON (existing extension export format) is the input to the eval runner; users annotate it by adding `"label": "ai" | "human"` to each post entry to create a labeled evaluation dataset.
 - [x] **EVAL-02**: `npm run eval <labeled-posts.json>` reads the labeled dataset, feeds each post's text through the LLM classifier, and records the model's verdict alongside the ground-truth label.
-- [ ] **EVAL-03**: The eval runner computes and prints: precision, recall, F1 score, accuracy, total LLM cost, average cost per post, and total posts evaluated — as a formatted results table.
-- [ ] **EVAL-04**: Results are written to `eval/results-YYYY-MM-DD.json` (directory auto-created) and a compact summary line is printed suitable for pasting into a README or PR description.
+- [x] **EVAL-03**: The eval runner computes and prints: precision, recall, F1 score, accuracy, total LLM cost, average cost per post, and total posts evaluated — as a formatted results table.
+- [x] **EVAL-04**: Results are written to `eval/results-YYYY-MM-DD.json` (directory auto-created) and a compact summary line is printed suitable for pasting into a README or PR description.
 
 ---
 

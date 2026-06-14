@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: executing
-last_updated: "2026-06-14T21:24:09.632Z"
+status: verifying
+last_updated: "2026-06-14T21:32:16.216Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 11
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 29
-  completed_plans: 28
-  percent: 91
+  completed_plans: 29
+  percent: 100
 ---
 
 # State — LinkedIn Blocker
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 Phase: 26 (eval-runner) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-14
 Note: Phase 25 family fully CLOSED — Phase 25 (verified passed, UAT complete), Phase 25.1 (verified 8/8, UAT 5/5), Phase 25.2 (verified 11/11, symmetric three-array export shipped). Phase 26 (eval-runner) already has 26-CONTEXT.md and consumes the new top-level flaggedPosts[]/unflaggedPosts[] arrays. Next: discuss/plan Phase 26.
 
@@ -96,3 +96,8 @@ None.
 | Phase Phase 25.1 PP06 | 4m | 2 tasks tasks | 2 files files |
 | Phase 25.1 P05 | 3m | 1 tasks | 1 files |
 | Phase 26-eval-runner P01 | 8m | 3 tasks | 3 files |
+| Phase 26-eval-runner P02 | 15m | 3 tasks | 4 files |
+
+## Decisions
+
+- [Phase ?]: Eval CLI: pure exported functions (collectLabeled, computeMetrics) for testability without CLI side-effects
