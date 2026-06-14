@@ -35,29 +35,6 @@ export function buildJsonExport(accounts: FlaggedAccount[], posts: StoredPost[])
   return JSON.stringify(payload, null, 2);
 }
 
-export function buildCsvExport(accounts: FlaggedAccount[]): string {
-  const headers = [
-    'authorId', 'authorName', 'authorProfileUrl',
-    'peakScore', 'compositeScore', 'postCount',
-    'status', 'firstSeenAt', 'lastSeenAt', 'signals',
-  ];
-
-  const rows = accounts.map(a => [
-    a.authorId,
-    a.authorName,
-    a.authorProfileUrl,
-    a.peakScore,
-    Math.round(a.compositeScore),
-    a.postCount,
-    a.status,
-    new Date(a.firstSeenAt).toISOString(),
-    new Date(a.lastSeenAt).toISOString(),
-    JSON.stringify(a.signals),
-  ].map(csvEscape).join(','));
-
-  return [headers.join(','), ...rows].join('\r\n');
-}
-
 // Parse a cleanse cutoff date string to UTC ms, rejecting invalid input.
 // An invalid/empty date yields NaN, and any `x >= NaN` comparison is always
 // false — which would silently drop every record. Fail loud instead (WR-02).

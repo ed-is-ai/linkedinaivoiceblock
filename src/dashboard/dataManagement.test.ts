@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   csvEscape,
   buildJsonExport,
-  buildCsvExport,
   deriveCleanseCount,
   filterCleansed,
   buildPostsCsvExport,
@@ -118,62 +117,6 @@ describe('buildJsonExport', () => {
     const parsed = JSON.parse(buildJsonExport([], []));
     expect(parsed).not.toHaveProperty('dailyStats');
     expect(parsed).not.toHaveProperty('dismissedAccounts');
-  });
-});
-
-// ─── buildCsvExport ──────────────────────────────────────────────────────────
-
-describe('buildCsvExport', () => {
-  it('first line is exact header', () => {
-    const lines = buildCsvExport([]).split('\r\n');
-    expect(lines[0]).toBe('authorId,authorName,authorProfileUrl,peakScore,compositeScore,postCount,status,firstSeenAt,lastSeenAt,signals');
-  });
-
-  it('returns header only for empty accounts', () => {
-    const result = buildCsvExport([]);
-    expect(result).toBe('authorId,authorName,authorProfileUrl,peakScore,compositeScore,postCount,status,firstSeenAt,lastSeenAt,signals');
-  });
-
-  it('emits one row per account', () => {
-    const result = buildCsvExport([makeAccount(), makeAccount({ authorId: 'user2', authorName: 'User 2' })]);
-    const lines = result.split('\r\n');
-    expect(lines).toHaveLength(3); // header + 2 rows
-  });
-
-  it('uses CRLF line endings per RFC 4180', () => {
-    const result = buildCsvExport([makeAccount()]);
-    expect(result).toContain('\r\n');
-  });
-
-  it('rounds compositeScore to integer', () => {
-    const account = makeAccount({ compositeScore: 72.4 });
-    const lines = buildCsvExport([account]).split('\r\n');
-    const cols = lines[1]!.split(',');
-    // compositeScore is the 5th column (index 4)
-    expect(cols[4]).toBe('72');
-  });
-
-  it('emits ISO timestamps for firstSeenAt and lastSeenAt', () => {
-    const account = makeAccount({ firstSeenAt: 1748560000000, lastSeenAt: 1748650000000 });
-    const lines = buildCsvExport([account]).split('\r\n');
-    expect(lines[1]).toContain(new Date(1748560000000).toISOString());
-    expect(lines[1]).toContain(new Date(1748650000000).toISOString());
-  });
-
-  it('escapes signals JSON — internal quotes are doubled, field is wrapped', () => {
-    const account = makeAccount({ signals: { listicle: 25, buzzwords: 15 } });
-    const lines = buildCsvExport([account]).split('\r\n');
-    const row = lines[1];
-    // signals column should be: "{""listicle"":25,""buzzwords"":15}"
-    expect(row).toContain('""listicle""');
-    expect(row).toContain('""buzzwords""');
-  });
-
-  it('does not include post text in output', () => {
-    // buildCsvExport only takes accounts — no post text should appear
-    const account = makeAccount();
-    const result = buildCsvExport([account]);
-    expect(result).not.toContain('Some post text');
   });
 });
 

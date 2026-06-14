@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegistrySchema, SelectorTarget } from '../shared/types';
-import { buildJsonExport, buildCsvExport, buildPostsCsvExport, buildTracesExport, deriveCleanseCount, filterCleansed } from './dataManagement';
+import { buildJsonExport, buildPostsCsvExport, buildTracesExport, deriveCleanseCount, filterCleansed } from './dataManagement';
 import SelectorView from './SelectorView';
 import { buildSeedRegistry } from '../content/selector-registry';
 import { storageSet } from '../shared/storage';
@@ -127,11 +127,6 @@ function App() {
   function handleExportJson(): void {
     const today = new Date().toISOString().slice(0, 10);
     triggerDownload(buildJsonExport(accounts, posts), `linkedin-blocker-${today}.json`, 'application/json');
-  }
-
-  function handleExportCsv(): void {
-    const today = new Date().toISOString().slice(0, 10);
-    triggerDownload(buildCsvExport(accounts), `linkedin-blocker-${today}.csv`, 'text/csv');
   }
 
   function handleExportPostsCsv(): void {
@@ -265,7 +260,6 @@ function App() {
           : (
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <button style={s.actionBtn} onClick={handleExportJson}>Export JSON</button>
-              <button style={s.actionBtn} onClick={handleExportCsv}>Export CSV</button>
               <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts CSV</button>
             </div>
           )
