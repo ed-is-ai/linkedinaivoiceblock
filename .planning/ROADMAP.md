@@ -298,13 +298,13 @@ Plans:
 **Goal:** Restructure the dashboard Export JSON into three symmetric top-level arrays — `flaggedAccounts` (retained; each entry's `status` enum collapsed to a derived `blocked: boolean` in the export, nested `posts[]` kept), `flaggedPosts` (NEW, post-centric positives sourced from the hidden `storedPosts`), and `unflaggedPosts` (negatives, already shipped in 25.1) — giving the Phase 26 eval a richer, post-centric dataset. (Per CONTEXT D-04/D-05, the earlier "blockedAccounts / filtered to blocked-only" framing is superseded: the account array stays named `flaggedAccounts` and is NOT filtered.)
 **Requirements**: EXPORT-05
 **Depends on:** Phase 25.1
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 
 **Wave 1**
-- [ ] 25.2-01-PLAN.md — EXPORT-05 requirement + traceability row; ROADMAP req line; confirm 26-CONTEXT flaggedPosts[] eval-walker amendment (EXPORT-05)
-- [ ] 25.2-02-PLAN.md — FlaggedPost type + buildJsonExport reshape (top-level flaggedPosts[], status->blocked transform, retain nested posts[]) + dataManagement tests (EXPORT-05)
+- [x] 25.2-01-PLAN.md — EXPORT-05 requirement + traceability row; ROADMAP req line; confirm 26-CONTEXT flaggedPosts[] eval-walker amendment (EXPORT-05)
+- [x] 25.2-02-PLAN.md — FlaggedPost type + buildJsonExport reshape (top-level flaggedPosts[], status->blocked transform, retain nested posts[]) + dataManagement tests (EXPORT-05)
 
 ### Phase 26: Eval Runner
 
