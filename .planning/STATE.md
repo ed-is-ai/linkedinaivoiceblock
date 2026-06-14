@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: v7.0
-milestone_name: Adaptive DOM Scraper
+milestone: v9.0
+milestone_name: Eval Harness
 status: ready_to_plan
-last_updated: 2026-06-14T10:24:05.251Z
+last_updated: 2026-06-14T11:30:00.000Z
 last_activity: 2026-06-14
 progress:
   total_phases: 9
@@ -11,7 +11,7 @@ progress:
   total_plans: 19
   completed_plans: 19
   percent: 89
-stopped_at: Phase 22 complete (5/5) — ready to discuss Phase 23
+stopped_at: Phases 18–25 complete (v7.0 Adaptive DOM Scraper + v8.0 Observability done). Phase 26 (Eval Runner, v9.0) is the only remaining phase.
 ---
 
 # State — LinkedIn Blocker
@@ -21,16 +21,17 @@ stopped_at: Phase 22 complete (5/5) — ready to discuss Phase 23
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 23 — self healing selector adapter
+**Current focus:** Phase 26 — eval runner (v9.0 Eval Harness)
 
 ---
 
 ## Current Position
 
-Phase: 23
-Plan: Not started
-Status: Ready to plan
+Phase: 26
+Plan: Not started — no CONTEXT/plans yet
+Status: Ready to discuss
 Last activity: 2026-06-14
+Note: Phases 23–25 were executed and completed ahead of Phase 22; Phase 22 was closed retroactively on 2026-06-14. All phases through 25 are now complete; Phase 26 is the only remaining phase.
 
 ## Accumulated Context
 
