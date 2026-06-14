@@ -210,6 +210,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
+
 - [x] 26-01-PLAN.md — Extract classifier into src/shared/classifier.ts + refactor service worker (wave 1)
 - [x] 26-02-PLAN.md — Eval CLI: threshold sweep, metrics, cost, results persistence, npm run eval (wave 2)
 
@@ -289,13 +290,16 @@ Plans:
 Plans:
 
 **Wave 1**
+
 - [x] 25.1-01-PLAN.md — UnflaggedPost type + unflaggedPosts StorageSchema key + captureUnflaggedPosts Settings field (CAPTURE-01)
 
 **Wave 2** *(blocked on Wave 1)*
+
 - [x] 25.1-02-PLAN.md — persistUnflaggedPost FIFO helper + gated below-threshold capture hook before the L323 early return (CAPTURE-01, CAPTURE-02)
 - [x] 25.1-03-PLAN.md — Additive top-level unflaggedPosts[] in buildJsonExport + test (EXPORT-04)
 
 **Wave 3** *(blocked on Wave 2)*
+
 - [x] 25.1-04-PLAN.md — Dashboard load+export wiring; popup opt-in toggle + merge-safe settings; 26-CONTEXT unflaggedPosts[] amendment (EXPORT-04, CAPTURE-02)
 
 ### Phase 25.2: Symmetric export redesign (blockedAccounts + flaggedPosts + unflaggedPosts) (INSERTED)
@@ -308,6 +312,7 @@ Plans:
 Plans:
 
 **Wave 1**
+
 - [x] 25.2-01-PLAN.md — EXPORT-05 requirement + traceability row; ROADMAP req line; confirm 26-CONTEXT flaggedPosts[] eval-walker amendment (EXPORT-05)
 - [x] 25.2-02-PLAN.md — FlaggedPost type + buildJsonExport reshape (top-level flaggedPosts[], status->blocked transform, retain nested posts[]) + dataManagement tests (EXPORT-05)
 
@@ -332,10 +337,14 @@ Plans:
 **Requirements**: EVAL-06–EVAL-09 (engine alignment, error analysis, labeling workflow, results viewer — finalized at planning)
 **Depends on:** Phase 26
 **Plans:** 3 plans
+Plans:
+**Wave 1**
 
-Plans:
 - [ ] 27-01-PLAN.md — Engine alignment (--engine heuristic|llm) + best-F1 error analysis (FP/FN) + eval-instructions sync (EVAL-06, EVAL-07)
 - [ ] 27-02-PLAN.md — Labeling workflow CLI (npm run eval-label, interactive + --auto) (EVAL-08)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 27-03-PLAN.md — Results viewer / run comparison CLI (npm run eval-compare) (EVAL-09)
 
 ---
