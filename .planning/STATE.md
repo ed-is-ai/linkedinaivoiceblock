@@ -80,8 +80,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Quick task 260614-gb8 — renamed the "Export Traces" button to "Export LLM call traces". tsc + build clean. (Prior quick tasks: g9t inlined the export buttons; g58 removed Export CSV + enlarged the Selector Health dot.)
-**Next action:** Phase 26 (Eval Runner) — the only remaining phase. Start with /gsd-discuss-phase 26.
+**Last action:** Phase 26 (Eval Runner) context gathered — 26-CONTEXT.md written. Decisions: extract classifier to a shared module (SW + CLI import); threshold sweep 35–90 (cost threshold-independent); input = Export JSON shape + per-post label, re-score fresh via LLM. Surfaced a NEW pre-phase: "Capture & export unflagged posts" (for human negatives) to be inserted via /gsd-phase.
+**Next action:** Insert the capture pre-phase (/gsd-phase), then /gsd-plan-phase 26. Resume file: .planning/phases/26-eval-runner/26-CONTEXT.md
 
 ## Performance Metrics
 
