@@ -138,6 +138,13 @@ export interface ObservedPost {
 export interface Settings {
   /** Score threshold (35–90) above which posts are auto-hidden. Default: 60. */
   autoHideThreshold: number;
+  /**
+   * Opt-in (default OFF) to capture below-threshold posts as eval negatives.
+   * Distinct, deliberately-enabled eval-prep feature; stores text the user never flagged —
+   * a broader privacy surface than flagged-post storage.
+   * When undefined, treat as false.
+   */
+  captureUnflaggedPosts?: boolean;
 }
 
 /** One calendar day of detection stats (UTC date). Rolling 30-day log. */
@@ -176,6 +183,36 @@ export interface StoredPost {
   text: string;
   /** Unix timestamp (ms) when this post was hidden */
   hiddenAt: number;
+}
+
+/**
+ * A below-FLAG_THRESHOLD post captured as an eval negative (Phase 25.1).
+ * Stored in StorageSchema.unflaggedPosts as a newest-first array, capped at 200 entries.
+ *
+ * Opt-in: only captured when Settings.captureUnflaggedPosts is explicitly true.
+ * Stored UNLABELED — the extension never writes the `label` field. Ground-truth
+ * labels are added by the user after exporting the JSON for eval purposes (D-06).
+ */
+export interface UnflaggedPost {
+  /** LinkedIn post URN — dedup key */
+  urn: string;
+  /** Author profile slug */
+  authorId: string;
+  /** Author display name at time of capture */
+  authorName: string;
+  /** Composite detection score at time of capture (0–100) */
+  score: number;
+  /** Post text truncated at 1000 chars */
+  text: string;
+  /** Unix timestamp (ms) when the post was seen (NOT hiddenAt — these posts are never hidden) */
+  seenAt: number;
+  /** Which detection engine computed the score (D-04) */
+  engineUsed: 'heuristic' | 'llm';
+  /**
+   * User-supplied ground-truth label for eval purposes.
+   * Never written by the extension — added by the user after editing the exported JSON.
+   */
+  label?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -346,12 +383,18 @@ export interface StorageSchema {
   dismissedAccounts?: string[];
   /** Anthropic API key — set once via DevTools: chrome.storage.local.set({anthropicApiKey:'sk-ant-...'}) */
   anthropicApiKey?: string;
-  /** User settings — threshold configurable in popup Settings section. */
+  /** User settings — threshold configurable in popup Settings section (includes captureUnflaggedPosts opt-in). */
   settings?: Settings;
   /** Rolling 30-day stats log. Content script writes; dashboard reads. */
   dailyStats?: DailyStats[];
   /** Newest-first array of hidden posts saved for review. Capped at 200 entries; content script writes, popup Phase 8 reads. */
   storedPosts?: StoredPost[];
+  /**
+   * Newest-first array of below-FLAG_THRESHOLD posts captured as eval negatives. Stored UNLABELED.
+   * Capped at 200 with oldest-evicted; content script writes (gated by Settings.captureUnflaggedPosts, off by default);
+   * dashboard reads for export.
+   */
+  unflaggedPosts?: UnflaggedPost[];
   /** Selector registry: versioned, rank-ordered candidate lists per target. Seeded from src/content/selectors.ts on first load or version bump. */
   selectorRegistry?: SelectorRegistrySchema;
   /** Set of selector targets that produced zero DOM matches in the current content-script session. Written by content script; read by dashboard health view. */
