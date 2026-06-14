@@ -15,7 +15,12 @@ findings:
   warning: 3
   info: 2
   total: 6
-status: issues_found
+status: resolved
+resolution:
+  resolved: 2026-06-14
+  fixed: [CR-01, WR-01, WR-02, WR-03, IN-01]
+  commits: [2268937, 773bc35, 26de97b]
+  note: "Critical + Warning findings fixed and committed; IN-01 test updated alongside WR-02. tsc + 250 tests + build green. IN-02 accepted as by-design (storage-cap enforced at write time)."
 ---
 
 # Phase 25: Code Review Report
