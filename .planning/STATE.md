@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: executing
-last_updated: "2026-06-14T13:21:06.385Z"
+last_updated: "2026-06-14T13:25:18.765Z"
 last_activity: 2026-06-14
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
   percent: 80
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 ## Current Position
 
 Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-14
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
@@ -59,6 +59,7 @@ Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts �
 | Popup inline styles | All popup styling via inline style objects (styles record); no CSS class selectors | Phase 4 |
 | Selector runtime model | selectors.ts = seed/defaults only; SelectorRegistry = runtime source-of-truth; only SelectorRegistry writes selectors to storage | Phase 22 |
 | LLM call location (v7.0) | Anthropic fetch lives in service worker (background/index.ts); content script sends chrome.runtime.sendMessage — CORS blocks direct fetch from linkedin.com. LLMRederiver must follow the same SCORE_POST message pattern. | Phase 23 |
+| unflaggedPosts export shape | Top-level sibling of flaggedAccounts in buildJsonExport JSON; defaulted third param keeps all existing callers unchanged; label forwarded only when user-supplied | Phase 25.1 |
 
 ### Todos
 
@@ -81,11 +82,12 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Executed 25.1-02 — persistUnflaggedPost FIFO helper (GREEN, TDD) + opt-in gated capture hook in content/index.ts before below-threshold early return. 247 tests pass, tsc clean.
-**Next action:** Execute 25.1-03. Resume file: .planning/phases/25.1-capture-and-export-unflagged-posts-for-eval-negatives/25.1-03-PLAN.md
+**Last action:** Executed 25.1-03 — additive unflaggedPosts[] array in buildJsonExport (TDD, RED acc23a6 / GREEN fa37509). 37 tests pass, tsc clean.
+**Next action:** Execute 25.1-04. Resume file: .planning/phases/25.1-capture-and-export-unflagged-posts-for-eval-negatives/25.1-04-PLAN.md
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
 | Phase 25 P02 | 900 | 2 tasks | 4 files |
+| Phase 25.1 P03 | 102s | 1 task | 2 files |
