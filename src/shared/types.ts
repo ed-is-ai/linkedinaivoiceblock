@@ -215,6 +215,37 @@ export interface UnflaggedPost {
   label?: string;
 }
 
+/**
+ * Export-only post-centric positives shape for the Phase 25.2 symmetric export.
+ * Sourced from hidden `storedPosts`; never written to storage — it is an export projection.
+ *
+ * Mirrors `UnflaggedPost` for symmetry, with two differences:
+ * - `hiddenAt` (not `seenAt`) — these posts were hidden, not merely seen.
+ * - No `engineUsed` — it was never recorded at hide time for `storedPosts`.
+ *
+ * Stored UNLABELED by default. The extension NEVER writes `label` — ground-truth labels
+ * are added by the user after exporting the JSON for eval purposes (25.1 D-06).
+ */
+export interface FlaggedPost {
+  /** LinkedIn post URN — dedup key */
+  urn: string;
+  /** Author profile slug */
+  authorId: string;
+  /** Author display name at time of hiding */
+  authorName: string;
+  /** Composite detection score at time of hiding (0–100) */
+  score: number;
+  /** Post text truncated at 1000 chars */
+  text: string;
+  /** Unix timestamp (ms) when this post was hidden (NOT seenAt — these posts were hidden) */
+  hiddenAt: number;
+  /**
+   * User-supplied ground-truth label for eval purposes.
+   * Never written by the extension — added by the user after editing the exported JSON.
+   */
+  label?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Phase 24: Trace Capture & Storage
 // ---------------------------------------------------------------------------

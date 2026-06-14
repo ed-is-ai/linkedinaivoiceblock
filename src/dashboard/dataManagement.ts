@@ -1,4 +1,4 @@
-import type { FlaggedAccount, StoredPost, TraceEntry, UnflaggedPost } from '../shared/types';
+import type { FlaggedAccount, FlaggedPost, StoredPost, TraceEntry, UnflaggedPost } from '../shared/types';
 
 export function csvEscape(value: string | number): string {
   const str = String(value);
@@ -23,17 +23,34 @@ export function buildJsonExport(
 
   const payload = {
     exportedAt: new Date().toISOString(),
-    flaggedAccounts: accounts.map(a => ({
-      ...a,
-      firstSeenAt: new Date(a.firstSeenAt).toISOString(),
-      lastSeenAt: new Date(a.lastSeenAt).toISOString(),
-      posts: (postsByAuthor[a.authorId] ?? []).map(p => ({
+    flaggedAccounts: accounts.map(a => {
+      const { status, ...rest } = a;
+      return {
+        ...rest,
+        blocked: status === 'blocked',
+        firstSeenAt: new Date(a.firstSeenAt).toISOString(),
+        lastSeenAt: new Date(a.lastSeenAt).toISOString(),
+        posts: (postsByAuthor[a.authorId] ?? []).map(p => ({
+          urn: p.urn,
+          score: p.score,
+          text: p.text,
+          hiddenAt: new Date(p.hiddenAt).toISOString(),
+        })),
+      };
+    }),
+    flaggedPosts: posts.map((p): Omit<FlaggedPost, 'hiddenAt'> & { hiddenAt: string } => {
+      const typed = p as StoredPost & { label?: string };
+      const labelEntry = typed.label === undefined ? {} : { label: typed.label };
+      return {
         urn: p.urn,
-        score: p.score,
+        authorId: p.authorId,
+        authorName: p.authorName,
         text: p.text,
+        score: p.score,
         hiddenAt: new Date(p.hiddenAt).toISOString(),
-      })),
-    })),
+        ...labelEntry,
+      };
+    }),
     unflaggedPosts: unflagged.map(p => ({
       urn: p.urn,
       authorId: p.authorId,

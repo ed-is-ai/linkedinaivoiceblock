@@ -168,6 +168,92 @@ describe('buildJsonExport', () => {
     // NOT nested under flaggedAccounts[0]
     expect(parsed.flaggedAccounts[0]).not.toHaveProperty('unflaggedPosts');
   });
+
+  // ── flaggedPosts[] assertions (Phase 25.2) ──────────────────────────────
+
+  it('empty call yields a top-level flaggedPosts equal to []', () => {
+    const parsed = JSON.parse(buildJsonExport([], []));
+    expect(parsed).toHaveProperty('flaggedPosts');
+    expect(parsed.flaggedPosts).toEqual([]);
+  });
+
+  it('given one StoredPost, flaggedPosts[0] has correct urn, authorId, authorName, text, score and hiddenAt as ISO', () => {
+    const post = makePost({ hiddenAt: 1748600000000 });
+    const parsed = JSON.parse(buildJsonExport([], [post]));
+    expect(parsed.flaggedPosts).toHaveLength(1);
+    const entry = parsed.flaggedPosts[0];
+    expect(entry.urn).toBe('urn:li:activity:1');
+    expect(entry.authorId).toBe('user1');
+    expect(entry.authorName).toBe('Test User');
+    expect(entry.text).toBe('Some post text.');
+    expect(entry.score).toBe(72);
+    expect(entry.hiddenAt).toBe(new Date(1748600000000).toISOString());
+  });
+
+  it('flaggedPosts[0] does NOT have an engineUsed property', () => {
+    const post = makePost();
+    const parsed = JSON.parse(buildJsonExport([], [post]));
+    expect(parsed.flaggedPosts[0]).not.toHaveProperty('engineUsed');
+  });
+
+  it('StoredPost with label yields flaggedPosts[0].label equal to that label', () => {
+    const post = { ...makePost(), label: 'ai' } as StoredPost & { label: string };
+    const parsed = JSON.parse(buildJsonExport([], [post]));
+    expect(parsed.flaggedPosts[0].label).toBe('ai');
+  });
+
+  it('StoredPost without label yields flaggedPosts[0] with NO label property', () => {
+    const post = makePost();
+    const parsed = JSON.parse(buildJsonExport([], [post]));
+    expect(parsed.flaggedPosts[0]).not.toHaveProperty('label');
+  });
+
+  it('flaggedPosts is a top-level sibling of flaggedAccounts, NOT nested under any entry', () => {
+    const account = makeAccount();
+    const post = makePost();
+    const parsed = JSON.parse(buildJsonExport([account], [post]));
+    expect(parsed).toHaveProperty('flaggedPosts');
+    expect(parsed.flaggedAccounts[0]).not.toHaveProperty('flaggedPosts');
+  });
+
+  // ── blocked boolean on exported flaggedAccounts[] (Phase 25.2) ──────────
+
+  it('exported flaggedAccounts[0] has blocked: true when account status is "blocked"', () => {
+    const account = makeAccount({ status: 'blocked' });
+    const parsed = JSON.parse(buildJsonExport([account], []));
+    expect(parsed.flaggedAccounts[0].blocked).toBe(true);
+  });
+
+  it('exported flaggedAccounts[0] has blocked: false when account status is "pending"', () => {
+    const account = makeAccount({ status: 'pending' });
+    const parsed = JSON.parse(buildJsonExport([account], []));
+    expect(parsed.flaggedAccounts[0].blocked).toBe(false);
+  });
+
+  it('exported flaggedAccounts[0] has blocked: false when account status is "dismissed"', () => {
+    const account = makeAccount({ status: 'dismissed' });
+    const parsed = JSON.parse(buildJsonExport([account], []));
+    expect(parsed.flaggedAccounts[0].blocked).toBe(false);
+  });
+
+  it('exported flaggedAccounts[0] does NOT have a status property', () => {
+    const account = makeAccount({ status: 'blocked' });
+    const parsed = JSON.parse(buildJsonExport([account], []));
+    expect(parsed.flaggedAccounts[0]).not.toHaveProperty('status');
+  });
+
+  it('exported flaggedAccounts[0] still has a nested posts array (D-06 retention)', () => {
+    const account = makeAccount();
+    const post = makePost();
+    const parsed = JSON.parse(buildJsonExport([account], [post]));
+    expect(parsed.flaggedAccounts[0]).toHaveProperty('posts');
+    expect(parsed.flaggedAccounts[0].posts).toHaveLength(1);
+    const nestedPost = parsed.flaggedAccounts[0].posts[0];
+    expect(nestedPost).toHaveProperty('urn');
+    expect(nestedPost).toHaveProperty('score');
+    expect(nestedPost).toHaveProperty('text');
+    expect(nestedPost).toHaveProperty('hiddenAt');
+  });
 });
 
 // ─── deriveCleanseCount ──────────────────────────────────────────────────────
