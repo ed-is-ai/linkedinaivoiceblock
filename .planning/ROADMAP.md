@@ -274,6 +274,16 @@ Plans:
 
 **UI hint**: yes
 
+### Phase 25.1: Capture and export unflagged posts for eval negatives (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 25
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 25.1 to break down)
+
 ### Phase 26: Eval Runner
 
 **Goal**: `npm run eval <labeled-posts.json>` feeds labeled posts through the LLM classifier and prints precision, recall, F1, accuracy, total cost, and average cost per post — with results persisted to `eval/results-YYYY-MM-DD.json`

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: Ready to discuss
-last_updated: "2026-06-14T12:32:35.329Z"
+last_updated: "2026-06-14T12:35:44.923Z"
 last_activity: 2026-06-14
 progress:
-  total_phases: 9
+  total_phases: 10
   completed_phases: 8
   total_plans: 19
   completed_plans: 19
-  percent: 89
+  percent: 80
 ---
 
 # State — LinkedIn Blocker
@@ -20,17 +20,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 26 — eval runner (v9.0 Eval Harness)
+**Current focus:** Phase 25.1 — capture & export unflagged posts (eval negatives), then Phase 26 eval runner
 
 ---
 
 ## Current Position
 
-Phase: 26
-Plan: Not started — no CONTEXT/plans yet
-Status: Ready to discuss
+Phase: 25.1
+Plan: Not planned yet (INSERTED) — no plans
+Status: Ready to plan
 Last activity: 2026-06-14
-Note: Phases 23–25 were executed and completed ahead of Phase 22; Phase 22 was closed retroactively on 2026-06-14. All phases through 25 are now complete; Phase 26 is the only remaining phase.
+Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
 
 ## Accumulated Context
 
@@ -38,6 +38,7 @@ Note: Phases 23–25 were executed and completed ahead of Phase 22; Phase 22 was
 
 - Phase 18.1 inserted after Phase 18: Dashboard Data Display (URGENT)
 - Phases 22–23 added: v7.0 Adaptive DOM Scraper
+- Phase 25.1 inserted after Phase 25: Capture and export unflagged posts for eval negatives (URGENT)
 
 ### Key Decisions
 
@@ -80,8 +81,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Phase 26 (Eval Runner) context gathered — 26-CONTEXT.md written. Decisions: extract classifier to a shared module (SW + CLI import); threshold sweep 35–90 (cost threshold-independent); input = Export JSON shape + per-post label, re-score fresh via LLM. Surfaced a NEW pre-phase: "Capture & export unflagged posts" (for human negatives) to be inserted via /gsd-phase.
-**Next action:** Insert the capture pre-phase (/gsd-phase), then /gsd-plan-phase 26. Resume file: .planning/phases/26-eval-runner/26-CONTEXT.md
+**Last action:** Phase 25.1 context gathered — 25.1-CONTEXT.md written. Capture below-FLAG_THRESHOLD posts (index.ts:323), new unflaggedPosts FIFO store (cap 200, dedupe by URN), separate opt-in (off by default), stored UNLABELED, exported as a new top-level unflaggedPosts[] array. NOTE: amends 26-CONTEXT D-07/D-08 — the eval walker must read unflaggedPosts[] too.
+**Next action:** /gsd-plan-phase 25.1, then /gsd-plan-phase 26 (incorporating the unflaggedPosts[] input amendment). Resume file: .planning/phases/25.1-capture-and-export-unflagged-posts-for-eval-negatives/25.1-CONTEXT.md
 
 ## Performance Metrics
 
