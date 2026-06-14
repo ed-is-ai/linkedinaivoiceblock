@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: verifying
-last_updated: "2026-06-14T13:32:12.013Z"
-last_activity: 2026-06-14
+status: executing
+last_updated: "2026-06-14T17:42:25.796Z"
+last_activity: 2026-06-14 -- Phase 25.1 planning complete
 progress:
   total_phases: 10
-  completed_phases: 9
-  total_plans: 23
+  completed_phases: 8
+  total_plans: 25
   completed_plans: 23
-  percent: 90
+  percent: 80
 ---
 
 # State — LinkedIn Blocker
@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 Phase: 25.1 (capture-and-export-unflagged-posts-for-eval-negatives) — COMPLETE
 Plan: 4 of 4 (all executed)
-Status: Phase 25.1 complete. Next: plan and execute Phase 26 (eval runner).
-Last activity: 2026-06-14
+Status: Ready to execute
+Last activity: 2026-06-14 -- Phase 25.1 planning complete
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
 
 ## Accumulated Context
