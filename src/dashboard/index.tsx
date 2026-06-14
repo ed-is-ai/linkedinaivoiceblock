@@ -261,7 +261,7 @@ function App() {
           <div style={s.statSub}>No flagged accounts yet — browse LinkedIn to collect data.</div>
         )}
         <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-          {accounts.length > 0 && (
+          {(accounts.length > 0 || posts.length > 0 || unflagged.length > 0) && (
             <button style={s.actionBtn} onClick={handleExportJson}>Export JSON</button>
           )}
           {accounts.length > 0 && (
