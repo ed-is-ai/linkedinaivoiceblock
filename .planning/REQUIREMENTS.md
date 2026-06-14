@@ -142,6 +142,30 @@
 
 ---
 
+## Eval Negatives Capture & Export (CAPTURE / Phase 25.1)
+
+> Phase 25.1 supplies real human-negatives for the v9.0 eval (EVAL-*). The detector's below-`FLAG_THRESHOLD` posts are captured UNLABELED and exported so the Phase 26 eval has genuine "human" examples to score against.
+
+- [x] **CAPTURE-01**: The detector's below-`FLAG_THRESHOLD` posts (the human-looking negatives dropped at the `content/index.ts` early return) are persisted UNLABELED to a new capped `unflaggedPosts` store in `chrome.storage.local` — a newest-first array, FIFO-capped at 200, deduped by `urn`, with post text truncated to 1000 chars, recording `seenAt`, `score`, and `engineUsed`; backed by an `UnflaggedPost` type, an `unflaggedPosts` `StorageSchema` key, and a `persistUnflaggedPost` helper. (Source: `src/shared/types.ts`, `src/shared/postStore.ts`.)
+- [x] **CAPTURE-02**: Capture is gated behind a distinct opt-in `Settings.captureUnflaggedPosts`, OFF by default, deliberately separate from any other storage opt-in (it stores text the user never flagged — a broader privacy surface); the popup exposes a toggle for it and writes settings via a merge so the opt-in and `autoHideThreshold` do not clobber each other; the content-script capture call fires only when the opt-in is enabled. (Source: `src/content/index.ts`, `src/popup/index.tsx`.)
+- [x] **EXPORT-04**: The dashboard "Export JSON" includes a top-level `unflaggedPosts[]` array (sibling of `flaggedAccounts[]`) so the Phase 26 eval has real human-negatives; the export builder adds the array additively (existing flagged-account nesting and CSV exports unchanged), and the Export JSON button is reachable whenever unflagged posts exist even with zero flagged accounts. EXPORT-04 is a **NEW** ID scoped to Phase 25.1 eval negatives and does **NOT** modify the archived v1.1 EXPORT-01 (flagged accounts + stored posts) nor the v1.2 EXPORT-03 (Posts CSV) definitions. (Source: `src/dashboard`, `buildJsonExport`.)
+
+---
+
+## Traceability (v9.0)
+
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| EVAL-01 | Phase 26 | Planned |
+| EVAL-02 | Phase 26 | Planned |
+| EVAL-03 | Phase 26 | Planned |
+| EVAL-04 | Phase 26 | Planned |
+| CAPTURE-01 | Phase 25.1 | Complete |
+| CAPTURE-02 | Phase 25.1 | Complete |
+| EXPORT-04 | Phase 25.1 | Complete |
+
+---
+
 ## Future Requirements (deferred from v9.0)
 
 - CI integration: run eval against a committed fixtures file on every push (costs real money — opt-in only).
