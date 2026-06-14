@@ -33,10 +33,11 @@ const s: Record<string, JSX.CSSProperties> = {
     padding: '4px 0',
   },
   trafficLight: {
-    width: 10,
-    height: 10,
+    width: 16,
+    height: 16,
     borderRadius: '50%',
     flexShrink: 0,
+    boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.08)',
   },
   chevron: {
     display: 'inline-block',
