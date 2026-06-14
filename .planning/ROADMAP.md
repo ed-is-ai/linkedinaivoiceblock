@@ -263,7 +263,14 @@ Plans:
   3. After running the script, README.md contains an updated `## LLM Cost Reference` section with the generated table
   4. The script exits non-zero with a clear error message if the input file is missing or malformed
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 25-01-PLAN.md — Dashboard Export Traces button + buildTracesExport pure builder (TRACE-04)
+- [ ] 25-02-PLAN.md — trace-summary script: recompute costs via computeCostUsd, grouped table, idempotent README LLM Cost Reference section (TRACE-05, TRACE-06)
 
 **UI hint**: yes
 
