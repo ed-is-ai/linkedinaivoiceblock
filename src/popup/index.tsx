@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { JSX } from 'preact';
-import type { FlaggedAccount, DailyStats, StoredPost } from '../shared/types';
+import type { FlaggedAccount, DailyStats, StoredPost, Settings } from '../shared/types';
 import AccountRow from './AccountRow';
 import BatchBlockBar from './BatchBlockBar';
 
@@ -13,6 +13,7 @@ function App() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [storedPosts, setStoredPosts] = useState<StoredPost[]>([]);
   const [threshold, setThreshold] = useState(60);
+  const [captureUnflagged, setCaptureUnflagged] = useState(false);
   const [feedPct, setFeedPct] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,8 +23,9 @@ function App() {
         setHasKey(true);
         setApiKey(key);
       }
-      const t = (result.settings as { autoHideThreshold?: number } | undefined)?.autoHideThreshold;
-      if (t !== undefined) setThreshold(t);
+      const s = result.settings as Settings | undefined;
+      if (s?.autoHideThreshold !== undefined) setThreshold(s.autoHideThreshold);
+      setCaptureUnflagged(s?.captureUnflaggedPosts ?? false);
     });
   }, []);
 
@@ -93,9 +95,20 @@ function App() {
     // Popup state refresh is automatic via the existing onChanged listener (Phase 4)
   }
 
+  async function mergeSettings(patch: Partial<Settings>): Promise<void> {
+    const result = await chrome.storage.local.get(['settings']);
+    const existing = (result.settings as Settings | undefined) ?? {};
+    await chrome.storage.local.set({ settings: { ...existing, ...patch } });
+  }
+
   function saveThreshold(value: number) {
     setThreshold(value);
-    chrome.storage.local.set({ settings: { autoHideThreshold: value } });
+    mergeSettings({ autoHideThreshold: value });
+  }
+
+  function saveCaptureUnflagged(value: boolean) {
+    setCaptureUnflagged(value);
+    mergeSettings({ captureUnflaggedPosts: value });
   }
 
   function openDashboard() {
@@ -216,6 +229,22 @@ function App() {
               onInput={(e) => saveThreshold(Number((e.target as HTMLInputElement).value))}
               style={styles.slider}
             />
+          </div>
+
+          <div style={styles.captureRow}>
+            <label style={styles.captureLabel}>
+              <input
+                type="checkbox"
+                checked={captureUnflagged}
+                onChange={(e) => saveCaptureUnflagged((e.target as HTMLInputElement).checked)}
+                style={styles.captureCheckbox}
+              />
+              Capture unflagged posts (eval prep)
+            </label>
+            <p style={styles.captureHint}>
+              Stores text from posts that were <em>not</em> hidden — broader privacy surface. OFF by default.
+              Only enable if you are building an evaluation dataset.
+            </p>
           </div>
 
           <div style={styles.modeRow}>
@@ -367,6 +396,10 @@ const styles: Record<string, preact.JSX.CSSProperties> = {
     textAlign: 'center' as const,
   },
   feedHealth: { fontSize: 11, color: '#6b7280', margin: '0 0 8px' },
+  captureRow: { marginBottom: 12 },
+  captureLabel: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' },
+  captureCheckbox: { cursor: 'pointer', margin: 0 },
+  captureHint: { margin: '4px 0 0', fontSize: 11, color: '#6b7280', lineHeight: 1.5 },
   blockedSectionHeader: {
     cursor: 'pointer',
     fontSize: 11,
