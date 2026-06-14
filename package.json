@@ -12,6 +12,7 @@
     "lint": "eslint src",
     "generate-icons": "node scripts/generate-icons.js",
     "trace-summary": "tsx scripts/trace-summary.ts",
+    "eval": "tsx scripts/eval.ts",
     "package": "npm run build && node scripts/package-zip.js",
     "test": "vitest run",
     "test:watch": "vitest",
