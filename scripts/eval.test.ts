@@ -35,7 +35,7 @@ beforeEach(() => {
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { collectLabeled, computeMetrics, safe, loadExport, main } from './eval';
+import { collectLabeled, computeMetrics, safe, loadExport, main, formatSignalBreakdown } from './eval';
 
 // ---------------------------------------------------------------------------
 // EVAL-01: Walker
@@ -214,6 +214,33 @@ describe('safe()', () => {
   it('converts Infinity to 0', () => {
     expect(safe(Infinity)).toBe(0);
     expect(safe(-Infinity)).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-post signal breakdown rendering
+// ---------------------------------------------------------------------------
+
+describe('formatSignalBreakdown', () => {
+  it('lists signals highest-contribution first', () => {
+    const out = formatSignalBreakdown({ 'em-dash': 12, 'formulaic-structure': 25, buzzword: 18 });
+    const order = out
+      .split('\n')
+      .map(l => l.trim().split(/\s+/)[0]);
+    expect(order).toEqual(['formulaic-structure', 'buzzword', 'em-dash']);
+  });
+
+  it('renders `(no signals)` for an empty breakdown', () => {
+    expect(formatSignalBreakdown({})).toContain('(no signals)');
+  });
+
+  it('appends reasoning when provided', () => {
+    const out = formatSignalBreakdown({ buzzword: 10 }, 'Generic motivational arc.');
+    expect(out).toContain('reasoning: Generic motivational arc.');
+  });
+
+  it('omits the reasoning line when reasoning is absent', () => {
+    expect(formatSignalBreakdown({ buzzword: 10 })).not.toContain('reasoning:');
   });
 });
 

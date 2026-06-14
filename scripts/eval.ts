@@ -127,6 +127,38 @@ export function collectLabeled(
 }
 
 // ---------------------------------------------------------------------------
+// Per-post detail — surfaces the detector's per-signal breakdown + reasoning
+// ---------------------------------------------------------------------------
+
+export interface PostDetail {
+  index: number;
+  label: 'ai' | 'human';
+  score: number;
+  confidence: 'high' | 'medium' | 'low';
+  signalBreakdown: Record<string, number>;
+  reasoning?: string;
+  /** First 80 chars of the post, so results-*.json is readable without the source export. */
+  textPreview: string;
+}
+
+/**
+ * Render a post's per-signal contributions (highest first) plus optional reasoning
+ * as indented stdout lines. Returns `(no signals)` when the breakdown is empty.
+ */
+export function formatSignalBreakdown(
+  breakdown: Record<string, number>,
+  reasoning?: string,
+): string {
+  const entries = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+  const lines =
+    entries.length === 0
+      ? ['       (no signals)']
+      : entries.map(([sig, val]) => `       ${sig.padEnd(26)} ${String(val).padStart(3)}`);
+  if (reasoning) lines.push(`       reasoning: ${reasoning}`);
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
 // Export loader (exportable for tests — EVAL-05 bad-input contract)
 // ---------------------------------------------------------------------------
 
@@ -212,6 +244,7 @@ export async function main(): Promise<void> {
 
   // 6. Sequential scoring loop — one LLM call per labeled post (D-08)
   const scored: ScoredEntry[] = [];
+  const details: PostDetail[] = [];
   let totalCostUsd = 0;
   let errored = 0;
 
@@ -232,12 +265,23 @@ export async function main(): Promise<void> {
       }
 
       scored.push({ label: post.label, score: result.score });
+      details.push({
+        index: i + 1,
+        label: post.label,
+        score: result.score,
+        confidence: result.confidence,
+        signalBreakdown: result.signalBreakdown,
+        ...(result.reasoning ? { reasoning: result.reasoning } : {}),
+        textPreview: post.text.slice(0, 80),
+      });
 
-      // Progress line — index/total + running cost (T-26-04: key never printed)
+      // Progress header — index/total + running cost (T-26-04: key never printed)
       process.stdout.write(
-        `  [${i + 1}/${labeled}] score=${result.score} label=${post.label}` +
+        `  [${i + 1}/${labeled}] score=${result.score} label=${post.label} confidence=${result.confidence}` +
         ` | running cost $${totalCostUsd.toFixed(6)}\n`,
       );
+      // Per-signal breakdown + reasoning — why this post scored what it did
+      process.stdout.write(formatSignalBreakdown(result.signalBreakdown, result.reasoning) + '\n');
     } catch (err) {
       errored++;
       process.stderr.write(`  [${i + 1}/${labeled}] ERROR: ${String(err)}\n`);
@@ -286,6 +330,7 @@ export async function main(): Promise<void> {
     },
     thresholds: thresholdRows,
     bestF1Threshold,
+    posts: details,
   };
 
   // ---------------------------------------------------------------------------

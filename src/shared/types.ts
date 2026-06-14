@@ -51,6 +51,11 @@ export interface DetectionResult {
   confidence: 'high' | 'medium' | 'low';
   /** Which detection engine produced this result */
   engineUsed: 'heuristic' | 'llm';
+  /**
+   * One-sentence rationale from the LLM detector (optional). Captured for eval/debugging
+   * visibility; the heuristic engine does not populate it.
+   */
+  reasoning?: string;
 }
 
 /**

@@ -142,10 +142,15 @@ export async function classifyPost(postText: string, apiKey: string): Promise<Cl
   };
   const raw = data.content[0]?.text ?? '';
   const jsonStr = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-  const parsed = JSON.parse(jsonStr) as { score: number; signals: Record<string, number> };
+  const parsed = JSON.parse(jsonStr) as {
+    score: number;
+    signals: Record<string, number>;
+    reasoning?: string;
+  };
 
   const score = Math.min(100, Math.max(0, Math.round(parsed.score)));
   const breakdown: Record<string, number> = parsed.signals ?? {};
+  const reasoning = typeof parsed.reasoning === 'string' ? parsed.reasoning : undefined;
 
   let confidence: 'high' | 'medium' | 'low';
   if (score >= 60) {
@@ -163,6 +168,7 @@ export async function classifyPost(postText: string, apiKey: string): Promise<Cl
       signalBreakdown: breakdown,
       confidence,
       engineUsed: 'llm',
+      ...(reasoning ? { reasoning } : {}),
     },
     usage: data.usage,
   };

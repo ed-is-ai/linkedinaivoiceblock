@@ -98,6 +98,24 @@ describe('classifyPost — success', () => {
     const headers = init.headers as Record<string, string>;
     expect(headers['x-api-key']).toBe('my-secret-key');
   });
+
+  it('captures the LLM reasoning string when present', async () => {
+    fetchMock.mockResolvedValue(okClassifyResponse());
+    const { result } = await classifyPost('text', 'key');
+    expect(result.reasoning).toBe('test');
+  });
+
+  it('leaves reasoning undefined when the response omits it', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ text: JSON.stringify({ score: 50, signals: { buzzword: 50 } }) }],
+        usage: { input_tokens: 1, output_tokens: 1 },
+      }),
+    });
+    const { result } = await classifyPost('text', 'key');
+    expect(result.reasoning).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------
