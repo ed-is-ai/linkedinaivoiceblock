@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v7.0
 milestone_name: Adaptive DOM Scraper
-status: verifying
-last_updated: "2026-06-14T09:15:57.075Z"
+status: ready_to_plan
+last_updated: 2026-06-14T10:08:36.245Z
 last_activity: 2026-06-14
 progress:
   total_phases: 9
@@ -11,6 +11,7 @@ progress:
   total_plans: 19
   completed_plans: 19
   percent: 89
+stopped_at: Phase 25 complete (2/2) — ready to discuss Phase 26
 ---
 
 # State — LinkedIn Blocker
@@ -20,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 25 — dashboard-export-readme-script
+**Current focus:** Phase 26 — eval runner
 
 ---
 
 ## Current Position
 
-Phase: 25 (dashboard-export-readme-script) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
+Phase: 26
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-06-14
 
 ## Accumulated Context
