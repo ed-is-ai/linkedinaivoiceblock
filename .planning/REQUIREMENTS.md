@@ -106,8 +106,8 @@
 - [x] **TRACE-02**: Each `LLMRederiver` call appends a trace entry with the same schema and source `"rederiver"`.
 - [x] **TRACE-03**: The trace store is capped at 500 entries; when full, the oldest entries are evicted (FIFO).
 - [x] **TRACE-04**: The dashboard exposes an "Export Traces" button that downloads all stored trace entries as a `linkedin-blocker-traces-YYYY-MM-DD.json` file.
-- [ ] **TRACE-05**: `npm run trace-summary <file>` reads a trace export JSON and prints a cost breakdown table grouped by source and model (call count, total input tokens, total output tokens, total USD cost, avg cost per call).
-- [ ] **TRACE-06**: `npm run trace-summary <file>` writes/updates a `## LLM Cost Reference` section in `README.md` with the generated cost table so the README always reflects a real run.
+- [x] **TRACE-05**: `npm run trace-summary <file>` reads a trace export JSON and prints a cost breakdown table grouped by source and model (call count, total input tokens, total output tokens, total USD cost, avg cost per call).
+- [x] **TRACE-06**: `npm run trace-summary <file>` writes/updates a `## LLM Cost Reference` section in `README.md` with the generated cost table so the README always reflects a real run.
 
 ---
 
