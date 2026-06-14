@@ -73,13 +73,14 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260614-g58 | UI tweaks — remove account-level Export CSV button/code; enlarge Selector Health status dot | 2026-06-14 | b229376 | [260614-g58-ui-tweaks-remove-export-csv-button-and-c](./quick/260614-g58-ui-tweaks-remove-export-csv-button-and-c/) |
+| 260614-g9t | Put all Data-management export buttons on one inline row | 2026-06-14 | f7f2afa | [260614-g9t-put-all-export-buttons-in-one-inline-row](./quick/260614-g9t-put-all-export-buttons-in-one-inline-row/) |
 
 ---
 
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Quick task 260614-g58 — removed the account-level Export CSV button + buildCsvExport/handleExportCsv + tests, and enlarged the Selector Health status dot (10→16 + ring). tsc clean, 242 tests pass, build clean.
+**Last action:** Quick task 260614-g9t — merged the export buttons into one inline (wrapping) flex row in the dashboard. tsc + build clean. (Prior: 260614-g58 removed Export CSV + enlarged the Selector Health dot.)
 **Next action:** Phase 26 (Eval Runner) — the only remaining phase. Start with /gsd-discuss-phase 26.
 
 ## Performance Metrics
