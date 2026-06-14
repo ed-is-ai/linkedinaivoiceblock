@@ -210,9 +210,8 @@ describe('deriveCleanseCount', () => {
     expect(postCount).toBe(0);
   });
 
-  it('returns { accountCount: 0, postCount: 0 } for empty date string', () => {
-    const result = deriveCleanseCount([makeAccount()], [makePost()], '');
-    expect(result).toEqual({ accountCount: 0, postCount: 0 });
+  it('throws RangeError for an empty/invalid date string (WR-02)', () => {
+    expect(() => deriveCleanseCount([makeAccount()], [makePost()], '')).toThrow(RangeError);
   });
 });
 

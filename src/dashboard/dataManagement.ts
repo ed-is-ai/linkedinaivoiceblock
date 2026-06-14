@@ -58,13 +58,24 @@ export function buildCsvExport(accounts: FlaggedAccount[]): string {
   return [headers.join(','), ...rows].join('\r\n');
 }
 
+// Parse a cleanse cutoff date string to UTC ms, rejecting invalid input.
+// An invalid/empty date yields NaN, and any `x >= NaN` comparison is always
+// false — which would silently drop every record. Fail loud instead (WR-02).
+function parseCutoffMs(beforeDateStr: string): number {
+  // date-only strings parse as UTC midnight — stored timestamps are UTC ms, so comparison is correct
+  const cutoffMs = new Date(beforeDateStr).getTime();
+  if (!Number.isFinite(cutoffMs)) {
+    throw new RangeError(`Invalid cleanse cutoff date: ${JSON.stringify(beforeDateStr)}`);
+  }
+  return cutoffMs;
+}
+
 export function deriveCleanseCount(
   accounts: FlaggedAccount[],
   posts: StoredPost[],
   beforeDateStr: string,
 ): { accountCount: number; postCount: number } {
-  // date-only strings parse as UTC midnight — stored timestamps are UTC ms, so comparison is correct
-  const cutoffMs = new Date(beforeDateStr).getTime();
+  const cutoffMs = parseCutoffMs(beforeDateStr);
   return {
     accountCount: accounts.filter(a => a.lastSeenAt < cutoffMs).length,
     postCount: posts.filter(p => p.hiddenAt < cutoffMs).length,
@@ -76,8 +87,7 @@ export function filterCleansed(
   posts: StoredPost[],
   beforeDateStr: string,
 ): { keptAccounts: Record<string, FlaggedAccount>; keptPosts: StoredPost[] } {
-  // date-only strings parse as UTC midnight — stored timestamps are UTC ms, so comparison is correct
-  const cutoffMs = new Date(beforeDateStr).getTime();
+  const cutoffMs = parseCutoffMs(beforeDateStr);
 
   // dailyStats are untouched (D-10); dismissedAccounts wiping is handled by the caller (D-09)
   // because dismissedAccounts is string[] with no timestamp to filter on
