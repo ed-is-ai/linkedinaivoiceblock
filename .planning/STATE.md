@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: Ready to discuss
-last_updated: "2026-06-14T12:35:44.923Z"
-last_activity: 2026-06-14
+status: executing
+last_updated: "2026-06-14T13:08:30.742Z"
+last_activity: 2026-06-14 -- Phase 25.1 planning complete
 progress:
   total_phases: 10
   completed_phases: 8
-  total_plans: 19
+  total_plans: 23
   completed_plans: 19
   percent: 80
 ---
@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 Phase: 25.1
 Plan: Not planned yet (INSERTED) — no plans
-Status: Ready to plan
-Last activity: 2026-06-14
+Status: Ready to execute
+Last activity: 2026-06-14 -- Phase 25.1 planning complete
 Note: Phase 25.1 inserted between 25 and 26 (capture & export unflagged posts → supplies human negatives for the Phase 26 eval). Phase 26 already has 26-CONTEXT.md. Recommended order: plan+execute 25.1, then plan 26.
 
 ## Accumulated Context
