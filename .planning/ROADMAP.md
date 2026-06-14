@@ -339,5 +339,5 @@ Plans:
 | 23. Self-Healing Selector Adapter | v7.0 | 4/4 | Complete    | 2026-06-13 |
 | 24. Trace Capture & Storage | v8.0 | 2/2 | Complete    | 2026-06-13 |
 | 25. Dashboard Export + README Script | v8.0 | 2/2 | Complete    | 2026-06-14 |
-| 25.1. Capture & Export Unflagged Posts | v9.0 | 4/4 | Complete   | 2026-06-14 |
+| 25.1. Capture & Export Unflagged Posts | v9.0 | 4/4 | Gaps Found | 2026-06-14 |
 | 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
