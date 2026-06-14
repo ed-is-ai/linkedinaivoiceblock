@@ -1,4 +1,4 @@
-import type { FlaggedAccount, StoredPost, TraceEntry } from '../shared/types';
+import type { FlaggedAccount, StoredPost, TraceEntry, UnflaggedPost } from '../shared/types';
 
 export function csvEscape(value: string | number): string {
   const str = String(value);
@@ -11,7 +11,11 @@ export function csvEscape(value: string | number): string {
   return str;
 }
 
-export function buildJsonExport(accounts: FlaggedAccount[], posts: StoredPost[]): string {
+export function buildJsonExport(
+  accounts: FlaggedAccount[],
+  posts: StoredPost[],
+  unflagged: UnflaggedPost[] = [],
+): string {
   const postsByAuthor: Record<string, StoredPost[]> = {};
   for (const p of posts) {
     (postsByAuthor[p.authorId] ??= []).push(p);
@@ -29,6 +33,15 @@ export function buildJsonExport(accounts: FlaggedAccount[], posts: StoredPost[])
         text: p.text,
         hiddenAt: new Date(p.hiddenAt).toISOString(),
       })),
+    })),
+    unflaggedPosts: unflagged.map(p => ({
+      urn: p.urn,
+      authorId: p.authorId,
+      authorName: p.authorName,
+      text: p.text,
+      score: p.score,
+      seenAt: new Date(p.seenAt).toISOString(),
+      ...(p.label !== undefined ? { label: p.label } : {}),
     })),
   };
 
