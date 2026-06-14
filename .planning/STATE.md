@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: executing
-last_updated: "2026-06-14T20:14:54.594Z"
+status: ready_to_plan
+last_updated: 2026-06-14T20:40:05.357Z
 last_activity: 2026-06-14 -- Phase 25.2 execution started
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 27
   percent: 82
+stopped_at: Phase 25.2 complete (2/2) — ready to discuss Phase 26
 ---
 
 # State — LinkedIn Blocker
@@ -20,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 25.2 — symmetric-export-redesign-blockedaccounts-flaggedposts-unfla
+**Current focus:** Phase 26 — eval runner
 
 ---
 
 ## Current Position
 
-Phase: 25.2 (symmetric-export-redesign-blockedaccounts-flaggedposts-unfla) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 25.2
-Last activity: 2026-06-14 -- Phase 25.2 execution started
+Phase: 26
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-14
 Note: Phase 25.1 COMPLETE (verified 8/8, UAT 5/5). Phase 25.2 inserted between 25.1 and 26 (symmetric export redesign: blockedAccounts + flaggedPosts + unflaggedPosts) — UAT-driven follow-on from 25.1. Phase 26 (eval-runner) already has 26-CONTEXT.md. Recommended order: discuss/plan/execute 25.2, then plan 26.
 
 ## Accumulated Context
