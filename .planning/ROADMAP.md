@@ -206,7 +206,11 @@ Plans:
   4. Opening the popup or dashboard shows a read-only selector health view listing each target's active selector, source badge (seed/heuristic/llm), and a warning when a critical selector has not matched recently
   5. Triggering "Reset to defaults" from the popup/dashboard restores all registry entries to the selectors.ts seed values and the health view reflects the change immediately
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 26-01-PLAN.md — Extract classifier into src/shared/classifier.ts + refactor service worker (wave 1)
+- [ ] 26-02-PLAN.md — Eval CLI: threshold sweep, metrics, cost, results persistence, npm run eval (wave 2)
 
 **UI hint**: yes
 
@@ -354,4 +358,4 @@ Plans:
 | 25. Dashboard Export + README Script | v8.0 | 2/2 | Complete    | 2026-06-14 |
 | 25.1. Capture & Export Unflagged Posts | v9.0 | 6/6 | Complete    | 2026-06-14 |
 | 25.2. Symmetric Export Redesign | v9.0 | 2/2 | Complete    | 2026-06-14 |
-| 26. Eval Runner | v9.0 | 0/TBD | Planned | - |
+| 26. Eval Runner | v9.0 | 0/2 | Planned | - |
