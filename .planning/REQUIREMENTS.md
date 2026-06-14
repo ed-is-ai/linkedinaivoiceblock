@@ -10,16 +10,16 @@
 
 ## Selector Registry (Wave 1 — externalize to storage)
 
-- [ ] **SELECTOR-01**: All selector-registry entries are stored in `chrome.storage.local` as rank-ordered candidate lists with metadata (`value`, `source`, `lastMatchedAt`, `lastVerifiedAt`, `matchCount`), seeded from `selectors.ts` defaults.
-- [ ] **SELECTOR-02**: At runtime the content script resolves every selector through the candidate registry in priority order; `selectors.ts` is reduced to the seed/defaults source (no direct selector imports remain in `observer.ts` / `exclusions.ts`).
-- [ ] **SELECTOR-03**: The registry is versioned; it seeds from defaults only when absent or on a version bump, and never overwrites adapted candidates on a normal page load.
-- [ ] **SELECTOR-04**: A successful match rotates the winning candidate to the front of its list and persists the change.
-- [ ] **SELECTOR-05**: Adapted candidates carry a timestamp and are demoted/expired after 30 days; each candidate list is capped (≤10 entries) and always retains the default seed.
-- [ ] **SELECTOR-06**: The user can reset selectors to bundled defaults from the popup/dashboard (escape hatch from a bad adaptation).
-- [ ] **SELECTOR-07**: A read-only view shows each target's active selector, its source (default/adapted/llm), and last-matched info, and warns when a critical selector has not matched recently on a feed page.
-- [ ] **SELECTOR-08**: The in-memory selector cache refreshes via `chrome.storage.onChanged` so healed selectors take effect within the session and stay consistent across tabs.
-- [ ] **SELECTOR-09**: After migration the extension behaves identically to v6.1 (regression-safe), verified by fixture-DOM tests covering seeding, runtime resolution, versioned migration, and reset-to-defaults.
-- [ ] **SELECTOR-10**: Project documentation (CLAUDE.md constraint #1) is updated to describe the seed-vs-runtime selector model (`selectors.ts` = defaults; `SelectorRegistry` = runtime source; only the registry writes selectors to storage).
+- [x] **SELECTOR-01**: All selector-registry entries are stored in `chrome.storage.local` as rank-ordered candidate lists with metadata (`value`, `source`, `lastMatchedAt`, `lastVerifiedAt`, `matchCount`), seeded from `selectors.ts` defaults.
+- [x] **SELECTOR-02**: At runtime the content script resolves every selector through the candidate registry in priority order; `selectors.ts` is reduced to the seed/defaults source (no direct selector imports remain in `observer.ts` / `exclusions.ts`).
+- [x] **SELECTOR-03**: The registry is versioned; it seeds from defaults only when absent or on a version bump, and never overwrites adapted candidates on a normal page load.
+- [x] **SELECTOR-04**: A successful match rotates the winning candidate to the front of its list and persists the change.
+- [x] **SELECTOR-05**: Adapted candidates carry a timestamp and are demoted/expired after 30 days; each candidate list is capped (≤10 entries) and always retains the default seed.
+- [x] **SELECTOR-06**: The user can reset selectors to bundled defaults from the popup/dashboard (escape hatch from a bad adaptation).
+- [x] **SELECTOR-07**: A read-only view shows each target's active selector, its source (default/adapted/llm), and last-matched info, and warns when a critical selector has not matched recently on a feed page.
+- [x] **SELECTOR-08**: The in-memory selector cache refreshes via `chrome.storage.onChanged` so healed selectors take effect within the session and stay consistent across tabs.
+- [x] **SELECTOR-09**: After migration the extension behaves identically to v6.1 (regression-safe), verified by fixture-DOM tests covering seeding, runtime resolution, versioned migration, and reset-to-defaults.
+- [x] **SELECTOR-10**: Project documentation (CLAUDE.md constraint #1) is updated to describe the seed-vs-runtime selector model (`selectors.ts` = defaults; `SelectorRegistry` = runtime source; only the registry writes selectors to storage).
 
 ## Adaptive Self-Healing (Wave 2 — recover broken selectors)
 
@@ -59,16 +59,16 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SELECTOR-01 | Phase 22 | Pending |
-| SELECTOR-02 | Phase 22 | Pending |
-| SELECTOR-03 | Phase 22 | Pending |
-| SELECTOR-04 | Phase 22 | Pending |
-| SELECTOR-05 | Phase 22 | Pending |
-| SELECTOR-06 | Phase 22 | Pending |
-| SELECTOR-07 | Phase 22 | Pending |
-| SELECTOR-08 | Phase 22 | Pending |
-| SELECTOR-09 | Phase 22 | Pending |
-| SELECTOR-10 | Phase 22 | Pending |
+| SELECTOR-01 | Phase 22 | Complete |
+| SELECTOR-02 | Phase 22 | Complete |
+| SELECTOR-03 | Phase 22 | Complete |
+| SELECTOR-04 | Phase 22 | Complete |
+| SELECTOR-05 | Phase 22 | Complete |
+| SELECTOR-06 | Phase 22 | Complete |
+| SELECTOR-07 | Phase 22 | Complete |
+| SELECTOR-08 | Phase 22 | Complete |
+| SELECTOR-09 | Phase 22 | Complete |
+| SELECTOR-10 | Phase 22 | Complete |
 | ADAPT-01 | Phase 23 | Complete |
 | ADAPT-02 | Phase 23 | Complete |
 | ADAPT-03 | Phase 23 | Complete |

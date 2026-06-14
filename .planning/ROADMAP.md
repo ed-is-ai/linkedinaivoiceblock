@@ -101,7 +101,7 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 
 **Milestone Goal:** Make LinkedIn scraping resilient to DOM/class churn — store selectors as a dynamic ranked candidate registry and add a self-healing adapter that detects breakage and re-derives working selectors automatically.
 
-- [ ] **Phase 22: Externalize Selectors to Storage** - Storage-backed ranked candidate registry seeded from selectors.ts; runtime resolution via SelectorRegistry; zero behavior change (Wave 1)
+- [x] **Phase 22: Externalize Selectors to Storage** - Storage-backed ranked candidate registry seeded from selectors.ts; runtime resolution via SelectorRegistry; zero behavior change (Wave 1) (completed 2026-06-14)
 - [x] **Phase 23: Self-Healing Selector Adapter** - Breakage detection with 6 false-positive guards; heuristic re-derivation; LLM fallback on sanitized structural DOM; confidence-ranked candidates (Wave 2) (completed 2026-06-13)
 
 ---
@@ -316,7 +316,7 @@ Plans:
 | 18.1. Dashboard Data Display | v6.0 | 1/1 | Complete | 2026-06-06 |
 | 20. Batch Block | v6.0 | 1/1 | Complete | 2026-06-06 |
 | 21. Dashboard Button Reposition | v6.1 | 1/1 | Complete | 2026-06-06 |
-| 22. Externalize Selectors to Storage | v7.0 | 0/TBD | Not started | - |
+| 22. Externalize Selectors to Storage | v7.0 | 5/5 | Complete    | 2026-06-14 |
 | 23. Self-Healing Selector Adapter | v7.0 | 4/4 | Complete    | 2026-06-13 |
 | 24. Trace Capture & Storage | v8.0 | 2/2 | Complete    | 2026-06-13 |
 | 25. Dashboard Export + README Script | v8.0 | 2/2 | Complete    | 2026-06-14 |
