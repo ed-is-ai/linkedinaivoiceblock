@@ -74,13 +74,14 @@ None.
 |---|-------------|------|--------|-----------|
 | 260614-g58 | UI tweaks — remove account-level Export CSV button/code; enlarge Selector Health status dot | 2026-06-14 | b229376 | [260614-g58-ui-tweaks-remove-export-csv-button-and-c](./quick/260614-g58-ui-tweaks-remove-export-csv-button-and-c/) |
 | 260614-g9t | Put all Data-management export buttons on one inline row | 2026-06-14 | f7f2afa | [260614-g9t-put-all-export-buttons-in-one-inline-row](./quick/260614-g9t-put-all-export-buttons-in-one-inline-row/) |
+| 260614-gb8 | Rename "Export Traces" button to "Export LLM call traces" | 2026-06-14 | fe94f0e | [260614-gb8-rename-export-traces-button-to-export-ll](./quick/260614-gb8-rename-export-traces-button-to-export-ll/) |
 
 ---
 
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Quick task 260614-g9t — merged the export buttons into one inline (wrapping) flex row in the dashboard. tsc + build clean. (Prior: 260614-g58 removed Export CSV + enlarged the Selector Health dot.)
+**Last action:** Quick task 260614-gb8 — renamed the "Export Traces" button to "Export LLM call traces". tsc + build clean. (Prior quick tasks: g9t inlined the export buttons; g58 removed Export CSV + enlarged the Selector Health dot.)
 **Next action:** Phase 26 (Eval Runner) — the only remaining phase. Start with /gsd-discuss-phase 26.
 
 ## Performance Metrics
