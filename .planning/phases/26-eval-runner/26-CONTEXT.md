@@ -36,6 +36,19 @@ Requirements: EVAL-01, EVAL-02, EVAL-03, EVAL-04 (+ the ROADMAP SC#5 error-exit 
 - **D-08:** The runner walks `flaggedAccounts[].posts[]`, reads each post's `text` + added `label`, and **re-scores the text fresh through the LLM** (EVAL-02). The stored `score` in the export is **ignored** — the point is to test the *current* classifier, not replay capture-time scores.
 - **D-09:** Posts **missing a `label`** are skipped and reported (count surfaced). If **no** post carries a label, the run **exits non-zero** with a clear message (EVAL-05). Positive class for metrics = **`ai`**.
 
+> **Amendment — Phase 25.1 D-07/D-08 (added 2026-06-14):**
+> The eval input walker MUST read BOTH of the following sources from the Export JSON:
+> 1. `flaggedAccounts[].posts[]` — the original flagged-post input (per D-07 above).
+> 2. `unflaggedPosts[]` — a NEW top-level sibling array produced by `buildJsonExport` (Phase 25.1).
+>
+> `unflaggedPosts` entries carry the shape `{ urn, authorId, authorName, text, score, seenAt, engineUsed }` plus an optional user-added `label`.
+>
+> Per Phase 25.1 D-06, these posts are stored **without a label** by default; the user must add `"label": "human"` (or `"ai"`) to each entry before running the eval. Unlabeled entries are **skipped** (consistent with D-09 above).
+>
+> The stored `score` field on `unflaggedPosts` entries is **ignored** — the eval re-scores each post's text fresh through the LLM (per D-08). This mirrors the behavior for `flaggedAccounts[].posts[]`.
+>
+> Source: Phase 25.1 D-07/D-08 (capture-and-export-unflagged-posts-for-eval-negatives).
+
 ### Claude's Discretion
 - **Batch run controls:** sequential LLM calls (not concurrent) with prompt caching; print a running/last cost as it progresses; posts where the API errors or returns an unparseable verdict are **excluded from the metrics** and reported as a **separate "errored" count** (mirrors the trace-summary `failed` column). A pre-run cost estimate / confirmation prompt is optional — planner's discretion.
 - **Cost computation:** reuse `src/shared/pricing.ts` `computeCostUsd` + `MODEL_PRICING` (same pattern as Phase 25); recompute from real token usage, never a hard-coded rate.
