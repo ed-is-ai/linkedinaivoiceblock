@@ -68,13 +68,19 @@ None.
 
 None.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260614-g58 | UI tweaks — remove account-level Export CSV button/code; enlarge Selector Health status dot | 2026-06-14 | b229376 | [260614-g58-ui-tweaks-remove-export-csv-button-and-c](./quick/260614-g58-ui-tweaks-remove-export-csv-button-and-c/) |
+
 ---
 
 ## Session Continuity
 
 **Last updated:** 2026-06-14
-**Last action:** Completed 25-01-PLAN.md. buildTracesExport pure builder added to dataManagement.ts with 4 unit tests (TDD RED/GREEN). handleExportTraces + Export Traces button + llbTraces storage load wired in index.tsx. tsc + build clean. TRACE-04 satisfied.
-**Next action:** Execute 25-02 (trace-summary script + README LLM Cost Reference section)
+**Last action:** Quick task 260614-g58 — removed the account-level Export CSV button + buildCsvExport/handleExportCsv + tests, and enlarged the Selector Health status dot (10→16 + ring). tsc clean, 242 tests pass, build clean.
+**Next action:** Phase 26 (Eval Runner) — the only remaining phase. Start with /gsd-discuss-phase 26.
 
 ## Performance Metrics
 
