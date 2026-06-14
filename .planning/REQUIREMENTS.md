@@ -140,6 +140,15 @@
 - [x] **EVAL-03**: The eval runner computes and prints: precision, recall, F1 score, accuracy, total LLM cost, average cost per post, and total posts evaluated — as a formatted results table.
 - [x] **EVAL-04**: Results are written to `eval/results-YYYY-MM-DD.json` (directory auto-created) and a compact summary line is printed suitable for pasting into a README or PR description.
 
+## Eval Improvements (EVAL / Phase 27)
+
+> Phase 27 makes the eval measure *shipped* detection and turns results into actionable output. Defined at planning time (finalized from the ROADMAP names EVAL-06–EVAL-09).
+
+- [ ] **EVAL-06**: The eval scores each post through the same detector engine the extension ships — `HeuristicDetector` (imported directly from `src/content/detector/heuristic.ts`; already DOM-free) or the LLM path via `classifyPost` — selected by a `--engine heuristic|llm` flag (default `llm`, preserving Phase 26 behavior). The heuristic engine requires no API key and is free; its per-post `signalBreakdown` uses the heuristic signal vocabulary matching the stored `flaggedAccounts.signals` shape. (Source: `scripts/eval.ts`, `src/content/detector/heuristic.ts`.)
+- [ ] **EVAL-07**: At the best-F1 threshold the eval surfaces false positives (true `human`, predicted AI) and false negatives (true `ai`, predicted `human`) with each post's score, `signalBreakdown`, optional reasoning, and `textPreview` — printed to the terminal (capped at top-5 each, full counts shown) and persisted under `results.errorAnalysis` in the results JSON. (Source: `scripts/eval.ts`.)
+- [ ] **EVAL-08**: `npm run eval-label -- <export.json> [--auto]` reduces the manual JSON-editing burden of adding `"label": "ai" | "human"` to export entries, writing labels back into the existing export shape (`flaggedPosts[].label` / `unflaggedPosts[].label`) while preserving all other fields; `--auto` bulk-labels flaggedPosts as `ai` and unflaggedPosts as `human` idempotently, and an interactive per-post mode handles ambiguous cases. (Source: `scripts/eval-label.ts`.)
+- [ ] **EVAL-09**: `npm run eval-compare -- <results-A.json> <results-B.json> [--format markdown]` reads two results files and prints a side-by-side comparison of engine, posts scored, best-F1 threshold, precision/recall/F1/accuracy, and cost (`free` for heuristic `cost: null` runs), in terminal or GitHub-markdown form. (Source: `scripts/eval-compare.ts`.)
+
 ---
 
 ## Eval Negatives Capture & Export (CAPTURE / Phase 25.1)
@@ -161,6 +170,10 @@
 | EVAL-02 | Phase 26 | Planned |
 | EVAL-03 | Phase 26 | Planned |
 | EVAL-04 | Phase 26 | Planned |
+| EVAL-06 | Phase 27 | Planned |
+| EVAL-07 | Phase 27 | Planned |
+| EVAL-08 | Phase 27 | Planned |
+| EVAL-09 | Phase 27 | Planned |
 | CAPTURE-01 | Phase 25.1 | Complete |
 | CAPTURE-02 | Phase 25.1 | Complete |
 | EXPORT-04 | Phase 25.1 | Complete |

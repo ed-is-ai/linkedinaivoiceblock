@@ -331,10 +331,12 @@ Plans:
 **Goal:** Make the eval harness measure *shipped* detection and turn results into actionable insight. Four deliverables: (1) **Engine alignment** — score posts through the same detector the extension actually runs (`HeuristicDetector`, already DOM-free; heuristic vs LLM selectable) instead of the raw `classifyPost`, so metrics and per-signal breakdowns reflect deployed behavior and match the stored `flaggedAccounts.signals` shape. (2) **Error analysis** — at the best-F1 threshold, surface false positives / false negatives with score + signals + reasoning. (3) **Labeling workflow** — reduce the manual JSON-editing burden of labeling posts `ai`/`human`. (4) **Results viewer / run comparison** — read results beyond raw JSON and diff runs over time. Engine alignment is foundational and sequences first.
 **Requirements**: EVAL-06–EVAL-09 (engine alignment, error analysis, labeling workflow, results viewer — finalized at planning)
 **Depends on:** Phase 26
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 27 to break down)
+- [ ] 27-01-PLAN.md — Engine alignment (--engine heuristic|llm) + best-F1 error analysis (FP/FN) + eval-instructions sync (EVAL-06, EVAL-07)
+- [ ] 27-02-PLAN.md — Labeling workflow CLI (npm run eval-label, interactive + --auto) (EVAL-08)
+- [ ] 27-03-PLAN.md — Results viewer / run comparison CLI (npm run eval-compare) (EVAL-09)
 
 ---
 
