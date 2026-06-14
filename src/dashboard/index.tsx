@@ -1,6 +1,6 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegistrySchema, SelectorTarget } from '../shared/types';
+import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegistrySchema, SelectorTarget, UnflaggedPost } from '../shared/types';
 import { buildJsonExport, buildPostsCsvExport, buildTracesExport, deriveCleanseCount, filterCleansed } from './dataManagement';
 import SelectorView from './SelectorView';
 import { buildSeedRegistry } from '../content/selector-registry';
@@ -75,6 +75,7 @@ function App() {
   const [accounts, setAccounts] = useState<FlaggedAccount[]>([]);
   const [stats, setStats] = useState<DailyStats[]>([]);
   const [posts, setPosts] = useState<StoredPost[]>([]);
+  const [unflagged, setUnflagged] = useState<UnflaggedPost[]>([]);
   const [traces, setTraces] = useState<TraceEntry[]>([]);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [cleanseDate, setCleanseDate] = useState<string>('');
@@ -84,13 +85,14 @@ function App() {
   const [sessionMisses, setSessionMisses] = useState<Set<SelectorTarget>>(new Set());
 
   useEffect(() => {
-    chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'dismissedAccounts', 'selectorRegistry', 'selectorSessionMisses', 'llbTraces']).then((result: Record<string, any>) => {
+    chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'unflaggedPosts', 'dismissedAccounts', 'selectorRegistry', 'selectorSessionMisses', 'llbTraces']).then((result: Record<string, any>) => {
       const accts = Object.values(
         (result.flaggedAccounts ?? {}) as Record<string, FlaggedAccount>
       );
       setAccounts(accts);
       setStats((result.dailyStats ?? []) as DailyStats[]);
       setPosts((result.storedPosts ?? []) as StoredPost[]);
+      setUnflagged((result.unflaggedPosts ?? []) as UnflaggedPost[]);
       setTraces((result.llbTraces ?? []) as TraceEntry[]);
       setDismissed((result.dismissedAccounts ?? []) as string[]);
       setSelectorRegistry((result.selectorRegistry as SelectorRegistrySchema) ?? null);
@@ -126,7 +128,7 @@ function App() {
 
   function handleExportJson(): void {
     const today = new Date().toISOString().slice(0, 10);
-    triggerDownload(buildJsonExport(accounts, posts), `linkedin-blocker-${today}.json`, 'application/json');
+    triggerDownload(buildJsonExport(accounts, posts, unflagged), `linkedin-blocker-${today}.json`, 'application/json');
   }
 
   function handleExportPostsCsv(): void {
