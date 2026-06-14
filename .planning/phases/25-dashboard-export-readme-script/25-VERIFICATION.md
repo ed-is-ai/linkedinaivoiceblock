@@ -1,13 +1,14 @@
 ---
 phase: 25-dashboard-export-readme-script
-verified: 2026-06-14T10:35:00Z
-status: human_needed
+verified: 2026-06-14T10:55:00Z
+status: passed
 score: 4/4
 overrides_applied: 0
 human_verification:
   - test: "Open built dashboard in Chrome, confirm Export Traces button is visible"
     expected: "Button renders in the Data Management card. When no traces exist, button appears grayed out/disabled. When traces exist, button shows count (e.g. 'Export Traces (3)'). Clicking it while enabled triggers download of linkedin-blocker-traces-YYYY-MM-DD.json."
     why_human: "chrome.storage.local interaction and Blob download require a real Chrome extension context — cannot be verified with grep or tsx runner alone."
+    result: "passed — confirmed in Chrome 2026-06-14 (see 25-HUMAN-UAT.md). Empty-store disabled state and populated-store download both verified after activating LLM mode via a feed-tab reload."
 ---
 
 # Phase 25: Dashboard Export + README Script Verification Report
