@@ -84,8 +84,9 @@ function App() {
       });
   }, []);
 
-  // Derive last run and its best-threshold row for the run controls footer
-  const lastRun = runs.at(-1) ?? null;
+  // Derive last run and its best-threshold row for the run controls footer.
+  // getEvalRuns() returns newest-first, so the most recent run is runs[0].
+  const lastRun = runs[0] ?? null;
   const lastRunBestRow = lastRun
     ? lastRun.thresholds.find(t => t.threshold === lastRun.bestF1Threshold)
     : null;
