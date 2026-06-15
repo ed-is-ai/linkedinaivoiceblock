@@ -4,10 +4,14 @@ How to import labeled post data and produce an accuracy/cost report for the
 LinkedIn Blocker AI detector.
 
 The eval is a **developer CLI** (`npm run eval`). It re-scores each labeled post
-fresh through the same LLM classifier the extension uses, compares the score
+fresh through a **selectable detector engine** — either the same LLM classifier
+the extension uses (`--engine llm`, the default) or the in-browser
+`HeuristicDetector` (`--engine heuristic`, free, no API key) — compares the score
 against your ground-truth label across a sweep of detection thresholds, and
-reports precision / recall / F1 / accuracy plus the LLM cost. There is **no UI** —
-everything happens in the terminal and in a results JSON file.
+reports precision / recall / F1 / accuracy plus cost. At the best-F1 threshold it
+also lists the misclassified posts (**error analysis** — false positives and false
+negatives). There is **no UI** — everything happens in the terminal and in a
+results JSON file.
 
 > Commands below use **PowerShell** (Windows). bash/zsh equivalents are noted
 > where they differ.
@@ -19,7 +23,8 @@ everything happens in the terminal and in a results JSON file.
 | Requirement | Notes |
 |-------------|-------|
 | Node + npm, deps installed | `npm install` once if you haven't |
-| An Anthropic API key | The eval makes **one LLM call per labeled post** — it costs money |
+| A detection engine | `--engine llm` (**default**) makes **one LLM call per labeled post** — needs a key, costs money. `--engine heuristic` scores through the in-browser `HeuristicDetector` — **free, no API key** |
+| An Anthropic API key | Required **only for `--engine llm`** (the default). Not needed for `--engine heuristic` |
 | A **labeled** Export JSON | Exported from the dashboard, then labeled (steps below) |
 
 ---
@@ -81,6 +86,9 @@ Save the labeled file somewhere convenient, e.g. `eval/labeled.json`.
 
 ## Step 3 — Set your API key
 
+> **Only required for `--engine llm`** (the default). If you run
+> `--engine heuristic`, skip this step entirely — the heuristic engine needs no key.
+
 PowerShell (current session only):
 
 ```powershell
@@ -113,7 +121,15 @@ If the path has spaces or parentheses, quote it:
 npm run eval -- "C:\Users\You\Downloads\linkedin-blocker-2026-06-14 (6).json"
 ```
 
-Equivalent direct invocation (skips npm's `--` quirk):
+To score through the **free heuristic engine** (no API key needed) instead of the
+LLM, add `--engine heuristic`:
+
+```powershell
+npm run eval -- "eval/labeled.json" --engine heuristic
+```
+
+`--engine llm` is the default and may be passed explicitly. Equivalent direct
+invocation (skips npm's `--` quirk):
 
 ```powershell
 npx tsx scripts/eval.ts "eval/labeled.json"
@@ -144,11 +160,15 @@ Eval: 12 labeled posts (43 unlabeled skipped, 55 total).
   ...
 ```
 
-> **Note on signal names:** these come from the **LLM** classifier (the engine
-> the eval grades). They are *not* the same vocabulary as the heuristic signals
-> (`buzzword`, `template`, `no-specificity`, …) stored on `flaggedAccounts` in
-> the export — those are produced by the in-browser heuristic detector. Same
-> shape, different engine.
+> **Note on signal names:** the vocabulary depends on the engine you ran.
+> - **`--engine heuristic`** emits the same names the deployed in-browser detector
+>   stores on `flaggedAccounts`: `listicle-cta`, `buzzword`, `em-dash`, `ai-vocab`,
+>   `hook-story`, `motivational`, `impersonal`. Note that **`generic-comments`
+>   never fires under the heuristic engine in the eval** — that signal needs the
+>   live DOM / comment fetching, which the CLI has no access to (expected; not a bug).
+> - **`--engine llm`** emits the LLM classifier's own descriptive vocabulary
+>   (`formulaic-structure`, `buzzword-density`, …) — same `{ signal: points }`
+>   shape, different engine.
 
 Then a **threshold sweep table** (thresholds 35→90, step 5) — for each cutoff,
 how the model's scores grade against your labels:
@@ -176,16 +196,43 @@ Eval 2026-06-14 | 12 posts | best F1 @T=50 (P=0.900 R=0.900 F1=0.900) | cost $0.
 Results written to: .../eval/results-2026-06-14.json
 ```
 
+### 5a-ii. Error analysis (misclassified posts at the best-F1 threshold)
+
+After the threshold table, the eval prints an **error analysis** section computed
+at the `bestF1Threshold` — the posts the model got wrong at the recommended cutoff:
+
+- **False Positives** — truly **human** posts the model scored **at or above** the
+  threshold (predicted AI). These are the over-flags.
+- **False Negatives** — truly **AI** posts the model scored **below** the threshold
+  (predicted human). These are the misses.
+
+Each list shows up to the **top 5** entries (with full counts in the header) and
+reuses the same per-signal breakdown shown above, so you can see *why* each post
+was misclassified. The full lists are persisted under `errorAnalysis` in the
+results JSON (see 5b).
+
 ### 5b. The results file (the durable report)
 
 A machine-readable report is written to **`eval/results-YYYY-MM-DD.json`**
 (re-running on the same day overwrites it). Structure:
 
+The file is an **`EvalRun`** record (the same shape a future Evals dashboard will
+ingest with no transformation):
+
 ```json
 {
+  "id": "2026-06-14T23:10:00.000Z::llm",   // `${runAt}::${engine}` — stable + unique
   "runAt": "2026-06-14T23:10:00.000Z",
+  "source": "cli",
+  "engine": "llm",                          // "llm" or "heuristic"
+  "model": "claude-sonnet-4-6",             // "heuristic" for a heuristic run
   "inputFile": "eval/labeled.json",
-  "model": "claude-sonnet-4-6",
+  "dataset": {
+    "source": "file",
+    "label": "eval/labeled.json",
+    "total": 55,
+    "labeled": 12
+  },
   "counts": {
     "total": 55,        // all entries in both arrays
     "labeled": 12,      // entries that had a valid label
@@ -193,7 +240,7 @@ A machine-readable report is written to **`eval/results-YYYY-MM-DD.json`**
     "errored": 0,       // posts whose LLM call failed
     "scored": 12        // posts successfully scored
   },
-  "cost": {
+  "cost": {             // null for a heuristic run (heuristic is free)
     "totalUsd": 0.014820,
     "avgUsdPerPost": 0.001235
   },
@@ -203,6 +250,11 @@ A machine-readable report is written to **`eval/results-YYYY-MM-DD.json`**
     ...
   ],
   "bestF1Threshold": 50,
+  "errorAnalysis": {
+    "threshold": 50,            // === bestF1Threshold
+    "falsePositives": [ /* truly-human posts scored >= threshold */ ],
+    "falseNegatives": [ /* truly-ai posts scored < threshold */ ]
+  },
   "posts": [
     {
       "index": 1,
@@ -241,10 +293,19 @@ The CLI exits **non-zero (1)** with a clear stderr message on any bad input, and
 | File missing / unreadable / not JSON | `Error: Could not read or parse file: <path>` |
 | Valid JSON but not an object (e.g. `null`, an array) | `Error: Could not read or parse file: <path>` |
 | Missing `flaggedPosts` / `unflaggedPosts` arrays | `Error: JSON must contain "flaggedPosts" and "unflaggedPosts" arrays.` |
-| `ANTHROPIC_API_KEY` not set | `Error: ANTHROPIC_API_KEY environment variable is not set.` |
+| `ANTHROPIC_API_KEY` not set (**`--engine llm` only**) | `Error: ANTHROPIC_API_KEY environment variable is not set.` — the **`--engine heuristic`** path skips this guard and runs without a key |
 | No labeled posts found | `Error: No labeled posts found (N unlabeled entries skipped)...` |
 
 Check the result in PowerShell with `$LASTEXITCODE` (should be `0` after a good run).
+
+---
+
+## Labeling helper
+
+Hand-editing `"label"` into every post is tedious. A companion CLI,
+**`npm run eval-label`**, automates it (`--auto` bulk-labels `flaggedPosts` → `ai`
+and `unflaggedPosts` → `human`; interactive mode prompts per post). See that
+script's own help for details — it produces the labeled file this eval consumes.
 
 ---
 
@@ -252,10 +313,10 @@ Check the result in PowerShell with `$LASTEXITCODE` (should be `0` after a good 
 
 ```powershell
 # 1. export from dashboard  ->  linkedin-blocker-YYYY-MM-DD.json
-# 2. add "label": "ai" | "human" to posts you want graded
-# 3. key
+# 2. label:  npm run eval-label -- "export.json" --auto   (or hand-add "label")
+# 3. key (only for the default --engine llm)
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
-# 4. run
+# 4. run  (add --engine heuristic for a free, key-less run)
 npm run eval -- "eval/labeled.json"
-# 5. read terminal table + eval/results-YYYY-MM-DD.json
+# 5. read terminal table + error analysis + eval/results-YYYY-MM-DD.json
 ```
