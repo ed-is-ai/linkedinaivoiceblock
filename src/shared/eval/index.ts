@@ -16,6 +16,7 @@
 
 // Pure eval core
 export {
+  THRESHOLDS,
   safe,
   computeMetrics,
   formatSignalBreakdown,
@@ -28,6 +29,14 @@ export type {
   ThresholdRow,
   PostDetail,
 } from './metrics.js';
+
+// EvalRunStore — FIFO persistence (Phase 28 dashboard-only)
+export {
+  appendEvalRun,
+  getEvalRuns,
+  EVAL_RUNS_KEY,
+  MAX_EVAL_RUNS,
+} from './evalRunStore.js';
 
 // Canonical run-record types + comparison helpers
 export {

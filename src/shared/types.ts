@@ -188,6 +188,13 @@ export interface StoredPost {
   text: string;
   /** Unix timestamp (ms) when this post was hidden */
   hiddenAt: number;
+  /**
+   * User-supplied ground-truth label for eval purposes (Phase 28, D-08).
+   * Written ONLY by the Evals page via setPostLabel() — the content script NEVER writes this field.
+   * This is a deliberate shift from the prior "never written by the extension" rule; the label
+   * is user-initiated via a click action on the Evals page, not automatic detection logic.
+   */
+  label?: string;
 }
 
 /**
@@ -397,6 +404,8 @@ export interface SelectorRegistrySchema {
   lastAdaptedAt: string | null;
 }
 
+import type { EvalRun } from './eval/runs';
+
 /**
  * Typed schema for chrome.storage.local.
  *
@@ -447,4 +456,10 @@ export interface StorageSchema {
   llbTraces?: TraceEntry[];
   /** Cache-aware model pricing table. SW overwrites from MODEL_PRICING constant on every load (D-06). */
   llbModelPricing?: ModelPricing;
+  /**
+   * Newest-first array of eval run records persisted by the Phase 28 Evals dashboard (D-03).
+   * Capped at 50 entries (MAX_EVAL_RUNS). Dashboard writes via EvalRunStore; dashboard reads.
+   * CLI eval runs are written to eval/results-YYYY-MM-DD.json, NOT to this key.
+   */
+  evalRuns?: EvalRun[];
 }

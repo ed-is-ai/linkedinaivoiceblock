@@ -44,7 +44,7 @@ beforeEach(() => {
 // Tests for persistUnflaggedPost
 // ---------------------------------------------------------------------------
 
-import type { UnflaggedPost } from './types';
+import type { UnflaggedPost, StoredPost } from './types';
 
 describe('persistUnflaggedPost — basic behaviour', () => {
   it('(a) appending to an empty store writes a 1-entry unflaggedPosts array, newest-first', async () => {
@@ -164,5 +164,162 @@ describe('persistUnflaggedPost — basic behaviour', () => {
 
     // D-06: no label property should exist on the written entry
     expect('label' in entry).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests for setPostLabel (D-08)
+// ---------------------------------------------------------------------------
+
+function makeStoredPost(urn: string, label?: string): StoredPost {
+  const post: StoredPost = {
+    urn,
+    authorId: 'author-1',
+    authorName: 'Alice',
+    score: 70,
+    text: 'Some AI post',
+    hiddenAt: Date.now(),
+  };
+  if (label !== undefined) post.label = label;
+  return post;
+}
+
+function makeUnflaggedPost(urn: string, label?: string): UnflaggedPost {
+  const post: UnflaggedPost = {
+    urn,
+    authorId: 'author-2',
+    authorName: 'Bob',
+    score: 10,
+    text: 'Some human post',
+    seenAt: Date.now(),
+    engineUsed: 'heuristic',
+  };
+  if (label !== undefined) post.label = label;
+  return post;
+}
+
+describe('setPostLabel — routes storedPosts first', () => {
+  it('(a) labels a storedPost entry and writes only storedPosts', async () => {
+    const originalUnflagged = [makeUnflaggedPost('urn:3')];
+    store['storedPosts'] = [makeStoredPost('urn:1'), makeStoredPost('urn:2')];
+    store['unflaggedPosts'] = originalUnflagged;
+
+    const { setPostLabel } = await import('./postStore');
+    await setPostLabel('urn:1', 'ai');
+
+    const stored = store['storedPosts'] as StoredPost[];
+    expect(stored.find(p => p.urn === 'urn:1')?.label).toBe('ai');
+    // unflaggedPosts must NOT be rewritten — same reference as what we put in
+    expect(store['unflaggedPosts']).toBe(originalUnflagged);
+  });
+
+  it('(b) overwrites an existing label on storedPost (explicit user action)', async () => {
+    store['storedPosts'] = [makeStoredPost('urn:1', 'human')];
+
+    const { setPostLabel } = await import('./postStore');
+    await setPostLabel('urn:1', 'ai');
+
+    const stored = store['storedPosts'] as StoredPost[];
+    expect(stored[0]!.label).toBe('ai');
+  });
+
+  it('(c) falls through to unflaggedPosts when urn not in storedPosts', async () => {
+    store['storedPosts'] = [makeStoredPost('urn:1')];
+    store['unflaggedPosts'] = [makeUnflaggedPost('urn:2')];
+
+    const { setPostLabel } = await import('./postStore');
+    await setPostLabel('urn:2', 'human');
+
+    const unflagged = store['unflaggedPosts'] as UnflaggedPost[];
+    expect(unflagged.find(p => p.urn === 'urn:2')?.label).toBe('human');
+    // storedPosts must NOT be rewritten
+    const stored = store['storedPosts'] as StoredPost[];
+    expect(stored[0]!.label).toBeUndefined();
+  });
+
+  it('(d) issues exactly one storageSet call per invocation', async () => {
+    const mockSet = vi.fn(async (values: Record<string, unknown>) => {
+      Object.assign(store, values);
+    });
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: vi.fn(async (keys: string[]) => {
+            const out: Record<string, unknown> = {};
+            for (const k of keys) if (k in store) out[k] = store[k];
+            return out;
+          }),
+          set: mockSet,
+        },
+      },
+    });
+    store['storedPosts'] = [makeStoredPost('urn:1')];
+
+    const { setPostLabel } = await import('./postStore');
+    await setPostLabel('urn:1', 'ai');
+
+    expect(mockSet).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests for bulkSeedLabels (D-09)
+// ---------------------------------------------------------------------------
+
+describe('bulkSeedLabels — idempotent bulk seed', () => {
+  it('(e) seeds all unlabeled storedPosts with "ai" and unlabeled unflaggedPosts with "human"', async () => {
+    store['storedPosts'] = [makeStoredPost('urn:s1'), makeStoredPost('urn:s2')];
+    store['unflaggedPosts'] = [makeUnflaggedPost('urn:u1'), makeUnflaggedPost('urn:u2')];
+
+    const { bulkSeedLabels } = await import('./postStore');
+    await bulkSeedLabels();
+
+    const stored = store['storedPosts'] as StoredPost[];
+    const unflagged = store['unflaggedPosts'] as UnflaggedPost[];
+    expect(stored.every(p => p.label === 'ai')).toBe(true);
+    expect(unflagged.every(p => p.label === 'human')).toBe(true);
+  });
+
+  it('(f) never overwrites a manually-set label (idempotency — D-09)', async () => {
+    store['storedPosts'] = [makeStoredPost('urn:s1', 'human'), makeStoredPost('urn:s2')];
+    store['unflaggedPosts'] = [makeUnflaggedPost('urn:u1', 'ai'), makeUnflaggedPost('urn:u2')];
+
+    const { bulkSeedLabels } = await import('./postStore');
+    await bulkSeedLabels();
+
+    const stored = store['storedPosts'] as StoredPost[];
+    const unflagged = store['unflaggedPosts'] as UnflaggedPost[];
+    // manual labels preserved
+    expect(stored.find(p => p.urn === 'urn:s1')?.label).toBe('human');
+    expect(unflagged.find(p => p.urn === 'urn:u1')?.label).toBe('ai');
+    // unlabeled entries seeded
+    expect(stored.find(p => p.urn === 'urn:s2')?.label).toBe('ai');
+    expect(unflagged.find(p => p.urn === 'urn:u2')?.label).toBe('human');
+  });
+
+  it('(g) calling bulkSeedLabels twice produces the same storage state as calling it once', async () => {
+    store['storedPosts'] = [makeStoredPost('urn:s1')];
+    store['unflaggedPosts'] = [makeUnflaggedPost('urn:u1')];
+
+    const { bulkSeedLabels } = await import('./postStore');
+    await bulkSeedLabels();
+    const afterFirst = JSON.stringify(store);
+    await bulkSeedLabels();
+    const afterSecond = JSON.stringify(store);
+
+    expect(afterFirst).toBe(afterSecond);
+  });
+
+  it('(h) a manual setPostLabel before bulkSeedLabels is preserved (D-09)', async () => {
+    store['storedPosts'] = [makeStoredPost('urn:s1'), makeStoredPost('urn:s2')];
+    store['unflaggedPosts'] = [];
+
+    const { setPostLabel, bulkSeedLabels } = await import('./postStore');
+    await setPostLabel('urn:s1', 'human'); // manual correction
+    await bulkSeedLabels();
+
+    const stored = store['storedPosts'] as StoredPost[];
+    expect(stored.find(p => p.urn === 'urn:s1')?.label).toBe('human'); // preserved
+    expect(stored.find(p => p.urn === 'urn:s2')?.label).toBe('ai');    // seeded
   });
 });
