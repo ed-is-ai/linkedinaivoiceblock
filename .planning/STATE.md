@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
 status: executing
-last_updated: "2026-06-15T09:23:05.732Z"
-last_activity: 2026-06-15 -- Phase 28 planning complete
+last_updated: "2026-06-15T09:29:47.289Z"
+last_activity: 2026-06-15 -- Phase 28 execution started
 progress:
   total_phases: 13
   completed_phases: 12
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-06)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 28 — evals dashboard (future)
+**Current focus:** Phase 28 — evals-dashboard-future
 
 ---
 
 ## Current Position
 
-Phase: 28
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 28 planning complete
+Phase: 28 (evals-dashboard-future) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 28
+Last activity: 2026-06-15 -- Phase 28 execution started
 Note: Milestone v9.0 reopened to append Phase 27 (Eval Improvements) after Phase 26 closed it. Phase 27 has 4 deliverables — engine alignment (foundational), error analysis (FP/FN), labeling workflow, results viewer/run comparison. 27-CONTEXT.md written. Next: /gsd-plan-phase 27.
 
 ## Accumulated Context

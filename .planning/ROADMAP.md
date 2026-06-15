@@ -359,11 +359,11 @@ Plans:
 **Phase 28 net-new work:** `EvalRunStore` persistence to `chrome.storage.local` (capped FIFO, mirrors `llbTraces`) + the Option A page UI. Option C is an optional later UI over the same types.
 **Resolved in planning:** cost guardrail = pre-run estimate + confirm modal and in-run Cancel (D-05/D-06); eval runs persist to `chrome.storage.local` only via `EvalRunStore` (no Download JSON) (D-03).
 
-**Plans:** 3 plans (3 waves)
+**Plans:** 1/3 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 28-01-PLAN.md — Storage + data-model foundation: EvalRunStore FIFO persistence, StoredPost.label/evalRuns/incomplete types, setPostLabel + idempotent bulkSeedLabels (D-03/06/08/09/10)
+- [x] 28-01-PLAN.md — Storage + data-model foundation: EvalRunStore FIFO persistence, StoredPost.label/evalRuns/incomplete types, setPostLabel + idempotent bulkSeedLabels (D-03/06/08/09/10)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
