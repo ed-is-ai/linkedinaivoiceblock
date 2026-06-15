@@ -309,7 +309,17 @@ Plans:
   2. `content/index.ts`, `background/index.ts`, `heuristic.ts`, and `scripts/eval.ts` import their threshold/weight values exclusively from `detectionConfig.ts` — no numeric literals remain at call sites
   3. `npm test && npm run type-check` pass green with no behavior change to detection output (same posts flagged, same scores produced)
   4. The eval CLI (`npm run eval`) uses the same threshold value as the running extension without any manual synchronization step
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 29-01-PLAN.md — Golden-score snapshot baseline (D-06): pin exact score + breakdown before extraction (CFG-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 29-02-PLAN.md — Create detectionConfig.ts + refactor content/index.ts, heuristic.ts, eval.ts; snapshot byte-identical (CFG-01)
 
 ---
 
@@ -403,7 +413,7 @@ Plans:
 | 26. Eval Runner | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
-| 29. Config Foundation | v10.0 | 0/? | Not started | - |
+| 29. Config Foundation | v10.0 | 0/2 | In progress | - |
 | 30. LLM-Primary Promotion | v10.0 | 0/? | Not started | - |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
