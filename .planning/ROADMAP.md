@@ -19,7 +19,7 @@
 - ✅ **v7.0 Adaptive DOM Scraper** — Phases 22–23 (shipped 2026-06-14)
 - ✅ **v8.0 Observability** — Phases 24–25 (shipped 2026-06-14)
 - ✅ **v9.0 Eval Harness** — Phases 25.1–28 (shipped 2026-06-15)
-- 🚧 **v10.0 LLM-Primary Detection & Eval-Driven Tuning** — Phases 29–33 (in progress)
+- 🚧 **v10.0 Skill-Based Detection & Eval-Driven Tuning** — Phases 29–33 (in progress)
 
 ---
 
@@ -129,10 +129,10 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 ---
 
-**v10.0 LLM-Primary Detection & Eval-Driven Tuning (Phases 29–33)**
+**v10.0 Skill-Based Detection & Eval-Driven Tuning (Phases 29–33)**
 
 - [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
-- [ ] **Phase 30: LLM-Primary Promotion** — LLM always primary; scored-URN dedup cache; optimistic pre-hide
+- [ ] **Phase 30: Skill Registry Architecture** — Two-level skill registry (detectors/signals/exclusions); storage-hydrated declarative skills; zero behavior change
 - [ ] **Phase 31: Cost Guardrail** — Storage-backed per-session cap; heuristic fallback when cap hit
 - [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
 - [ ] **Phase 33: Detection Tuning Run** — Run eval, bake precision-constrained config, commit baseline
@@ -323,16 +323,16 @@ Plans:
 
 ---
 
-### Phase 30: LLM-Primary Promotion
+### Phase 30: Skill Registry Architecture
 
-**Goal**: The LLM is always the primary per-post classifier; heuristic is a silent fallback; a scored-URN session cache prevents re-scoring on SPA navigation; posts the heuristic flags are hidden optimistically before the LLM round-trip completes
+**Goal**: Detection logic is reorganized into a two-level skill registry — DetectorSkills (heuristic, llm), SignalSkills (the scoring signals), and ExclusionSkills (sponsored / company / non-English) — fronted by a SkillRegistry that seeds built-ins in code and is ready to hydrate declarative, LLM-authorable skills from `chrome.storage.local` (mirroring SelectorRegistry); zero behavior change to detection output
 **Depends on**: Phase 29
-**Requirements**: LLM-01, LLM-02, LLM-03
+**Requirements**: SKILL-01, SKILL-02, SKILL-03, SKILL-04
 **Success Criteria** (what must be TRUE):
-  1. Scrolling the LinkedIn feed with an API key configured causes every eligible post (non-sponsored, non-company, English) to be scored by the LLM — visible in exported traces with `source: "detector"`
-  2. Removing the API key (or simulating an offline/error state) causes the same posts to be scored silently by the heuristic with no user-visible error or console exception
-  3. Navigating away and back to the feed (SPA pushState) does not re-send already-scored post URNs to the LLM — the scored-URN cache prevents duplicate trace entries for the same URN within a session
-  4. A post whose heuristic score meets or exceeds the flag threshold is hidden (`.llb-hidden` applied) within 10 ms of DOM insertion, before the LLM response arrives; the hide is confirmed or reverted once the LLM result returns
+  1. Every scoring signal is a registered SignalSkill executed through a single registry runner inside HeuristicDetector; adding a signal is one skill module + one registry entry with its weight read from `detectionConfig` — no hand-wired signal pipeline remains in `heuristic.ts`
+  2. Hard exclusions (sponsored, company, non-English) are ExclusionSkills that the runner executes — and short-circuits on — before any DetectorSkill/SignalSkill runs; the hard-exclusions-before-detection ordering (CLAUDE.md constraint #5) is preserved
+  3. A SkillRegistry seeds built-in skills from code and hydrates additional declarative (data-only, LLM-authorable) skills from `chrome.storage.local` with a code-seed fallback (SelectorRegistry pattern); with zero declarative skills seeded, behavior is unchanged, and only SkillRegistry writes skill definitions to storage
+  4. `npm test && npm run type-check` pass green with zero behavior change — the Phase 29 golden-score snapshot stays byte-identical and exclusion outcomes (which posts are excluded) are unchanged on a representative fixture set
 **Plans**: TBD
 
 ---
@@ -414,7 +414,7 @@ Plans:
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
-| 30. LLM-Primary Promotion | v10.0 | 0/? | Not started | - |
+| 30. Skill Registry Architecture | v10.0 | 0/? | Not started | - |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |

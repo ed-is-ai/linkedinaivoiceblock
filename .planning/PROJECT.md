@@ -35,12 +35,12 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 - **Extension popup** shows the queue of suspicious accounts with post counts and signals detected
 - **User review** — from the popup, user can: confirm block (trigger LinkedIn block), dismiss (mark as false positive), or ignore for now
 
-## Current Milestone: v10.0 LLM-Primary Detection & Eval-Driven Tuning
+## Current Milestone: v10.0 Skill-Based Detection & Eval-Driven Tuning
 
-**Goal:** Make the LLM the primary per-post classifier, then use the v9.0 eval harness to tune and lock in detection quality — data-derived config, a regression gate, and measurable false-positive reduction.
+**Goal:** Reorganize detection into a two-level skill registry (detectors / signals / exclusions) that is ready to hydrate declarative, LLM-authorable skills from storage, then use the v9.0 eval harness to tune and lock in detection quality — data-derived config, a regression gate, and measurable false-positive reduction.
 
 **Target features:**
-- LLM-primary classification — `LLMDetector` scores every eligible post (after hard exclusions); heuristic demotes to fallback (no API key / offline / error)
+- Skill registry architecture — detectors, scoring signals, and hard exclusions become self-describing registered skills; a `SkillRegistry` seeds built-ins in code and can hydrate declarative skills from `chrome.storage.local` (SelectorRegistry pattern), with zero behavior change to existing detection
 - Cost guardrail — per-session rate limit / cap so per-post LLM stays affordable (leans on existing prompt caching)
 - Eval-derived config — use labeled data to pick the optimal decision threshold (+ heuristic-fallback weights); bake the winning config in, replacing hand-tuned values
 - Regression gate — `npm` / CI check that fails if F1 or precision drops below the last accepted baseline
@@ -198,4 +198,4 @@ This document evolves at phase transitions and milestone boundaries.
 ---
 *Last updated: 2026-06-15 after v9.0 milestone — Eval Harness shipped (Phases 25.1, 25.2, 26, 27, 28): opt-in negatives capture, symmetric labeled export, `npm run eval` (heuristic/LLM) with precision/recall/F1/cost, FP/FN error analysis, labeling/compare CLIs, and an in-extension Evals dashboard reusing the shared `src/shared/eval/` core. Audit passed 12/12. This close also retroactively validated v7.0 (Adaptive DOM Scraper) and v8.0 (Observability), which had shipped but not been recorded.*
 
-*Milestone v10.0 started 2026-06-15 — LLM-Primary Detection & Eval-Driven Tuning: promote LLMDetector to the primary per-post classifier (heuristic → fallback), add a per-session cost guardrail, derive detection config (threshold + heuristic-fallback weights) from labeled eval data, add an F1/precision regression gate, and cut false positives via eval FP analysis. No new profile/engagement scraping.*
+*Milestone v10.0 started 2026-06-15 — Skill-Based Detection & Eval-Driven Tuning. Phase 29 (Config Foundation) shipped 2026-06-15. Re-scoped 2026-06-16: Phase 30 changed from "LLM-Primary Promotion" to "Skill Registry Architecture" — reorganize detectors/signals/exclusions into a two-level skill registry ready to hydrate declarative, LLM-authorable skills from storage (zero behavior change). LLM-primary promotion (old LLM-01/02/03) dropped; the LLM remains one DetectorSkill. Still includes: per-session cost guardrail, eval-derived config (threshold + weights), F1/precision regression gate, FP reduction. No new profile/engagement scraping.*
