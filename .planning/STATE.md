@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: LLM-Primary Detection & Eval-Driven Tuning
-status: roadmap_ready
-last_updated: "2026-06-15T12:00:00.000Z"
-last_activity: 2026-06-15
+status: Roadmap ready — awaiting plan-phase
+last_updated: "2026-06-15T18:53:12.897Z"
+last_activity: 2026-06-15 — v10.0 roadmap written (Phases 29–33)
 progress:
-  total_phases: 5
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 13
+  completed_phases: 8
+  total_plans: 19
+  completed_plans: 19
+  percent: 62
 ---
 
 # State — LinkedIn Blocker
