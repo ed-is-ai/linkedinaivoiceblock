@@ -19,6 +19,7 @@
 - ✅ **v7.0 Adaptive DOM Scraper** — Phases 22–23 (shipped 2026-06-14)
 - ✅ **v8.0 Observability** — Phases 24–25 (shipped 2026-06-14)
 - ✅ **v9.0 Eval Harness** — Phases 25.1–28 (shipped 2026-06-15)
+- 🚧 **v10.0 LLM-Primary Detection & Eval-Driven Tuning** — Phases 29–33 (in progress)
 
 ---
 
@@ -125,6 +126,16 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 - [x] Phase 28: Evals Dashboard — completed 2026-06-15
 
 </details>
+
+---
+
+**v10.0 LLM-Primary Detection & Eval-Driven Tuning (Phases 29–33)**
+
+- [ ] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change
+- [ ] **Phase 30: LLM-Primary Promotion** — LLM always primary; scored-URN dedup cache; optimistic pre-hide
+- [ ] **Phase 31: Cost Guardrail** — Storage-backed per-session cap; heuristic fallback when cap hit
+- [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
+- [ ] **Phase 33: Detection Tuning Run** — Run eval, bake precision-constrained config, commit baseline
 
 ---
 
@@ -286,6 +297,77 @@ Plans:
 
 **UI hint**: yes
 
+---
+
+### Phase 29: Config Foundation
+
+**Goal**: A single committed `src/shared/detectionConfig.ts` module is the sole source of detection constants — thresholds, session cap, heuristic weights — imported by both runtime and eval CLI, with zero behavior change to the running extension
+**Depends on**: Phase 28
+**Requirements**: CFG-01
+**Success Criteria** (what must be TRUE):
+  1. `src/shared/detectionConfig.ts` exists and exports all detection constants (autoHideThreshold, flagThreshold, maxPostsPerSession, heuristicWeights) that previously appeared as hard-coded literals in content/index.ts and heuristic.ts
+  2. `content/index.ts`, `background/index.ts`, `heuristic.ts`, and `scripts/eval.ts` import their threshold/weight values exclusively from `detectionConfig.ts` — no numeric literals remain at call sites
+  3. `npm test && npm run type-check` pass green with no behavior change to detection output (same posts flagged, same scores produced)
+  4. The eval CLI (`npm run eval`) uses the same threshold value as the running extension without any manual synchronization step
+**Plans**: TBD
+
+---
+
+### Phase 30: LLM-Primary Promotion
+
+**Goal**: The LLM is always the primary per-post classifier; heuristic is a silent fallback; a scored-URN session cache prevents re-scoring on SPA navigation; posts the heuristic flags are hidden optimistically before the LLM round-trip completes
+**Depends on**: Phase 29
+**Requirements**: LLM-01, LLM-02, LLM-03
+**Success Criteria** (what must be TRUE):
+  1. Scrolling the LinkedIn feed with an API key configured causes every eligible post (non-sponsored, non-company, English) to be scored by the LLM — visible in exported traces with `source: "detector"`
+  2. Removing the API key (or simulating an offline/error state) causes the same posts to be scored silently by the heuristic with no user-visible error or console exception
+  3. Navigating away and back to the feed (SPA pushState) does not re-send already-scored post URNs to the LLM — the scored-URN cache prevents duplicate trace entries for the same URN within a session
+  4. A post whose heuristic score meets or exceeds the flag threshold is hidden (`.llb-hidden` applied) within 10 ms of DOM insertion, before the LLM response arrives; the hide is confirmed or reverted once the LLM result returns
+**Plans**: TBD
+
+---
+
+### Phase 31: Cost Guardrail
+
+**Goal**: A storage-backed per-session LLM call cap prevents runaway cost when the extension is used across long LinkedIn sessions; once the cap is hit, all scoring falls back to heuristic silently; the counter survives service-worker termination
+**Depends on**: Phase 30
+**Requirements**: COST-01
+**Success Criteria** (what must be TRUE):
+  1. After the Nth LLM-scored post in a session (default N = 50), all subsequent posts in that session are scored by heuristic — no further LLM calls appear in traces for that session
+  2. Terminating and restarting the service worker mid-session does not reset the counter — the cap is enforced consistently across SW restarts by reading state from `chrome.storage.local` on every `SCORE_POST` message
+  3. Starting a new browser session (epoch-ms window boundary crossed) resets the counter and LLM scoring resumes
+  4. The cap value is read from `detectionConfig.ts`, making it a single-location change to adjust the default
+**Plans**: TBD
+
+---
+
+### Phase 32: Eval Tuning Machinery
+
+**Goal**: The eval pipeline has a precision-constrained threshold selector and a held-out train/test split so that the operating point chosen for deployment is validated on data it was not selected from
+**Depends on**: Phase 31
+**Requirements**: CFG-02, CFG-03
+**Success Criteria** (what must be TRUE):
+  1. `selectThreshold(rows, minPrecision = 0.90, minRecall = 0.60)` exists in `src/shared/eval/metrics.ts` and returns the threshold with the highest F1 among rows where precision >= 0.90 and recall >= 0.60 (not the raw best-F1 row)
+  2. Running `npm run eval` with a labeled dataset automatically reserves a held-out test split before any threshold selection — no threshold value is selected and validated on the same rows
+  3. The eval output table marks the precision-constrained operating point with a `*` so it is distinguishable from the raw best-F1 row
+  4. Supplying a dataset where no threshold meets the precision floor causes the CLI to report this clearly rather than silently falling back to raw best-F1
+**Plans**: TBD
+
+---
+
+### Phase 33: Detection Tuning Run
+
+**Goal**: One real eval run selects the precision-constrained operating point from labeled data, bakes the winning threshold into `detectionConfig.ts`, and commits `eval/baseline.json` as the accepted regression reference — the milestone's meaningful deliverable
+**Depends on**: Phase 32
+**Requirements**: TUNE-01
+**Success Criteria** (what must be TRUE):
+  1. An eval run completes against the labeled dataset; the output shows precision >= 0.90 at the selected threshold on the held-out test split
+  2. `src/shared/detectionConfig.ts` contains the eval-derived `autoHideThreshold` value (not the original hand-tuned constant) committed to git
+  3. `eval/baseline.json` is committed and contains the EvalRunSummary from this run (threshold, precision, recall, F1) as the accepted baseline reference — the automated regression gate that consumes it is deferred (Future: GATE-01)
+  4. The deployed operating point is reproducible: re-running `selectThreshold` against the committed labeled split yields the same threshold that was baked into `detectionConfig.ts`
+**Plans**: TBD
+
+---
 
 ## Progress
 
@@ -321,3 +403,8 @@ Plans:
 | 26. Eval Runner | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
+| 29. Config Foundation | v10.0 | 0/? | Not started | - |
+| 30. LLM-Primary Promotion | v10.0 | 0/? | Not started | - |
+| 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
+| 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
+| 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |

@@ -67,20 +67,20 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LLM-01 | TBD | Pending |
-| LLM-02 | TBD | Pending |
-| LLM-03 | TBD | Pending |
-| COST-01 | TBD | Pending |
-| CFG-01 | TBD | Pending |
-| CFG-02 | TBD | Pending |
-| CFG-03 | TBD | Pending |
-| TUNE-01 | TBD | Pending |
+| LLM-01 | Phase 30 | Pending |
+| LLM-02 | Phase 30 | Pending |
+| LLM-03 | Phase 30 | Pending |
+| COST-01 | Phase 31 | Pending |
+| CFG-01 | Phase 29 | Pending |
+| CFG-02 | Phase 32 | Pending |
+| CFG-03 | Phase 32 | Pending |
+| TUNE-01 | Phase 33 | Pending |
 
 **Coverage:**
 - v10.0 requirements: 8 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 8 ⚠️
+- Mapped to phases: 8 (roadmap complete)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-15*
-*Last updated: 2026-06-15 after v10.0 milestone definition*
+*Last updated: 2026-06-15 — traceability filled after v10.0 roadmap written*
