@@ -1,5 +1,28 @@
 # Milestones — LinkedIn Blocker
 
+## v9.0 — Eval Harness
+
+**Shipped:** 2026-06-15
+**Phases:** 25.1, 25.2, 26, 27, 28 (5 phases) | **Plans:** 16
+**Audit:** passed (12/12 requirements) — [v9.0-MILESTONE-AUDIT.md](milestones/v9.0-MILESTONE-AUDIT.md)
+
+### Delivered
+
+Evaluate LLM classifier quality against a labeled real-world dataset: capture human-negatives, export a symmetric labeled JSON, run an eval (heuristic or LLM) for precision/recall/F1/cost, analyze errors, and review it all from an in-extension Evals dashboard.
+
+### Accomplishments
+
+1. **Eval negatives capture** (25.1) — below-threshold posts captured UNLABELED to a capped `unflaggedPosts` store behind an OFF-by-default opt-in (`Settings.captureUnflaggedPosts`); exported as a top-level `unflaggedPosts[]` array.
+2. **Symmetric export redesign** (25.2) — `buildJsonExport` restructured into three symmetric arrays: `flaggedAccounts` (`status`→`blocked` boolean, nested `posts[]` retained), new post-centric `flaggedPosts[]`, and `unflaggedPosts[]`.
+3. **Eval runner** (26) — shared transport-agnostic `classifyPost` extracted to `src/shared/classifier.ts` (used by both service worker and CLI); `npm run eval` re-scores labeled posts, sweeps thresholds, reports precision/recall/F1/accuracy/cost, and writes `eval/results-YYYY-MM-DD.json`.
+4. **Engine alignment + error analysis** (27) — selectable `--engine heuristic|llm` (heuristic needs no API key); best-F1 FP/FN surfacing; pure host-agnostic eval core in `src/shared/eval/`; `npm run eval-label` and `npm run eval-compare`.
+5. **In-extension Evals dashboard** (28) — standalone `evals.html` reusing the shared eval core: run heuristic/LLM evals from `chrome.storage.local`, click-to-label, cost-estimate confirm modal, FP/FN cards, and run-over-run diffs persisted via `EvalRunStore`.
+
+### Notes
+
+- One display-only bug found by the milestone integration audit (Evals "Last run" footer showed the oldest run) was fixed before close — commit fc92b40.
+- Deferred tech debt: SUMMARY `requirements-completed` frontmatter was largely unpopulated (evidence lives in VERIFICATION.md tables instead).
+
 ---
 
 ## v1.0 — Clean Feed

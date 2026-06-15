@@ -45,6 +45,11 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | Local-only storage | No backend, no account, no privacy risk | chrome.storage.local |
 | Block action | ToS risk with programmatic clicks | Deep-link to /overlay/report-or-block/ only |
 | Icons in src/public/icons/ | Vite publicDir with root: 'src' — copied verbatim to dist/ | Required for vite-plugin-web-extension |
+| Selector seed-vs-runtime split (v7.0) | `selectors.ts` = defaults seed; `SelectorRegistry` = runtime source-of-truth; only the registry writes selectors | ✓ Good — reconciles CLAUDE.md constraint #1 |
+| LLM fetch in service worker (v7.0) | CORS blocks content-script fetch from linkedin.com; LLMRederiver follows the SCORE_POST relay pattern | ✓ Good |
+| Shared classifier + eval core (v9.0) | Extract `classifyPost` to `src/shared/classifier.ts` and pure eval core to `src/shared/eval/` so service worker, CLI, and Evals dashboard share one implementation | ✓ Good — no forked logic across hosts |
+| Symmetric export shape (v9.0) | Three top-level arrays (`flaggedAccounts` w/ `blocked` boolean, `flaggedPosts`, `unflaggedPosts`); additive, transform-only over stored data | ✓ Good — feeds eval without storage migration |
+| Eval runs stored, not downloaded (v9.0) | `EvalRunStore` FIFO in `chrome.storage.local` (cap 50); pre-run cost-estimate + confirm modal, in-run Cancel persists partial run | ✓ Good |
 
 ## Requirements
 
@@ -104,40 +109,28 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 - "📊 View Dashboard" button surfaced at the top of the popup, visible without opening Settings ✓
 - Settings disclosure retains only threshold + API key/mode + export/cleanse controls (dashboard link moved, not duplicated) ✓
 
-### Current Milestone: v7.0 Adaptive DOM Scraper
+### Validated (v7.0 complete)
 
-**Goal:** Make LinkedIn scraping resilient to LinkedIn's frequent DOM/class churn — store selectors as a dynamic, ranked candidate registry, and add a module that detects when scraping breaks and re-derives working selectors automatically.
+- Selector-registry entries stored in `chrome.storage.local` as ranked candidate lists (source, last-verified, last-matched), seeded from `selectors.ts` ✓
+- Runtime resolution via `SelectorRegistry` (priority order); read-only health view of active selectors + source; reset-to-defaults escape hatch ✓
+- Self-healing adapter: total-breakage detection with 6 false-positive guards → heuristic re-derivation → LLM fallback on sanitized structural DOM (no PII), strictly validated before any write ✓
+- Fixture-DOM tests covering seeding, runtime resolution, versioned migration, reset, and heuristic/LLM recovery; CLAUDE.md constraint #1 updated to the seed-vs-runtime model ✓
 
-**Target features:**
-- Externalize all selector-registry entries into `chrome.storage.local` as ranked candidate lists with metadata (source, last-verified, last-matched), seeded from the current `selectors.ts` defaults
-- Scraper reads candidates from storage at runtime (priority order); read-only view of active selectors + source
-- Self-healing adapter: detect total breakage (zero post-card matches over an active-feed window), re-derive selectors via structural heuristics, fall back to LLM (Claude) only when heuristics fail; prepend winning candidate
-- Fixture-DOM automated tests proving read-from-storage, breakage detection, and heuristic recovery
+### Validated (v8.0 complete)
 
-**Key context:**
-- `selectors.ts` is reframed from runtime source-of-truth to the **seed/defaults** source; storage becomes the runtime source-of-truth (reconciles CLAUDE.md constraint #1).
-- Manual selector editing is deferred to a Future Requirement (read-only this milestone).
-- LLM fallback reuses the existing Anthropic API-key/mode + prompt-caching infra (v4.0); DOM samples sanitized before any API call.
+- Trace capture for `LLMDetector` + `LLMRederiver` (shared schema, `source` distinguishes them) ✓
+- `chrome.storage.local` FIFO trace store (500-entry cap) ✓
+- "Export Traces" button on dashboard → JSON download ✓
+- `npm run trace-summary <file>` → cost breakdown table + idempotent `## LLM Cost Reference` section written into README.md ✓
 
-### Planned: v8.0 Observability
+### Validated (v9.0 complete)
 
-**Goal:** Every LLM call is traced — model, prompts, token counts, USD cost — stored in chrome.storage.local, exportable from the dashboard, and summarized in the README by an npm script so practitioners can see exactly what the extension costs to run.
-
-**Target features:**
-- Trace capture for LLMDetector + LLMRederiver (same schema, source field distinguishes them)
-- chrome.storage.local FIFO store (500-entry cap)
-- "Export Traces" button on dashboard → JSON download
-- `npm run trace-summary <file>` → cost breakdown table printed to stdout + `## LLM Cost Reference` section written into README.md
-
-### Planned: v9.0 Eval Harness
-
-**Goal:** Evaluate LLM classifier quality against a real labeled dataset — user annotates an extension post-export JSON with `"label": "ai" | "human"`, runs `npm run eval`, and gets precision/recall/F1/cost metrics.
-
-**Target features:**
-- No new export format — labels are added to the existing post-export JSON
-- `npm run eval <labeled-posts.json>` → calls LLM classifier, compares to labels
-- Precision, recall, F1, accuracy, total USD cost, avg cost/post printed as a table
-- Results written to `eval/results-YYYY-MM-DD.json`
+- Below-threshold posts captured UNLABELED to a capped `unflaggedPosts` store behind an OFF-by-default opt-in ✓
+- Symmetric Export JSON: `flaggedAccounts` (`status`→`blocked` boolean), post-centric `flaggedPosts[]`, and `unflaggedPosts[]` ✓
+- Shared transport-agnostic `classifyPost` (`src/shared/classifier.ts`) used by both service worker and CLI ✓
+- `npm run eval <labeled-posts.json>` → selectable `--engine heuristic|llm`, threshold sweep, precision/recall/F1/accuracy/cost, results to `eval/results-YYYY-MM-DD.json` ✓
+- Best-F1 FP/FN error analysis; `npm run eval-label` + `npm run eval-compare`; pure host-agnostic eval core in `src/shared/eval/` ✓
+- In-extension Evals dashboard (`evals.html`) reusing the eval core: click-to-label, cost-estimate confirm modal, FP/FN cards, run-over-run diffs persisted via `EvalRunStore` ✓
 
 ---
 
@@ -163,9 +156,9 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | v5.0 | Voice pattern detection — hook-story, motivational, impersonal framing signals | Complete 2026-05-31 |
 | v6.0 | UX Polish + Block Management — popup interaction fixes, batch block, threshold-hiding bug | Complete 2026-06-06 |
 | v6.1 | Popup UX Tidy-up — surface the View Dashboard button at the top of the popup | Complete 2026-06-06 |
-| v7.0 | Adaptive DOM Scraper — storage-backed candidate registry + self-healing selector adapter | In progress |
-| v8.0 | Observability — per-call LLM traces, dashboard export, README cost table | Planned |
-| v9.0 | Eval Harness — labeled-dataset eval runner, precision/recall/F1/cost metrics | Planned |
+| v7.0 | Adaptive DOM Scraper — storage-backed candidate registry + self-healing selector adapter | Complete 2026-06-14 |
+| v8.0 | Observability — per-call LLM traces, dashboard export, README cost table | Complete 2026-06-14 |
+| v9.0 | Eval Harness — labeled-dataset eval runner, precision/recall/F1/cost metrics, in-extension Evals dashboard | Complete 2026-06-15 |
 
 ---
-*Last updated: 2026-06-14 — Phase 25 complete: "Export Traces" dashboard button + `npm run trace-summary` cost report (TRACE-04/05/06 validated). v8.0 Observability feature set is now built (Phases 24–25). Note: Phase 22 (v7.0 Externalize Selectors to Storage) remains outstanding — milestones executed out of order.*
+*Last updated: 2026-06-15 after v9.0 milestone — Eval Harness shipped (Phases 25.1, 25.2, 26, 27, 28): opt-in negatives capture, symmetric labeled export, `npm run eval` (heuristic/LLM) with precision/recall/F1/cost, FP/FN error analysis, labeling/compare CLIs, and an in-extension Evals dashboard reusing the shared `src/shared/eval/` core. Audit passed 12/12. This close also retroactively validated v7.0 (Adaptive DOM Scraper) and v8.0 (Observability), which had shipped but not been recorded.*

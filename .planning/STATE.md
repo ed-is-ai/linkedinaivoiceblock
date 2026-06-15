@@ -2,35 +2,34 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: executing
-last_updated: "2026-06-15T09:29:47.289Z"
-last_activity: 2026-06-15 -- Phase 28 execution started
+status: Awaiting next milestone
+last_updated: "2026-06-15T11:04:07.516Z"
+last_activity: 2026-06-15 — Milestone v9.0 completed and archived
 progress:
   total_phases: 13
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 35
-  completed_plans: 32
-  percent: 91
+  completed_plans: 35
+  percent: 100
 ---
 
 # State — LinkedIn Blocker
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-06)
+See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 28 — evals-dashboard-future
+**Current focus:** Planning next milestone (v9.0 Eval Harness shipped 2026-06-15)
 
 ---
 
 ## Current Position
 
-Phase: 28 (evals-dashboard-future) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 28
-Last activity: 2026-06-15 -- Phase 28 execution started
-Note: Milestone v9.0 reopened to append Phase 27 (Eval Improvements) after Phase 26 closed it. Phase 27 has 4 deliverables — engine alignment (foundational), error analysis (FP/FN), labeling workflow, results viewer/run comparison. 27-CONTEXT.md written. Next: /gsd-plan-phase 27.
+Phase: Milestone v9.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-15 — Milestone v9.0 completed and archived
 
 ## Accumulated Context
 
@@ -101,3 +100,7 @@ None.
 ## Decisions
 
 - [Phase ?]: Eval CLI: pure exported functions (collectLabeled, computeMetrics) for testability without CLI side-effects
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
