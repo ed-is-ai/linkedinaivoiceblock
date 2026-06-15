@@ -56,9 +56,12 @@ result: pass
 
 ### 11. FP/FN Error Cards
 expected: The error-analysis area shows false-positive and false-negative posts as cards. Each card shows the post text preview and signal pills sorted by score (highest first).
-result: issue
-reported: "It's working but the text is cutoff. Can you wrap?"
-severity: cosmetic
+result: pass
+note: |
+  Initially reported truncated ("It's working but the text is cutoff. Can you wrap?") — cosmetic.
+  Fixed in commit ab44246 (ERR_PREVIEW_LEN=280, errText wraps, overflow-wrap). Verified pass on a
+  fresh run. Note: previews are baked into stored runs, so pre-fix runs still show 80-char text;
+  only runs created after the fix wrap.
 
 ### 12. Compare Δ Table
 expected: When a prior run of the same engine exists, a compare table shows F1 / Precision / Recall / Cost for the current run, the baseline run, and the delta (Δ) — coloured green for improvement, red for regression.
@@ -67,16 +70,19 @@ result: pass
 ## Summary
 
 total: 12
-passed: 11
-issues: 1
+passed: 12
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
+note: 1 issue found and fixed during the session (test 11, cosmetic — commit ab44246).
 
 ## Gaps
 
 - truth: "FP/FN error cards show the post text in a readable form"
-  status: fixed
+  status: resolved
+  fix_commit: ab44246
+  verified: true
   reason: "User reported: It's working but the text is cutoff. Can you wrap?"
   severity: cosmetic
   test: 11
