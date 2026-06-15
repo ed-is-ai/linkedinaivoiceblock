@@ -107,6 +107,12 @@ export interface EvalRun {
   errorAnalysis: ErrorAnalysis;
   /** Full per-post detail (one entry per scored post) */
   posts: PostDetail[];
+  /**
+   * True when a run was cancelled/interrupted; metrics computed on partial data (Phase 28, D-06).
+   * Optional so the CLI/storage drop-in compatibility guarantee in DATA-MODEL.md holds —
+   * the CLI never sets this field; absence is equivalent to false (complete run).
+   */
+  incomplete?: boolean;
 }
 
 // ---------------------------------------------------------------------------

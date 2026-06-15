@@ -18,6 +18,19 @@
 import type { PostData } from '../types.js';
 
 // ---------------------------------------------------------------------------
+// Shared threshold sweep constant (D-03 — one constant, no drift)
+// ---------------------------------------------------------------------------
+
+/**
+ * The canonical threshold sweep set for the eval harness.
+ * Both the CLI (scripts/eval.ts) and the Phase 28 Evals dashboard import this
+ * constant from the shared eval core — they can never drift apart (D-03).
+ *
+ * 12 thresholds: 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90
+ */
+export const THRESHOLDS: number[] = Array.from({ length: 12 }, (_, i) => 35 + i * 5);
+
+// ---------------------------------------------------------------------------
 // Safe numeric guard — must not propagate NaN into any output
 // ---------------------------------------------------------------------------
 

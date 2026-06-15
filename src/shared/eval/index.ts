@@ -16,6 +16,7 @@
 
 // Pure eval core
 export {
+  THRESHOLDS,
   safe,
   computeMetrics,
   formatSignalBreakdown,

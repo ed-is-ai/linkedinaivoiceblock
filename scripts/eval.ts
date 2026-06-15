@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { computeCostUsd } from '../src/shared/pricing.js';
 import { classifyPost } from '../src/shared/classifier.js';
 import {
+  THRESHOLDS,
   safe,
   computeMetrics,
   formatSignalBreakdown,
@@ -37,8 +38,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const MODEL = 'claude-sonnet-4-6';
 const EVAL_DIR = join(__dirname, '../eval');
-// 12 thresholds: 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90
-const THRESHOLDS = Array.from({ length: 12 }, (_, i) => 35 + i * 5);
+// THRESHOLDS imported from ../src/shared/eval/index.js (D-03 — single shared constant, no drift)
 
 // ---------------------------------------------------------------------------
 // Walker (pure, exportable for tests — EVAL-01)
