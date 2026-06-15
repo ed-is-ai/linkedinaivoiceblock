@@ -35,7 +35,8 @@ beforeEach(() => {
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { collectLabeled, computeMetrics, safe, loadExport, main, formatSignalBreakdown } from './eval';
+import { collectLabeled, loadExport, main } from './eval';
+import { computeMetrics, safe, formatSignalBreakdown } from '../src/shared/eval/index';
 
 // ---------------------------------------------------------------------------
 // EVAL-01: Walker
