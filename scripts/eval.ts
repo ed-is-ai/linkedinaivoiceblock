@@ -29,6 +29,7 @@ import {
 // The Phase 28 dashboard reuses this SAME import (it is DOM-free; no re-homing needed).
 import { HeuristicDetector } from '../src/content/detector/heuristic.js';
 import type { PostData } from '../src/shared/types.js';
+import { detectionConfig } from '../src/shared/detectionConfig.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -259,7 +260,7 @@ export async function main(): Promise<void> {
   const thresholdRows: ThresholdRow[] = THRESHOLDS.map(t => computeMetrics(scored, t));
 
   // Best F1: highest non-null f1; ties → first
-  let bestF1Threshold = THRESHOLDS[0]!;
+  let bestF1Threshold = detectionConfig.thresholds.flag;
   let bestF1Value: number | null = null;
   for (const row of thresholdRows) {
     if (row.f1 !== null && (bestF1Value === null || row.f1 > bestF1Value)) {
