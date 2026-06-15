@@ -200,16 +200,17 @@ function makeUnflaggedPost(urn: string, label?: string): UnflaggedPost {
 
 describe('setPostLabel — routes storedPosts first', () => {
   it('(a) labels a storedPost entry and writes only storedPosts', async () => {
+    const originalUnflagged = [makeUnflaggedPost('urn:3')];
     store['storedPosts'] = [makeStoredPost('urn:1'), makeStoredPost('urn:2')];
-    store['unflaggedPosts'] = [makeUnflaggedPost('urn:3')];
+    store['unflaggedPosts'] = originalUnflagged;
 
     const { setPostLabel } = await import('./postStore');
     await setPostLabel('urn:1', 'ai');
 
     const stored = store['storedPosts'] as StoredPost[];
     expect(stored.find(p => p.urn === 'urn:1')?.label).toBe('ai');
-    // unflaggedPosts must NOT be rewritten
-    expect(store['unflaggedPosts']).toEqual([makeUnflaggedPost('urn:3')]);
+    // unflaggedPosts must NOT be rewritten — same reference as what we put in
+    expect(store['unflaggedPosts']).toBe(originalUnflagged);
   });
 
   it('(b) overwrites an existing label on storedPost (explicit user action)', async () => {
