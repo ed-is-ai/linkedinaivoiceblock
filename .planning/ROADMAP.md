@@ -119,7 +119,7 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 
 - [x] **Phase 26: Eval Runner** - Labeled-JSON input format (extends existing export); eval script feeding posts through LLM classifier; precision/recall/F1/cost metrics; results written to `eval/results-YYYY-MM-DD.json` (completed 2026-06-14)
 - [x] **Phase 27: Eval Improvements** - Align eval with the shipped detector engine (heuristic/LLM selectable); error analysis (FP/FN at best-F1); labeling workflow; results viewer + run comparison (completed 2026-06-15)
-- [ ] **Phase 28: Evals Dashboard (future)** - In-extension "Evals" dashboard page reusing the pure eval core extracted to `src/shared/eval/`: run heuristic/LLM evals from storage, click-to-label, view metrics + error analysis, diff runs over time. Mockups: `.planning/phases/27-eval-improvements/mockups/`
+- [x] **Phase 28: Evals Dashboard (future)** - In-extension "Evals" dashboard page reusing the pure eval core extracted to `src/shared/eval/`: run heuristic/LLM evals from storage, click-to-label, view metrics + error analysis, diff runs over time. Mockups: `.planning/phases/27-eval-improvements/mockups/` (completed 2026-06-15)
 
 ---
 
@@ -359,7 +359,7 @@ Plans:
 **Phase 28 net-new work:** `EvalRunStore` persistence to `chrome.storage.local` (capped FIFO, mirrors `llbTraces`) + the Option A page UI. Option C is an optional later UI over the same types.
 **Resolved in planning:** cost guardrail = pre-run estimate + confirm modal and in-run Cancel (D-05/D-06); eval runs persist to `chrome.storage.local` only via `EvalRunStore` (no Download JSON) (D-03).
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 **Wave 1**
 
@@ -371,7 +371,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 28-03-PLAN.md — Run engine (heuristic in-page + LLM via SCORE_POST), cost-estimate modal, progress/Cancel + partial-run persistence, metrics/sweep/FP-FN/compare rendering (D-03/05/06/07)
+- [x] 28-03-PLAN.md — Run engine (heuristic in-page + LLM via SCORE_POST), cost-estimate modal, progress/Cancel + partial-run persistence, metrics/sweep/FP-FN/compare rendering (D-03/05/06/07)
 
 ---
 
