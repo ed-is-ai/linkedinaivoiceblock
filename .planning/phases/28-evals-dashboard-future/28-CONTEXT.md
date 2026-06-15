@@ -50,7 +50,7 @@ rendering of the sweep.
 - **D-03:** Completed runs persist **to `chrome.storage.local` only** via `EvalRunStore`
   (FIFO cap `MAX_EVAL_RUNS = 50`, newest-first — mirror `traceStore.appendTrace`). **No per-run
   "Download JSON"** in this phase. Stored history powers the in-page "compare to previous" view.
-- **D-04:** **CLI `results-*.json` import is deferred.** Phase 28 stores only runs produced in the
+- **D-04 [informational]:** **CLI `results-*.json` import is deferred.** Phase 28 stores only runs produced in the
   dashboard. The data model already makes CLI files drop-in `EvalRun` records, so a file-picker import
   stays cheap to add later (no migration). See Deferred Ideas.
 

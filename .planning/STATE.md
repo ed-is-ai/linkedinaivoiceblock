@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v9.0
 milestone_name: Eval Harness
-status: planning
-last_updated: "2026-06-15T08:56:45.713Z"
-last_activity: 2026-06-15
+status: executing
+last_updated: "2026-06-15T09:23:05.732Z"
+last_activity: 2026-06-15 -- Phase 28 planning complete
 progress:
   total_phases: 13
   completed_phases: 12
-  total_plans: 32
+  total_plans: 35
   completed_plans: 32
-  percent: 92
+  percent: 91
 ---
 
 # State — LinkedIn Blocker
@@ -28,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 Phase: 28
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-15
+Status: Ready to execute
+Last activity: 2026-06-15 -- Phase 28 planning complete
 Note: Milestone v9.0 reopened to append Phase 27 (Eval Improvements) after Phase 26 closed it. Phase 27 has 4 deliverables — engine alignment (foundational), error analysis (FP/FN), labeling workflow, results viewer/run comparison. 27-CONTEXT.md written. Next: /gsd-plan-phase 27.
 
 ## Accumulated Context
