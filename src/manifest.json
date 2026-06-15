@@ -34,5 +34,11 @@
   "options_ui": {
     "page": "dashboard/index.html",
     "open_in_tab": true
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard/evals.html"],
+      "matches": ["https://www.linkedin.com/*"]
+    }
+  ]
 }

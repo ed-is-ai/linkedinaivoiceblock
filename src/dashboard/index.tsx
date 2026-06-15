@@ -255,6 +255,14 @@ function App() {
 
       <div style={s.card}>
         <div style={s.cardHeading}>Data management</div>
+        <div style={{ marginBottom: 12 }}>
+          <button
+            style={s.actionBtn}
+            onClick={() => window.open(chrome.runtime.getURL('dashboard/evals.html'), '_blank', 'noreferrer')}
+          >
+            Open Evals console
+          </button>
+        </div>
         {loadError && <div style={s.errorMsg}>{loadError}</div>}
         <div style={s.statLabel}>Export data</div>
         {accounts.length === 0 && (
