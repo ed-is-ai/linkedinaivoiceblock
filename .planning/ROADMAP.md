@@ -359,7 +359,7 @@ Plans:
 **Phase 28 net-new work:** `EvalRunStore` persistence to `chrome.storage.local` (capped FIFO, mirrors `llbTraces`) + the Option A page UI. Option C is an optional later UI over the same types.
 **Resolved in planning:** cost guardrail = pre-run estimate + confirm modal and in-run Cancel (D-05/D-06); eval runs persist to `chrome.storage.local` only via `EvalRunStore` (no Download JSON) (D-03).
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 Plans:
 **Wave 1**
 
@@ -367,7 +367,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 28-02-PLAN.md — Standalone evals.html page shell + build wiring + popup/dashboard nav links + click-to-label & bulk-seed UI (D-01/02/08/09)
+- [x] 28-02-PLAN.md — Standalone evals.html page shell + build wiring + popup/dashboard nav links + click-to-label & bulk-seed UI (D-01/02/08/09)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
