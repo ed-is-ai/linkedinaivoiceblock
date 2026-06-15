@@ -1,15 +1,33 @@
 #!/usr/bin/env node
 // Reads a labeled Export JSON (produced by the dashboard's Export JSON button),
-// re-scores each labeled post through the shared LLM classifier, computes
-// precision/recall/F1/accuracy across a threshold sweep (35–90 step 5),
-// prints a full metrics table + compact summary, persists results to
-// eval/results-YYYY-MM-DD.json, and exits non-zero on bad input.
-// Run via: npm run eval <labeled-posts.json>
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { dirname, join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+// re-scores each labeled post through either the HeuristicDetector (--engine heuristic,
+// free) or the shared LLM classifier (--engine llm, default — Phase 26 behavior preserved),
+// computes precision/recall/F1/accuracy across a threshold sweep (35–90 step 5),
+// prints a full metrics table + FP/FN error analysis + compact summary, persists results
+// to eval/results-YYYY-MM-DD.json as a conformant EvalRun record, and exits non-zero
+// on bad input.
+// Run via: npm run eval -- <labeled-posts.json> [--engine heuristic|llm]
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { computeCostUsd } from '../src/shared/pricing.js';
 import { classifyPost } from '../src/shared/classifier.js';
+import {
+  safe,
+  computeMetrics,
+  formatSignalBreakdown,
+  buildPostData,
+  filterErrors,
+  type PostDetail,
+  type ScoredEntry,
+  type ThresholdRow,
+  type EvalRun,
+} from '../src/shared/eval/index.js';
+// Direct import from src/content/detector/heuristic.ts — safe because HeuristicDetector
+// is already completely DOM-free (no document.*, no chrome.*, no selector literals).
+// The Phase 28 dashboard reuses this SAME import (it is DOM-free; no re-homing needed).
+import { HeuristicDetector } from '../src/content/detector/heuristic.js';
+import type { PostData } from '../src/shared/types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -23,65 +41,13 @@ const EVAL_DIR = join(__dirname, '../eval');
 const THRESHOLDS = Array.from({ length: 12 }, (_, i) => 35 + i * 5);
 
 // ---------------------------------------------------------------------------
-// Safe numeric guard (WR-01) — must not propagate NaN into any output
-// ---------------------------------------------------------------------------
-
-export const safe = (n: number): number => (Number.isFinite(n) ? n : 0);
-
-// ---------------------------------------------------------------------------
-// Metric computation (pure, exportable for tests — EVAL-03)
-// ---------------------------------------------------------------------------
-
-export interface ScoredEntry {
-  label: 'ai' | 'human';
-  score: number;
-}
-
-export interface ThresholdRow {
-  threshold: number;
-  tp: number;
-  fp: number;
-  tn: number;
-  fn: number;
-  precision: number | null;
-  recall: number | null;
-  f1: number | null;
-  accuracy: number;
-}
-
-/** Compute TP/FP/TN/FN and all four metrics at a single threshold. */
-export function computeMetrics(scored: ScoredEntry[], threshold: number): ThresholdRow {
-  let tp = 0;
-  let fp = 0;
-  let tn = 0;
-  let fn = 0;
-
-  for (const entry of scored) {
-    const predicted = entry.score >= threshold;
-    const actual = entry.label === 'ai';
-    if (predicted && actual) tp++;
-    else if (predicted && !actual) fp++;
-    else if (!predicted && actual) fn++;
-    else tn++;
-  }
-
-  // Divide-by-zero guards — use null for undefined metrics, never NaN (T-26-09)
-  const precision = (tp + fp) > 0 ? tp / (tp + fp) : null;
-  const recall = (tp + fn) > 0 ? tp / (tp + fn) : null;
-  const f1 =
-    precision !== null && recall !== null && (precision + recall) > 0
-      ? (2 * precision * recall) / (precision + recall)
-      : null;
-  const accuracy = (tp + fp + tn + fn) > 0 ? (tp + tn) / (tp + fp + tn + fn) : 0;
-
-  return { threshold, tp, fp, tn, fn, precision, recall, f1, accuracy };
-}
-
-// ---------------------------------------------------------------------------
 // Walker (pure, exportable for tests — EVAL-01)
 // ---------------------------------------------------------------------------
 
 export interface PostEntry {
+  urn?: string;
+  authorId?: string;
+  authorName?: string;
   text: string;
   label: 'ai' | 'human';
 }
@@ -120,42 +86,16 @@ export function collectLabeled(
       continue;
     }
 
-    labeled.push({ text, label });
+    labeled.push({
+      urn: typeof entry['urn'] === 'string' ? entry['urn'] : undefined,
+      authorId: typeof entry['authorId'] === 'string' ? entry['authorId'] : undefined,
+      authorName: typeof entry['authorName'] === 'string' ? entry['authorName'] : undefined,
+      text,
+      label,
+    });
   }
 
   return { labeled, skipped };
-}
-
-// ---------------------------------------------------------------------------
-// Per-post detail — surfaces the detector's per-signal breakdown + reasoning
-// ---------------------------------------------------------------------------
-
-export interface PostDetail {
-  index: number;
-  label: 'ai' | 'human';
-  score: number;
-  confidence: 'high' | 'medium' | 'low';
-  signalBreakdown: Record<string, number>;
-  reasoning?: string;
-  /** First 80 chars of the post, so results-*.json is readable without the source export. */
-  textPreview: string;
-}
-
-/**
- * Render a post's per-signal contributions (highest first) plus optional reasoning
- * as indented stdout lines. Returns `(no signals)` when the breakdown is empty.
- */
-export function formatSignalBreakdown(
-  breakdown: Record<string, number>,
-  reasoning?: string,
-): string {
-  const entries = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
-  const lines =
-    entries.length === 0
-      ? ['       (no signals)']
-      : entries.map(([sig, val]) => `       ${sig.padEnd(26)} ${String(val).padStart(3)}`);
-  if (reasoning) lines.push(`       reasoning: ${reasoning}`);
-  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -169,9 +109,7 @@ export interface LabeledExport {
 
 /**
  * Read + parse the labeled Export JSON and validate its top-level shape.
- * Writes a clear stderr message and exits non-zero on any failure:
- * unreadable/unparseable file, valid-but-non-object JSON (CR-01: `null`, an
- * array, a bare number), or missing `flaggedPosts`/`unflaggedPosts` arrays.
+ * Writes a clear stderr message and exits non-zero on any failure.
  */
 export function loadExport(filePath: string): LabeledExport {
   let json: unknown;
@@ -209,24 +147,32 @@ if (isMain) {
 }
 
 export async function main(): Promise<void> {
-  // 1. argv guard
-  const filePath = process.argv[2];
+  // 1. Arg parsing — extract --engine flag and file path
+  const args = process.argv.slice(2);
+  const engineFlagIdx = args.indexOf('--engine');
+  const engine: 'heuristic' | 'llm' =
+    engineFlagIdx !== -1 && args[engineFlagIdx + 1] === 'heuristic'
+      ? 'heuristic'
+      : 'llm';  // default: llm — preserves Phase 26 backward-compatibility (D-02)
+  const engineValueIdx = engineFlagIdx !== -1 ? engineFlagIdx + 1 : -1;
+  const filePath = args.find((a, i) => !a.startsWith('--') && i !== engineValueIdx);
+
   if (!filePath) {
-    process.stderr.write('Usage: npm run eval <labeled-posts.json>\n');
+    process.stderr.write('Usage: npm run eval -- <labeled-posts.json> [--engine heuristic|llm]\n');
     process.exit(1);
   }
 
   // 2. File read + JSON parse + shape/array validation (CR-01 guarded in loadExport)
   const parsed = loadExport(filePath);
 
-  // 3. API key guard (EVAL-05, T-26-04 — key never printed)
+  // 3. API key guard — only required for LLM engine (heuristic is free — pitfall 3)
   const apiKey = process.env['ANTHROPIC_API_KEY'];
-  if (!apiKey) {
+  if (engine === 'llm' && !apiKey) {
     process.stderr.write('Error: ANTHROPIC_API_KEY environment variable is not set.\n');
     process.exit(1);
   }
 
-  // 4. Walk flaggedPosts + unflaggedPosts only (D-07 / Phase 25.2 — top-level post-centric arrays)
+  // 4. Walk flaggedPosts + unflaggedPosts only (D-07 / Phase 25.2)
   const { labeled: labeledPosts, skipped } = collectLabeled(parsed.flaggedPosts, parsed.unflaggedPosts);
 
   // 5. No-label guard
@@ -240,28 +186,43 @@ export async function main(): Promise<void> {
 
   const total = parsed.flaggedPosts.length + parsed.unflaggedPosts.length;
   const labeled = labeledPosts.length;
-  process.stdout.write(`\nEval: ${labeled} labeled posts (${skipped} unlabeled skipped, ${total} total).\n\n`);
+  process.stdout.write(`\nEval [${engine}]: ${labeled} labeled posts (${skipped} unlabeled skipped, ${total} total).\n\n`);
 
-  // 6. Sequential scoring loop — one LLM call per labeled post (D-08)
+  // 6. Instantiate heuristic detector (before loop — no fetchComments: eval has no DOM;
+  //    generic-comments will never fire — documented in eval-instructions.md pitfall 5)
+  const heuristicDetector = new HeuristicDetector();  // no fetchComments — eval has no DOM
+
+  // 7. Sequential scoring loop
   const scored: ScoredEntry[] = [];
   const details: PostDetail[] = [];
   let totalCostUsd = 0;
   let errored = 0;
 
   for (let i = 0; i < labeledPosts.length; i++) {
-    const post = labeledPosts[i];
+    const post = labeledPosts[i]!;
     try {
-      const { result, usage } = await classifyPost(post.text, apiKey);
+      // result type is DetectionResult — inferred from both branches below
+      let result: Awaited<ReturnType<typeof heuristicDetector.detect>>;
 
-      // Accumulate cost from real usage (D-08, never the stored score)
-      if (usage) {
-        const { costUsd } = computeCostUsd(MODEL, {
-          input_tokens: safe(usage.input_tokens),
-          output_tokens: safe(usage.output_tokens),
-          cache_creation_input_tokens: safe(usage.cache_creation_input_tokens ?? 0),
-          cache_read_input_tokens: safe(usage.cache_read_input_tokens ?? 0),
-        });
-        totalCostUsd += safe(costUsd);
+      if (engine === 'heuristic') {
+        // Build PostData from export entry (maps text → postText, stubs authorProfileUrl)
+        const postData: PostData = buildPostData(post as unknown as Record<string, unknown>);
+        result = await heuristicDetector.detect(postData);
+        // No usage — heuristic is free; totalCostUsd stays at 0
+      } else {
+        // LLM path — keeps Phase 26 behavior via classifyPost (D-01)
+        const classified = await classifyPost(post.text, apiKey!);
+        result = classified.result;
+        const usage = classified.usage;
+        if (usage) {
+          const { costUsd } = computeCostUsd(MODEL, {
+            input_tokens: safe(usage.input_tokens),
+            output_tokens: safe(usage.output_tokens),
+            cache_creation_input_tokens: safe(usage.cache_creation_input_tokens ?? 0),
+            cache_read_input_tokens: safe(usage.cache_read_input_tokens ?? 0),
+          });
+          totalCostUsd += safe(costUsd);
+        }
       }
 
       scored.push({ label: post.label, score: result.score });
@@ -275,12 +236,15 @@ export async function main(): Promise<void> {
         textPreview: post.text.slice(0, 80),
       });
 
-      // Progress header — index/total + running cost (T-26-04: key never printed)
+      // Progress header
+      const costPart = engine === 'heuristic'
+        ? ''
+        : ` | running cost $${totalCostUsd.toFixed(6)}`;
       process.stdout.write(
         `  [${i + 1}/${labeled}] score=${result.score} label=${post.label} confidence=${result.confidence}` +
-        ` | running cost $${totalCostUsd.toFixed(6)}\n`,
+        `${costPart}\n`,
       );
-      // Per-signal breakdown + reasoning — why this post scored what it did
+      // Per-signal breakdown + optional reasoning
       process.stdout.write(formatSignalBreakdown(result.signalBreakdown, result.reasoning) + '\n');
     } catch (err) {
       errored++;
@@ -295,7 +259,7 @@ export async function main(): Promise<void> {
   const thresholdRows: ThresholdRow[] = THRESHOLDS.map(t => computeMetrics(scored, t));
 
   // Best F1: highest non-null f1; ties → first
-  let bestF1Threshold = THRESHOLDS[0];
+  let bestF1Threshold = THRESHOLDS[0]!;
   let bestF1Value: number | null = null;
   for (const row of thresholdRows) {
     if (row.f1 !== null && (bestF1Value === null || row.f1 > bestF1Value)) {
@@ -308,15 +272,32 @@ export async function main(): Promise<void> {
   const avgUsdPerPost = scoredCount > 0 ? safe(totalCostUsd) / scoredCount : 0;
 
   // ---------------------------------------------------------------------------
-  // Results object (T-26-04: no apiKey field)
+  // Error analysis — FP/FN at bestF1Threshold (EVAL-07 / D-05)
+  // IMPORTANT: always computed AFTER the sweep using bestF1Threshold (pitfall 4)
   // ---------------------------------------------------------------------------
 
-  const today = new Date().toISOString().slice(0, 10);
+  const falsePositives = filterErrors(details, bestF1Threshold, 'human');
+  const falseNegatives = filterErrors(details, bestF1Threshold, 'ai');
 
-  const results = {
-    runAt: new Date().toISOString(),
-    inputFile: filePath,
-    model: MODEL,
+  // ---------------------------------------------------------------------------
+  // Build conformant EvalRun record (DATA-MODEL.md forward-compat guarantee #1)
+  // ---------------------------------------------------------------------------
+
+  const runAt = new Date().toISOString();
+  const today = runAt.slice(0, 10);
+
+  const results: EvalRun = {
+    id: `${runAt}::${engine}`,
+    runAt,
+    source: 'cli',
+    engine,
+    model: engine === 'heuristic' ? 'heuristic' : MODEL,
+    dataset: {
+      source: 'file',
+      label: filePath,
+      total,
+      labeled,
+    },
     counts: {
       total,
       labeled,
@@ -324,17 +305,22 @@ export async function main(): Promise<void> {
       errored,
       scored: scoredCount,
     },
-    cost: {
-      totalUsd: safe(totalCostUsd),
-      avgUsdPerPost,
-    },
+    cost: engine === 'heuristic'
+      ? null
+      : { totalUsd: safe(totalCostUsd), avgUsdPerPost },
     thresholds: thresholdRows,
     bestF1Threshold,
+    errorAnalysis: {
+      threshold: bestF1Threshold,
+      falsePositives,
+      falseNegatives,
+    },
     posts: details,
   };
 
   // ---------------------------------------------------------------------------
-  // Persist to eval/results-YYYY-MM-DD.json (EVAL-04, T-26-08)
+  // Persist to eval/results-YYYY-MM-DD.json (EVAL-04)
+  // The written object IS an EvalRun (DATA-MODEL.md forward-compat #1)
   // ---------------------------------------------------------------------------
 
   mkdirSync(EVAL_DIR, { recursive: true });
@@ -342,7 +328,7 @@ export async function main(): Promise<void> {
   writeFileSync(outFile, JSON.stringify(results, null, 2), 'utf8');
 
   // ---------------------------------------------------------------------------
-  // Stdout: full table + compact summary (EVAL-04)
+  // Stdout: full table
   // ---------------------------------------------------------------------------
 
   const fmt2 = (n: number | null) => (n === null ? ' n/a' : n.toFixed(3));
@@ -359,12 +345,46 @@ export async function main(): Promise<void> {
   process.stdout.write('\n');
   process.stdout.write([header, separator, ...tableRows].join('\n') + '\n');
 
+  // ---------------------------------------------------------------------------
+  // Stdout: FP/FN error analysis section (EVAL-07)
+  // Capped at top-5 per list; full counts shown; full lists in JSON
+  // ---------------------------------------------------------------------------
+
+  const topFP = falsePositives.slice(0, 5);
+  const topFN = falseNegatives.slice(0, 5);
+
+  if (topFP.length > 0 || topFN.length > 0) {
+    process.stdout.write(`\nError analysis @T=${bestF1Threshold}:\n`);
+    if (topFP.length > 0) {
+      process.stdout.write(`\nFalse positives (${falsePositives.length} total — true human, predicted AI):\n`);
+      for (const d of topFP) {
+        process.stdout.write(`  [${d.index}] score=${d.score} "${d.textPreview}"\n`);
+        // Print reasoning only for LLM engine (heuristic has no reasoning text)
+        process.stdout.write(formatSignalBreakdown(d.signalBreakdown, engine === 'llm' ? d.reasoning : undefined) + '\n');
+      }
+    }
+    if (topFN.length > 0) {
+      process.stdout.write(`\nFalse negatives (${falseNegatives.length} total — true AI, predicted human):\n`);
+      for (const d of topFN) {
+        process.stdout.write(`  [${d.index}] score=${d.score} "${d.textPreview}"\n`);
+        process.stdout.write(formatSignalBreakdown(d.signalBreakdown, engine === 'llm' ? d.reasoning : undefined) + '\n');
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stdout: compact summary line
+  // ---------------------------------------------------------------------------
+
   const bestRow = thresholdRows.find(r => r.threshold === bestF1Threshold)!;
+  const costDisplay = engine === 'heuristic'
+    ? 'cost: free'
+    : `cost $${safe(totalCostUsd).toFixed(6)} total ($${avgUsdPerPost.toFixed(6)}/post)`;
   const summaryLine =
-    `Eval ${today} | ${scoredCount} posts | ` +
+    `Eval ${today} [${engine}] | ${scoredCount} posts | ` +
     `best F1 @T=${bestF1Threshold} ` +
     `(P=${fmt2(bestRow.precision)} R=${fmt2(bestRow.recall)} F1=${fmt2(bestRow.f1)}) | ` +
-    `cost $${safe(totalCostUsd).toFixed(6)} total ($${avgUsdPerPost.toFixed(6)}/post)`;
+    costDisplay;
 
   process.stdout.write('\n' + summaryLine + '\n');
   process.stdout.write(`\nResults written to: ${outFile}\n`);
