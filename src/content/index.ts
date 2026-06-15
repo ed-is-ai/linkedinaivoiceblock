@@ -12,19 +12,13 @@ import { persistFlaggedAccount } from '../shared/queue';
 import { persistStoredPost, persistUnflaggedPost } from '../shared/postStore';
 import { AI_LANGUAGE_SIGNALS } from '../shared/signals';
 import type { Detector, PostData, ObservedPost, DailyStats } from '../shared/types';
+import { detectionConfig } from '../shared/detectionConfig';
 
 // ---------------------------------------------------------------------------
 // Debug flag — set to true locally to log per-post extraction details
 // ---------------------------------------------------------------------------
 
 const DEBUG = true;
-
-// ---------------------------------------------------------------------------
-// Threshold constants (D-04)
-// ---------------------------------------------------------------------------
-
-const FLAG_THRESHOLD = 35;
-const OPEN_TO_WORK_PENALTY = 20;
 
 // ---------------------------------------------------------------------------
 // Profile signal cache — module scope so it persists across SPA navigations
@@ -75,7 +69,7 @@ function calcProfileScore(signals: Record<string, number>): number {
 // Default matches settings?.autoHideThreshold ?? 60 used in init().
 // ---------------------------------------------------------------------------
 
-let currentThreshold = 60;
+let currentThreshold: number = detectionConfig.thresholds.autoHideDefault;
 
 // ---------------------------------------------------------------------------
 // Daily stats counters — reset on SPA navigation; flushed on hide events
@@ -167,7 +161,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   // Handle settings change — rebuild thresholdAuthors against the new threshold so that
   // moving the slider takes effect on the next scrolled-in post without a page reload
   if (changes['settings']) {
-    const newThreshold = (changes['settings'].newValue as { autoHideThreshold?: number } | undefined)?.autoHideThreshold ?? 60;
+    const newThreshold = (changes['settings'].newValue as { autoHideThreshold?: number } | undefined)?.autoHideThreshold ?? detectionConfig.thresholds.autoHideDefault;
     currentThreshold = newThreshold;
     storageGet(['flaggedAccounts']).then(({ flaggedAccounts = {} }) => {
       thresholdAuthors.clear();
@@ -214,7 +208,7 @@ async function init(): Promise<void> {
   await seedIfNeeded();
   await load();
 
-  const autoHideThreshold = settings?.autoHideThreshold ?? 60;
+  const autoHideThreshold = settings?.autoHideThreshold ?? detectionConfig.thresholds.autoHideDefault;
   const captureUnflaggedPosts = settings?.captureUnflaggedPosts ?? false;
   currentThreshold = autoHideThreshold;
   for (const id of dismissedAccounts) dismissedSet.add(id);
@@ -301,7 +295,7 @@ async function init(): Promise<void> {
     seenProfileIdsToday.add(authorId);
 
     const effectiveHideThreshold = exclusion.openToWork
-      ? autoHideThreshold + OPEN_TO_WORK_PENALTY
+      ? autoHideThreshold + detectionConfig.thresholds.openToWorkPenalty
       : autoHideThreshold;
 
     // Extract profile signals once per author per session (D-10)
@@ -321,10 +315,10 @@ async function init(): Promise<void> {
         console.log(`[LLB] ${mergedScore.toString().padStart(3)} | ${result.engineUsed} | ${authorName || '<unknown>'} | ${signals}\n${postText}`);
       }
 
-      if (captureUnflaggedPosts && mergedScore < FLAG_THRESHOLD) {
+      if (captureUnflaggedPosts && mergedScore < detectionConfig.thresholds.flag) {
         persistUnflaggedPost({ urn, authorId: authorId || urn, authorName, score: mergedScore, text: postText, engineUsed: result.engineUsed }).catch(() => {});
       }
-      if (mergedScore < FLAG_THRESHOLD) return;
+      if (mergedScore < detectionConfig.thresholds.flag) return;
 
       // Skip dismissed authors (Phase 5 writes dismissedAccounts; Phase 3 reads defensively)
       if (dismissedSet.has(authorId)) return;

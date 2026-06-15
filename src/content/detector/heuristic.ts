@@ -11,6 +11,7 @@
  */
 
 import type { PostData, DetectionResult, Detector } from '../../shared/types';
+import { detectionConfig } from '../../shared/detectionConfig';
 import { checkListicle } from './signals/listicle';
 import { checkBuzzwords } from './signals/buzzwords';
 import { checkEmDash } from './signals/em-dash';
@@ -82,16 +83,16 @@ export class HeuristicDetector implements Detector {
 
     if (listicleScore > 0 && ctaScore > 0) {
       // Both signals present: strong composite signal
-      breakdown['listicle-cta'] = 25;
-      score += 25;
+      breakdown['listicle-cta'] = detectionConfig.weights.listicleCta.both;
+      score += detectionConfig.weights.listicleCta.both;
     } else if (listicleScore > 0) {
       // Listicle only: moderate signal
-      breakdown['listicle-cta'] = 12;
-      score += 12;
+      breakdown['listicle-cta'] = detectionConfig.weights.listicleCta.listicleOnly;
+      score += detectionConfig.weights.listicleCta.listicleOnly;
     } else if (ctaScore > 0) {
       // CTA only: weak signal
-      breakdown['listicle-cta'] = 8;
-      score += 8;
+      breakdown['listicle-cta'] = detectionConfig.weights.listicleCta.ctaOnly;
+      score += detectionConfig.weights.listicleCta.ctaOnly;
     }
 
     // Step 2: Buzzwords density (D-05 weight: up to 15)
@@ -141,7 +142,7 @@ export class HeuristicDetector implements Detector {
     // Step 4: Engagement signal — gated behind content score > 20 (D-02, DETECT-07).
     // The comment expansion is only performed when content signals indicate a post is
     // suspicious enough to warrant the extra DOM read (RESEARCH Open Question 2).
-    if (score > 20 && this.options.fetchComments !== undefined) {
+    if (score > detectionConfig.weights.genericComments.gate && this.options.fetchComments !== undefined) {
       const comments = await this.options.fetchComments(post);
       const commentScore = checkGenericComments(comments);
       if (commentScore > 0) {
