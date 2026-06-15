@@ -338,7 +338,8 @@ Plans:
 **Requirements**: EVAL-06–EVAL-09 (engine alignment, error analysis, labeling workflow, results viewer — finalized at planning)
 **Depends on:** Phase 26
 **Plans:** 3/3 plans complete
-Plans:
+
+Plans:
 **Wave 1**
 
 - [x] 27-01-PLAN.md — Engine alignment (--engine heuristic|llm) + best-F1 error analysis (FP/FN) + eval-instructions sync (EVAL-06, EVAL-07)
@@ -356,9 +357,14 @@ Plans:
 **Layout:** **Option A — single-page console (SELECTED).** See `.planning/phases/27-eval-improvements/mockups/index.html`.
 **Data model:** `.planning/phases/27-eval-improvements/mockups/DATA-MODEL.md` — canonical `EvalRun` record + `EvalRunSummary`/`compareRuns`/`EvalRunStore`. Phase 27 emits a conformant per-run record and houses the shared run/comparison types in `src/shared/eval/`, so **Option C (run-history + diff) becomes a pure UI addition later — no data migration.**
 **Phase 28 net-new work:** `EvalRunStore` persistence to `chrome.storage.local` (capped FIFO, mirrors `llbTraces`) + the Option A page UI. Option C is an optional later UI over the same types.
-**Open decisions for planning:** cost guardrail for one-click LLM runs over large datasets; whether eval runs persist to `chrome.storage.local`, download, or both.
+**Resolved in planning:** cost guardrail = pre-run estimate + confirm modal and in-run Cancel (D-05/D-06); eval runs persist to `chrome.storage.local` only via `EvalRunStore` (no Download JSON) (D-03).
 
-**Plans:** TBD (run /gsd-plan-phase 28 to break down)
+**Plans:** 3 plans (3 waves)
+
+Plans:
+- [ ] 28-01-PLAN.md — Storage + data-model foundation: EvalRunStore FIFO persistence, StoredPost.label/evalRuns/incomplete types, setPostLabel + idempotent bulkSeedLabels (D-03/06/08/09/10)
+- [ ] 28-02-PLAN.md — Standalone evals.html page shell + build wiring + popup/dashboard nav links + click-to-label & bulk-seed UI (D-01/02/08/09)
+- [ ] 28-03-PLAN.md — Run engine (heuristic in-page + LLM via SCORE_POST), cost-estimate modal, progress/Cancel + partial-run persistence, metrics/sweep/FP-FN/compare rendering (D-03/05/06/07)
 
 ---
 
