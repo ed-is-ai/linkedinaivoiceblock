@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: LLM-Primary Detection & Eval-Driven Tuning
 status: executing
-last_updated: "2026-06-15T19:32:35.526Z"
-last_activity: 2026-06-15 -- Phase 29 planning complete
+last_updated: "2026-06-15T21:08:28.818Z"
+last_activity: 2026-06-15 -- Phase 29 execution started
 progress:
   total_phases: 13
   completed_phases: 8
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** v10.0 — LLM-Primary Detection & Eval-Driven Tuning (roadmap defined, planning Phase 29)
+**Current focus:** Phase 29 — config-foundation
 
 ---
 
 ## Current Position
 
-Phase: 29 — Config Foundation
-Plan: —
-Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 29 planning complete
+Phase: 29 (config-foundation) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 29
+Last activity: 2026-06-15 -- Phase 29 execution started
 
 ### Progress Bar
 

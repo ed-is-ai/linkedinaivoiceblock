@@ -315,7 +315,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 29-01-PLAN.md — Golden-score snapshot baseline (D-06): pin exact score + breakdown before extraction (CFG-01)
+- [x] 29-01-PLAN.md — Golden-score snapshot baseline (D-06): pin exact score + breakdown before extraction (CFG-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -413,7 +413,7 @@ Plans:
 | 26. Eval Runner | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
-| 29. Config Foundation | v10.0 | 0/2 | In progress | - |
+| 29. Config Foundation | v10.0 | 1/2 | In Progress|  |
 | 30. LLM-Primary Promotion | v10.0 | 0/? | Not started | - |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
