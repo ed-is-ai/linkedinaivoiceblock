@@ -115,6 +115,10 @@ function App() {
     window.open(chrome.runtime.getURL('dashboard/index.html'), '_blank', 'noreferrer');
   }
 
+  function openEvals() {
+    window.open(chrome.runtime.getURL('dashboard/evals.html'), '_blank', 'noreferrer');
+  }
+
   function save() {
     const trimmed = apiKey.trim();
     if (!trimmed) return;
@@ -155,6 +159,7 @@ function App() {
       </div>
 
       <button onClick={openDashboard} style={styles.dashboardLink}>📊 View Dashboard</button>
+      <button onClick={openEvals} style={styles.dashboardLink}>🧪 Open Evals</button>
 
       {feedPct !== null && (
         <p style={styles.feedHealth}>{feedPct} of posts flagged (7d)</p>
