@@ -76,11 +76,15 @@ blocked: 0
 ## Gaps
 
 - truth: "FP/FN error cards show the post text in a readable form"
-  status: failed
+  status: fixed
   reason: "User reported: It's working but the text is cutoff. Can you wrap?"
   severity: cosmetic
   test: 11
-  root_cause: ""     # Filled by diagnosis
-  artifacts: []      # Filled by diagnosis
-  missing: []        # Filled by diagnosis
-  debug_session: ""  # Filled by diagnosis
+  root_cause: "FP/FN card text is truncated at the data layer, not by CSS. evals.tsx:233 builds PostDetail.textPreview as post.text.slice(0, 80) and evals.tsx:635 appends '…' when length>=80. The errText style (evals.tsx:877) already wraps (no nowrap/ellipsis), so removing/raising the 80-char data cap lets the full text wrap across lines."
+  artifacts:
+    - path: "src/dashboard/evals.tsx"
+      issue: "Line 233 caps textPreview to 80 chars (post.text.slice(0,80)); line 635 appends ellipsis at >=80"
+  missing:
+    - "Increase or remove the 80-char slice so FP/FN cards receive enough text to read"
+    - "Keep errText wrapping (already wraps); drop or adjust the >=80 ellipsis suffix so it only shows when text is actually truncated"
+  debug_session: ""

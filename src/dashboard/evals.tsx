@@ -46,6 +46,10 @@ function estimateAvgUsdPerPost(): number {
 
 const AVG_USD_PER_POST = estimateAvgUsdPerPost();
 
+// Max chars of post text kept for FP/FN error cards. Cards wrap (errText has no
+// nowrap/ellipsis), so this just bounds how much is stored per detail.
+const ERR_PREVIEW_LEN = 280;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -230,7 +234,7 @@ function App() {
           confidence,
           signalBreakdown,
           ...(reasoning !== undefined ? { reasoning } : {}),
-          textPreview: post.text.slice(0, 80),
+          textPreview: post.text.slice(0, ERR_PREVIEW_LEN),
         });
 
         // Update live progress (D-06)
@@ -632,7 +636,7 @@ function ErrorCard({ post, type }: ErrorCardProps) {
         <span style={tagStyle}>{tagLabel}</span>
         <span>score {post.score} · label: {post.label}</span>
       </div>
-      <div style={s.errText}>{post.textPreview}{post.textPreview.length >= 80 ? '…' : ''}</div>
+      <div style={s.errText}>{post.textPreview}{post.textPreview.length >= ERR_PREVIEW_LEN ? '…' : ''}</div>
       {signals.length > 0 && (
         <div style={{ marginTop: 6 }}>
           {signals.map(([sig, val]) => (
@@ -874,7 +878,7 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     color: '#6b7280',
     marginBottom: 4,
   },
-  errText: { fontSize: 13, color: '#1a1a1a', margin: '6px 0' },
+  errText: { fontSize: 13, color: '#1a1a1a', margin: '6px 0', whiteSpace: 'pre-wrap' as const, overflowWrap: 'break-word' as const },
   errReason: { fontSize: 12, color: '#6b7280', fontStyle: 'italic' as const, marginTop: 4 },
   tagFp: {
     fontSize: 10,
