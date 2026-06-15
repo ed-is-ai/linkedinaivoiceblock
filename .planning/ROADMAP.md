@@ -118,7 +118,7 @@ Three new signal functions: hook-story, motivational, impersonal framing. AI voi
 **Milestone Goal:** Evaluate LLM classifier quality against a labeled real-world dataset — user annotates an extension post-export JSON, runs an eval script, and gets precision/recall/F1/cost metrics.
 
 - [x] **Phase 26: Eval Runner** - Labeled-JSON input format (extends existing export); eval script feeding posts through LLM classifier; precision/recall/F1/cost metrics; results written to `eval/results-YYYY-MM-DD.json` (completed 2026-06-14)
-- [ ] **Phase 27: Eval Improvements** - Align eval with the shipped detector engine (heuristic/LLM selectable); error analysis (FP/FN at best-F1); labeling workflow; results viewer + run comparison
+- [x] **Phase 27: Eval Improvements** - Align eval with the shipped detector engine (heuristic/LLM selectable); error analysis (FP/FN at best-F1); labeling workflow; results viewer + run comparison (completed 2026-06-15)
 - [ ] **Phase 28: Evals Dashboard (future)** - In-extension "Evals" dashboard page reusing the pure eval core extracted to `src/shared/eval/`: run heuristic/LLM evals from storage, click-to-label, view metrics + error analysis, diff runs over time. Mockups: `.planning/phases/27-eval-improvements/mockups/`
 
 ---
@@ -337,7 +337,7 @@ Plans:
 **Goal:** Make the eval harness measure *shipped* detection and turn results into actionable insight. Four deliverables: (1) **Engine alignment** — score posts through the same detector the extension actually runs (`HeuristicDetector`, already DOM-free; heuristic vs LLM selectable) instead of the raw `classifyPost`, so metrics and per-signal breakdowns reflect deployed behavior and match the stored `flaggedAccounts.signals` shape. (2) **Error analysis** — at the best-F1 threshold, surface false positives / false negatives with score + signals + reasoning. (3) **Labeling workflow** — reduce the manual JSON-editing burden of labeling posts `ai`/`human`. (4) **Results viewer / run comparison** — read results beyond raw JSON and diff runs over time. Engine alignment is foundational and sequences first.
 **Requirements**: EVAL-06–EVAL-09 (engine alignment, error analysis, labeling workflow, results viewer — finalized at planning)
 **Depends on:** Phase 26
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 **Wave 1**
 
@@ -346,7 +346,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 27-03-PLAN.md — Results viewer / run comparison CLI (npm run eval-compare) (EVAL-09)
+- [x] 27-03-PLAN.md — Results viewer / run comparison CLI (npm run eval-compare) (EVAL-09)
 
 ### Phase 28: Evals Dashboard (future)
 
@@ -394,4 +394,4 @@ Plans:
 | 25.1. Capture & Export Unflagged Posts | v9.0 | 6/6 | Complete    | 2026-06-14 |
 | 25.2. Symmetric Export Redesign | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 26. Eval Runner | v9.0 | 2/2 | Complete    | 2026-06-14 |
-| 27. Eval Improvements | v9.0 | 2/3 | In Progress|  |
+| 27. Eval Improvements | v9.0 | 3/3 | Complete   | 2026-06-15 |
