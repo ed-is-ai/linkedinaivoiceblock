@@ -2,6 +2,7 @@ import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { StoredPost, UnflaggedPost } from '../shared/types';
 import type { EvalRun } from '../shared/eval/index';
+import { labelPost, seedLabels, countLabeled } from './evalsLabeling';
 
 function App() {
   const [posts, setPosts] = useState<StoredPost[]>([]);
@@ -243,23 +244,11 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
 }
 
 // ---------------------------------------------------------------------------
-// Exported pure handler functions — called by the component; unit-testable
-// without any component-rendering tooling.
+// Re-export helpers for callers that import from evals.tsx directly.
+// The implementations live in evalsLabeling.ts (static imports, fully mockable).
 // ---------------------------------------------------------------------------
 
-export async function labelPost(urn: string, label: 'ai' | 'human'): Promise<void> {
-  const { setPostLabel } = await import('../shared/postStore');
-  await setPostLabel(urn, label);
-}
-
-export async function seedLabels(): Promise<void> {
-  const { bulkSeedLabels } = await import('../shared/postStore');
-  await bulkSeedLabels();
-}
-
-export function countLabeled(posts: ReadonlyArray<{ label?: string }>): number {
-  return posts.filter(p => p.label !== undefined).length;
-}
+export { labelPost, seedLabels, countLabeled } from './evalsLabeling';
 
 // ---------------------------------------------------------------------------
 // Inline styles — no CSS class names (CLAUDE.md constraint)
