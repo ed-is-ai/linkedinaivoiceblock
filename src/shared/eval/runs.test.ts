@@ -80,16 +80,16 @@ const RUN_A = makeRun({
   thresholds: [
     threshRow(45, 0.6, 0.55, 0.65),
     threshRow(50, 0.72, 0.75, 0.69, 0.8),
-    threshRow(55, 0.65, 0.70, 0.61),
+    threshRow(55, 0.65, 0.7, 0.61),
   ],
   errorAnalysis: {
     threshold: 50,
     falsePositives: [
-      { urn: 'fp1', authorId: 'a1', authorName: 'Alice', text: 'fp text', label: 'human', score: 55, signals: {} },
-      { urn: 'fp2', authorId: 'a2', authorName: 'Bob', text: 'fp2 text', label: 'human', score: 60, signals: {} },
+      { index: 0, label: 'human', score: 55, confidence: 'high', signalBreakdown: {}, textPreview: 'fp text' },
+      { index: 1, label: 'human', score: 60, confidence: 'medium', signalBreakdown: {}, textPreview: 'fp2 text' },
     ],
     falseNegatives: [
-      { urn: 'fn1', authorId: 'a3', authorName: 'Carol', text: 'fn text', label: 'ai', score: 40, signals: {} },
+      { index: 2, label: 'ai', score: 40, confidence: 'low', signalBreakdown: {}, textPreview: 'fn text' },
     ],
   },
 });
@@ -108,7 +108,7 @@ const RUN_B = makeRun({
   },
   thresholds: [
     threshRow(45, 0.68),
-    threshRow(50, 0.80, 0.82, 0.78, 0.85),
+    threshRow(50, 0.8, 0.82, 0.78, 0.85),
     threshRow(55, 0.76),
   ],
   errorAnalysis: {
@@ -189,7 +189,7 @@ describe('compareRuns', () => {
   it('returns correct f1/precision/recall deltas between two runs', () => {
     const cmp = compareRuns(RUN_B, RUN_A); // B = current, A = baseline
     // f1: 0.80 - 0.72 = 0.08
-    expect(cmp.f1.current).toBeCloseTo(0.80, 5);
+    expect(cmp.f1.current).toBeCloseTo(0.8, 5);
     expect(cmp.f1.baseline).toBeCloseTo(0.72, 5);
     expect(cmp.f1.delta).toBeCloseTo(0.08, 5);
     // precision: 0.82 - 0.75 = 0.07
@@ -218,13 +218,13 @@ describe('compareRuns', () => {
   it('cost MetricDelta delta is a number when both runs have cost', () => {
     const runWithCostA = makeRun({
       bestF1Threshold: 50,
-      cost: { totalUsd: 0.0100, avgUsdPerPost: 0.001 },
-      thresholds: [threshRow(50, 0.70)],
+      cost: { totalUsd: 0.01, avgUsdPerPost: 0.001 },
+      thresholds: [threshRow(50, 0.7)],
     });
     const runWithCostB = makeRun({
       bestF1Threshold: 50,
-      cost: { totalUsd: 0.0200, avgUsdPerPost: 0.002 },
-      thresholds: [threshRow(50, 0.80)],
+      cost: { totalUsd: 0.02, avgUsdPerPost: 0.002 },
+      thresholds: [threshRow(50, 0.8)],
     });
     const cmp = compareRuns(runWithCostB, runWithCostA);
     expect(cmp.cost.delta).toBeCloseTo(0.01, 6);
@@ -236,33 +236,35 @@ describe('compareRuns', () => {
     expect(cmp.perThreshold).toHaveLength(3);
     const t50 = cmp.perThreshold.find(p => p.threshold === 50);
     expect(t50).toBeDefined();
+    if (!t50) return; // narrow type for TS
     // f1 at t=50: current=0.80, baseline=0.72, delta=0.08
-    expect(t50!.f1.current).toBeCloseTo(0.80, 5);
-    expect(t50!.f1.baseline).toBeCloseTo(0.72, 5);
-    expect(t50!.f1.delta).toBeCloseTo(0.08, 5);
+    expect(t50.f1.current).toBeCloseTo(0.8, 5);
+    expect(t50.f1.baseline).toBeCloseTo(0.72, 5);
+    expect(t50.f1.delta).toBeCloseTo(0.08, 5);
   });
 
   it('perThreshold yields delta null when threshold absent in baseline', () => {
     const currentWithExtraT = makeRun({
       bestF1Threshold: 50,
       thresholds: [
-        threshRow(50, 0.80),
+        threshRow(50, 0.8),
         threshRow(60, 0.75), // not in baseline
       ],
     });
     const baselineNoT60 = makeRun({
       bestF1Threshold: 50,
-      thresholds: [threshRow(50, 0.70)],
+      thresholds: [threshRow(50, 0.7)],
     });
     const cmp = compareRuns(currentWithExtraT, baselineNoT60);
     const t60 = cmp.perThreshold.find(p => p.threshold === 60);
     expect(t60).toBeDefined();
-    expect(t60!.f1.baseline).toBeNull();
-    expect(t60!.f1.delta).toBeNull();
+    if (!t60) return; // narrow type for TS
+    expect(t60.f1.baseline).toBeNull();
+    expect(t60.f1.delta).toBeNull();
   });
 
   it('compareRuns with both null-cost runs yields cost delta null (not NaN)', () => {
-    const runA = makeRun({ bestF1Threshold: 50, cost: null, thresholds: [threshRow(50, 0.70)] });
+    const runA = makeRun({ bestF1Threshold: 50, cost: null, thresholds: [threshRow(50, 0.7)] });
     const runB = makeRun({ bestF1Threshold: 50, cost: null, thresholds: [threshRow(50, 0.75)] });
     const cmp = compareRuns(runA, runB);
     expect(cmp.cost.delta).toBeNull();
