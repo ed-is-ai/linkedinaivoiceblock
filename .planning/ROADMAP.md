@@ -131,7 +131,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 **v10.0 LLM-Primary Detection & Eval-Driven Tuning (Phases 29–33)**
 
-- [ ] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change
+- [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
 - [ ] **Phase 30: LLM-Primary Promotion** — LLM always primary; scored-URN dedup cache; optimistic pre-hide
 - [ ] **Phase 31: Cost Guardrail** — Storage-backed per-session cap; heuristic fallback when cap hit
 - [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
@@ -319,7 +319,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 29-02-PLAN.md — Create detectionConfig.ts + refactor content/index.ts, heuristic.ts, eval.ts; snapshot byte-identical (CFG-01)
+- [x] 29-02-PLAN.md — Create detectionConfig.ts + refactor content/index.ts, heuristic.ts, eval.ts; snapshot byte-identical (CFG-01)
 
 ---
 
@@ -413,7 +413,7 @@ Plans:
 | 26. Eval Runner | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
-| 29. Config Foundation | v10.0 | 1/2 | In Progress|  |
+| 29. Config Foundation | v10.0 | 2/2 | Complete   | 2026-06-15 |
 | 30. LLM-Primary Promotion | v10.0 | 0/? | Not started | - |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
