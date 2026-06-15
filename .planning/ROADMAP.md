@@ -413,7 +413,7 @@ Plans:
 | 26. Eval Runner | v9.0 | 2/2 | Complete    | 2026-06-14 |
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
-| 29. Config Foundation | v10.0 | 2/2 | Complete   | 2026-06-15 |
+| 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. LLM-Primary Promotion | v10.0 | 0/? | Not started | - |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |

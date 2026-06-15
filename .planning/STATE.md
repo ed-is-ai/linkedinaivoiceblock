@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: LLM-Primary Detection & Eval-Driven Tuning
-status: executing
-last_updated: "2026-06-15T21:08:28.818Z"
+status: ready_to_plan
+last_updated: 2026-06-15T22:23:31.642Z
 last_activity: 2026-06-15 -- Phase 29 execution started
 progress:
   total_phases: 13
   completed_phases: 8
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 37
   percent: 62
+stopped_at: Phase 29 complete (2/2) — ready to discuss Phase 30
 ---
 
 # State — LinkedIn Blocker
@@ -20,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 29 — config-foundation
+**Current focus:** Phase 30 — llm primary promotion
 
 ---
 
 ## Current Position
 
-Phase: 29 (config-foundation) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 29
-Last activity: 2026-06-15 -- Phase 29 execution started
+Phase: 30
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-15
 
 ### Progress Bar
 

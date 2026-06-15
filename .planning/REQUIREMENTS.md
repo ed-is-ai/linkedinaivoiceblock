@@ -19,7 +19,7 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 
 ### Eval-Derived Config
 
-- [ ] **CFG-01**: One committed detection-config module (decision threshold + heuristic-fallback signal weights) is the single source of truth, imported by both the runtime (content script / service worker) and the eval CLI.
+- [x] **CFG-01**: One committed detection-config module (decision threshold + heuristic-fallback signal weights) is the single source of truth, imported by both the runtime (content script / service worker) and the eval CLI.
 - [ ] **CFG-02**: Threshold selection is precision-constrained (`selectThreshold` with `minPrecision = 0.90`, `minRecall = 0.60`) rather than raw best-F1 — the correct operating point for a false-positive-averse feed-hider.
 - [ ] **CFG-03**: Tuning uses a held-out test split so the operating point is not selected and validated on the same labeled data (no train/test leakage).
 
@@ -71,7 +71,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | LLM-02 | Phase 30 | Pending |
 | LLM-03 | Phase 30 | Pending |
 | COST-01 | Phase 31 | Pending |
-| CFG-01 | Phase 29 | Pending |
+| CFG-01 | Phase 29 | Complete |
 | CFG-02 | Phase 32 | Pending |
 | CFG-03 | Phase 32 | Pending |
 | TUNE-01 | Phase 33 | Pending |
