@@ -333,7 +333,26 @@ Plans:
   2. Hard exclusions (sponsored, company, non-English) are ExclusionSkills that the runner executes — and short-circuits on — before any DetectorSkill/SignalSkill runs; the hard-exclusions-before-detection ordering (CLAUDE.md constraint #5) is preserved
   3. A SkillRegistry seeds built-in skills from code and hydrates additional declarative (data-only, LLM-authorable) skills from `chrome.storage.local` with a code-seed fallback (SelectorRegistry pattern); with zero declarative skills seeded, behavior is unchanged, and only SkillRegistry writes skill definitions to storage
   4. `npm test && npm run type-check` pass green with zero behavior change — the Phase 29 golden-score snapshot stays byte-identical and exclusion outcomes (which posts are excluded) are unchanged on a representative fixture set
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 30-01-PLAN.md — Skill type contracts (DetectorSkill/SignalSkill/CodeSkill/PatternSkill/ExclusionSkill) + StorageSchema skillRegistry key (SKILL-01, SKILL-02)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 30-02-PLAN.md — 8 CodeSkill signal wrappers (incl. listicle-cta composite, async generic-comments) + MV3-CSP-safe PatternSkillRunner (SKILL-01, SKILL-02)
+- [ ] 30-03-PLAN.md — 4 ExclusionSkill modules (sponsored/company-page/non-english/open-to-work) extracted from checkExclusions (SKILL-01, SKILL-03)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 30-04-PLAN.md — SkillRegistry singleton mirroring SelectorRegistry: ordered code seeds, empty declarative lists, single-writer storage (SKILL-02)
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 30-05-PLAN.md — HeuristicDetector registry runner + exclusion runner wiring + LLMDetector DetectorSkill + exclusion parity test; golden-score snapshot byte-identical (SKILL-01, SKILL-03, SKILL-04)
 
 ---
 
