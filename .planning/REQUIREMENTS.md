@@ -20,8 +20,8 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 
 ### Tool Abstraction Layer
 
-- [ ] **TOOL-01**: A first-class `Tool` abstraction exists, distinct from the host-agnostic detection skills (`SignalSkill`/`ExclusionSkill`/`DetectorSkill`). A `Tool<I, O>` contract (`name`, `description`, `execute(input): Promise<O>`) is defined in the shared skill types with host I/O (network, `chrome.storage`) explicitly permitted, and a `skills/library/` tools folder convention is established (`SKILL.md` with `metadata.kind: tool`).
-- [ ] **TOOL-02**: `rederiveSelector` (+ helpers `REDERIVE_SYSTEM_PROMPT`, `RederiveCandidate`, `isRederiveModelOutput`) is migrated from `background/index.ts` into the library as the first tool (`dom-selector-rederive`), the `dom-selector-registry` `metadata.kind` mislabel is corrected, and existing skills are audited against a documented skill-vs-tool decision rule and reclassified where they are really imperative/I/O tools — with zero behavior change.
+- [x] **TOOL-01**: A first-class `Tool` abstraction exists, distinct from the host-agnostic detection skills (`SignalSkill`/`ExclusionSkill`/`DetectorSkill`). A `Tool<I, O>` contract (`name`, `description`, `execute(input): Promise<O>`) is defined in the shared skill types with host I/O (network, `chrome.storage`) explicitly permitted, and a `skills/library/` tools folder convention is established (`SKILL.md` with `metadata.kind: tool`).
+- [x] **TOOL-02**: `rederiveSelector` (+ helpers `REDERIVE_SYSTEM_PROMPT`, `RederiveCandidate`, `isRederiveModelOutput`) is migrated from `background/index.ts` into the library as the first tool (`dom-selector-rederive`), the `dom-selector-registry` `metadata.kind` mislabel is corrected, and existing skills are audited against a documented skill-vs-tool decision rule and reclassified where they are really imperative/I/O tools — with zero behavior change.
 
 ### Eval-Derived Config
 
@@ -73,8 +73,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SKILL-04 | Phase 30 | Complete |
 | SKILL-05 | Phase 31 | Complete |
 | CFG-01 | Phase 29 | Complete |
-| TOOL-01 | Phase 32 | Pending |
-| TOOL-02 | Phase 32 | Pending |
+| TOOL-01 | Phase 32 | Complete |
+| TOOL-02 | Phase 32 | Complete |
 
 **Coverage:**
 - v10.0 requirements: 8 total
