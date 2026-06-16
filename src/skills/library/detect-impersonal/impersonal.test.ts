@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkImpersonalVoice } from '../impersonal';
+import { checkImpersonalVoice } from './impersonal';
 
 function elapsed(fn: () => unknown): number {
   const start = performance.now();

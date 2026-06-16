@@ -3,7 +3,7 @@
  * Wraps checkMotivational from ./motivational — weights are NOT redeclared here (they live in the underlying function).
  */
 
-import { checkMotivational } from '../../../content/detector/signals/motivational';
+import { checkMotivational } from './motivational';
 import type { CodeSkill } from '../../../shared/skills/types';
 
 export const motivationalSkill: CodeSkill = {

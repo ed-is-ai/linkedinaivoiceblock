@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkMotivational } from '../motivational';
+import { checkMotivational } from './motivational';
 
 function elapsed(fn: () => unknown): number {
   const start = performance.now();

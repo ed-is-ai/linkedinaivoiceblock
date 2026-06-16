@@ -3,7 +3,7 @@
  * Wraps checkHookStory from ./hook-story — weights are NOT redeclared here (they live in the underlying function).
  */
 
-import { checkHookStory } from '../../../content/detector/signals/hook-story';
+import { checkHookStory } from './hook-story';
 import type { CodeSkill } from '../../../shared/skills/types';
 
 export const hookStorySkill: CodeSkill = {

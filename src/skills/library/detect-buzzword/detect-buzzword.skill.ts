@@ -3,7 +3,7 @@
  * Wraps checkBuzzwords from ./buzzwords — weights are NOT redeclared here (they live in the underlying function).
  */
 
-import { checkBuzzwords } from '../../../content/detector/signals/buzzwords';
+import { checkBuzzwords } from './buzzwords';
 import type { CodeSkill } from '../../../shared/skills/types';
 
 export const buzzwordSkill: CodeSkill = {

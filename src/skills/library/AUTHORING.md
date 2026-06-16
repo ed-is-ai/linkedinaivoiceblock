@@ -6,10 +6,21 @@ How to add a new detection skill to the LinkedIn Blocker skill library.
 
 ## Overview
 
-All skill definitions live in `src/skills/library/<name>/`.  Each folder contains:
+All skill definitions live in `src/skills/library/<name>/`.  **Skills are self-contained** —
+each folder owns everything it relies on (manifest, wrapper, the underlying pure
+function(s), and the unit test(s)).  A folder contains:
 
 - `SKILL.md` — build-time manifest (frontmatter only; never bundled)
-- `<name>.skill.ts` — runtime TypeScript implementation
+- `<name>.skill.ts` — runtime TypeScript wrapper implementing the skill contract
+- the underlying pure signal/exclusion function file(s) (e.g. `ai-vocab.ts`) — imported by
+  the wrapper via a local `./` path, NOT from `src/content/`
+- the co-located unit test(s) (e.g. `ai-vocab.test.ts`)
+
+Shared infrastructure that is used by more than just one skill stays in `src/content/`
+(e.g. `selector-registry.ts` — the CLAUDE.md #1 single-writer; `detector/language.ts` —
+also used by `content/exclusions.ts`; `skill-registry.ts` — the registry itself). Those are
+imported with the usual `../../../content/...` path and are deliberately NOT vendored into a
+skill folder.
 
 The codegen script (`scripts/generate-skill-registry.ts`) reads every folder listed in
 `scripts/skill-order.json`, validates the SKILL.md frontmatter at build time (D-08), and
@@ -52,7 +63,9 @@ Use the prefixed folder name throughout (e.g. a new buzzword-style signal `detec
 ```
 src/skills/library/detect-foo/
   SKILL.md
-  detect-foo.skill.ts
+  detect-foo.skill.ts    # wrapper
+  foo.ts                 # the underlying pure function (lives HERE, not in src/content/)
+  foo.test.ts            # co-located unit test
 ```
 
 **SKILL.md** — frontmatter only; no runtime fields.  Three mandatory fields:
@@ -76,7 +89,7 @@ Rules for `SKILL.md`:
 **`<name>.skill.ts`** — carries the runtime contract.  For a signal skill:
 
 ```typescript
-import { checkMyFunction } from '../../../content/detector/signals/my-function';
+import { checkMyFunction } from './foo';   // underlying function is co-located in this folder
 import type { CodeSkill } from '../../../shared/skills/types';
 
 export const fooSkill: CodeSkill = {   // export name is UNPREFIXED (no detect-)
@@ -93,10 +106,10 @@ export const fooSkill: CodeSkill = {   // export name is UNPREFIXED (no detect-)
 
 Import depth from `src/skills/library/<name>/` to `src/` is **three levels** (`../../../`).
 Common paths:
-- Underlying function: `'../../../content/detector/signals/<function-file>'`
+- Underlying function (co-located, self-contained): `'./<function-file>'`
 - Shared types: `'../../../shared/skills/types'`
 - Detection config: `'../../../shared/detectionConfig'`
-- Selector registry: `'../../../content/selector-registry'`
+- Shared infrastructure (registries/language used by more than this skill): `'../../../content/selector-registry'`, `'../../../content/detector/language'`
 
 Weights MUST NOT appear in SKILL.md or the skill object literal.  They live in the
 underlying function files or in `src/shared/detectionConfig.ts` (D-04).

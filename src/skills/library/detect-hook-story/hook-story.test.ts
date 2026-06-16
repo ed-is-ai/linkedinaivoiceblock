@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkHookStory } from '../hook-story';
+import { checkHookStory } from './hook-story';
 
 function elapsed(fn: () => unknown): number {
   const start = performance.now();
