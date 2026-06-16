@@ -136,6 +136,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 - [x] **Phase 31: Skill Library Alignment** — Restructure detector/exclusion/selector skills into the Anthropic Agent Skills folder convention under `skills/library/`; tracer-bullet (spike exclusion, then build out); zero behavior change (completed 2026-06-16)
 - [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
 - [ ] **Phase 33: Detection Tuning Run** — Run eval, bake precision-constrained config, commit baseline
+- [ ] **Phase 34: Tool Abstraction Layer** — Introduce a `Tool` contract + tools folder convention; migrate `rederiveSelector` as the first tool; reclassify skills that are really tools
 
 ---
 
@@ -414,6 +415,25 @@ Plans:
   3. `eval/baseline.json` is committed and contains the EvalRunSummary from this run (threshold, precision, recall, F1) as the accepted baseline reference — the automated regression gate that consumes it is deferred (Future: GATE-01)
   4. The deployed operating point is reproducible: re-running `selectThreshold` against the committed labeled split yields the same threshold that was baked into `detectionConfig.ts`
 **Plans**: TBD
+
+### Phase 34: Tool Abstraction Layer
+
+**Goal**: A first-class `Tool` abstraction exists, separate from the host-agnostic detection skills. Tools are imperative capabilities that may perform host I/O (network, `chrome.storage`) and expose a typed `name` / `description` / `execute(input)` contract; they live under the `skills/library/` folder convention with a `SKILL.md` manifest (`metadata.kind: tool`). `rederiveSelector` is migrated out of `background/index.ts` into the library as the first tool, the `dom-selector-registry` mislabel is corrected, and existing "skills" that are really imperative/I/O capabilities are audited and reclassified as tools — with zero behavior change.
+**Depends on**: Phase 31 (skill-library folder convention; independent of the Phase 32–33 eval work)
+**Requirements**: TOOL-01, TOOL-02
+**Success Criteria** (what must be TRUE):
+
+  1. A `Tool<I, O>` contract is defined in the shared skill types (`name`, `description`, `execute(input): Promise<O>`) — host I/O explicitly permitted — and is distinct from `SignalSkill` / `ExclusionSkill` / `DetectorSkill` (which keep their host-agnostic invariant)
+  2. A tools folder convention exists under `src/skills/library/`: each tool is a self-contained folder with a `SKILL.md` manifest declaring `metadata.kind: tool` alongside its bundled implementation
+  3. `rederiveSelector` and its tightly-coupled helpers (`REDERIVE_SYSTEM_PROMPT`, `RederiveCandidate`, `isRederiveModelOutput`) move into the library as `dom-selector-rederive`; `background/index.ts` imports it from the new location and the self-healing selector flow behaves byte-identically
+  4. The `dom-selector-registry` `metadata.kind` mislabel (code-review CR-01: currently `exclusion`) is corrected to an accurate kind
+  5. Existing skills are audited against the skill-vs-tool decision rule; any imperative/I/O capability masquerading as a detection skill is reclassified as a tool, and the decision rule is documented in `AUTHORING.md`
+  6. Zero behavior change: full test suite + `check-skill-registry` stale-check pass; golden-score snapshot and exclusion parity remain byte-identical
+
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 34 to break down)
 
 ---
 

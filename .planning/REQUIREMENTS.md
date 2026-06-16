@@ -18,6 +18,11 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 
 - [x] **SKILL-05**: The detector, exclusion, and selector skills are each defined as a self-contained folder under `skills/library/<name>/` following the Anthropic Agent Skills convention — a `SKILL.md` manifest (name/description/metadata frontmatter) alongside the bundled TypeScript implementation — and `SkillRegistry` hydrates skill metadata from the bundled manifests at build time (static imports only; no runtime filesystem load, MV3-CSP-safe), with zero behavior change. Delivered tracer-bullet style: spike one skill kind (exclusion) end-to-end, then build out the rest.
 
+### Tool Abstraction Layer
+
+- [ ] **TOOL-01**: A first-class `Tool` abstraction exists, distinct from the host-agnostic detection skills (`SignalSkill`/`ExclusionSkill`/`DetectorSkill`). A `Tool<I, O>` contract (`name`, `description`, `execute(input): Promise<O>`) is defined in the shared skill types with host I/O (network, `chrome.storage`) explicitly permitted, and a `skills/library/` tools folder convention is established (`SKILL.md` with `metadata.kind: tool`).
+- [ ] **TOOL-02**: `rederiveSelector` (+ helpers `REDERIVE_SYSTEM_PROMPT`, `RederiveCandidate`, `isRederiveModelOutput`) is migrated from `background/index.ts` into the library as the first tool (`dom-selector-rederive`), the `dom-selector-registry` `metadata.kind` mislabel is corrected, and existing skills are audited against a documented skill-vs-tool decision rule and reclassified where they are really imperative/I/O tools — with zero behavior change.
+
 ### Eval-Derived Config
 
 - [x] **CFG-01**: One committed detection-config module (decision threshold + heuristic-fallback signal weights) is the single source of truth, imported by both the runtime (content script / service worker) and the eval CLI.
@@ -77,13 +82,16 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CFG-02 | Phase 32 | Pending |
 | CFG-03 | Phase 32 | Pending |
 | TUNE-01 | Phase 33 | Pending |
+| TOOL-01 | Phase 34 | Pending |
+| TOOL-02 | Phase 34 | Pending |
 
 **Coverage:**
-- v10.0 requirements: 9 total
-- Mapped to phases: 9 (roadmap complete)
+- v10.0 requirements: 11 total
+- Mapped to phases: 11 (roadmap complete)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-15*
 *Last updated: 2026-06-16 — Phase 30 re-scoped from LLM-Primary Promotion to Skill Registry Architecture; LLM-01/02/03 dropped, SKILL-01..04 added; milestone retitled Skill-Based Detection*
 *Last updated: 2026-06-16 — Phase 31 re-scoped from Cost Guardrail to Skill Library Alignment; COST-01 dropped, SKILL-05 added; Phase 32 dependency moved from Phase 31 → Phase 29 (eval tuning is independent of the skill-library work). Note: future COST-02/03/04 now presuppose a revived COST-01.*
+*Last updated: 2026-06-16 — Phase 34 (Tool Abstraction Layer) added: TOOL-01/02. Introduces a `Tool` contract distinct from the host-agnostic detection skills, migrates `rederiveSelector` as the first tool, fixes the dom-selector-registry CR-01 mislabel, and audits skills for tool reclassification. Depends on Phase 31; independent of eval phases 32–33.*

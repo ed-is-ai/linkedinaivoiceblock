@@ -48,6 +48,7 @@ v10.0: [░░░░░░░░░░░░░░░░░░░░] 0% (0/5 ph
 - Phase 25.2 inserted after Phase 25: Symmetric export redesign (blockedAccounts + flaggedPosts + unflaggedPosts) (URGENT)
 - Phases 29–33 added: v10.0 LLM-Primary Detection & Eval-Driven Tuning
 - Phase 31 re-scoped (2026-06-16): Cost Guardrail → Skill Library Alignment (COST-01 dropped, SKILL-05 added); Phase 32 dep moved 31 → 29
+- Phase 34 added (2026-06-16): Tool Abstraction Layer (TOOL-01/02) — Tool contract distinct from host-agnostic skills, migrate rederiveSelector as first tool, fix dom-selector-registry CR-01 mislabel, audit skills for tool reclassification; depends on Phase 31, independent of eval phases 32–33
 
 ### Key Decisions
 
