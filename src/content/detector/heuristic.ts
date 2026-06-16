@@ -14,6 +14,7 @@ import type { PostData, DetectionResult, Detector } from '../../shared/types';
 import type { DetectorSkill, CodeSkill } from '../../shared/skills/types';
 import { detectionConfig } from '../../shared/detectionConfig';
 import { getSignalSkills } from '../skill-registry';
+import { runPatternSkill } from '../../shared/skills/pattern-runner';
 
 /** Constructor options for HeuristicDetector. */
 export interface HeuristicDetectorOptions {
@@ -74,13 +75,21 @@ export class HeuristicDetector implements Detector, DetectorSkill {
     const skills = getSignalSkills();
 
     // Pass 1: Sync skills — run in array order (= step-order = breakdown insertion order)
+    // Dispatch on `flavor`: CodeSkills call run(); PatternSkills (declarative,
+    // no run() method) are executed by the eval-free pattern-runner (D-02, CR-01).
     for (const skill of skills) {
       if (!skill.sync) continue;
-      const result = (skill as CodeSkill).run({ postData: post });
-      // result is number (sync path — no await needed)
-      if ((result as number) > 0) {
-        breakdown[skill.id] = result as number;
-        score += result as number;
+      let result: number;
+      if (skill.flavor === 'code') {
+        // sync CodeSkill — run() returns a number directly (no await needed)
+        result = (skill as CodeSkill).run({ postData: post }) as number;
+      } else {
+        // PatternSkill — eval-free declarative executor (the whole point of the phase)
+        result = runPatternSkill(skill, { postData: post });
+      }
+      if (result > 0) {
+        breakdown[skill.id] = result;
+        score += result;
       }
     }
 
@@ -88,6 +97,10 @@ export class HeuristicDetector implements Detector, DetectorSkill {
     // Gate uses the post-sync-pass score (Landmine 3 — gate stays in runner, not in skill)
     for (const skill of skills) {
       if (skill.sync) continue;
+      // Only CodeSkills have an async run(). PatternSkills are always sync (handled in
+      // Pass 1), so a non-sync skill should always be a CodeSkill — guard on flavor anyway
+      // so an unexpected non-sync PatternSkill is skipped rather than crashing (CR-01).
+      if (skill.flavor !== 'code') continue;
       if (skill.id === 'generic-comments') {
         if (score > detectionConfig.weights.genericComments.gate && this.options.fetchComments !== undefined) {
           const r = await (skill as CodeSkill).run({ postData: post, fetchComments: this.options.fetchComments });

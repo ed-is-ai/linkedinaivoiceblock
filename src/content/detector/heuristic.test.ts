@@ -2,9 +2,11 @@
  * Tests for HeuristicDetector — composes signal functions into a Detector implementation.
  * All tests run without a browser (no DOM access inside HeuristicDetector).
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { HeuristicDetector } from './heuristic';
 import type { PostData } from '../../shared/types';
+import type { PatternSkill, SignalSkill } from '../../shared/skills/types';
+import * as skillRegistry from '../skill-registry';
 
 describe('HeuristicDetector', () => {
   it('has name === "heuristic"', () => {
@@ -194,6 +196,53 @@ describe('HeuristicDetector', () => {
       postText,
     });
     expect(result.signals).toEqual(Object.keys(result.signalBreakdown));
+  });
+});
+
+describe('HeuristicDetector — declarative PatternSkill dispatch (CR-01 regression)', () => {
+  // Regression guard for CR-01: before the fix, detect() blind-cast every registered
+  // skill to CodeSkill and called .run(). A PatternSkill has NO run() method, so the
+  // first registered declarative skill made detect() throw `skill.run is not a function`.
+  // After the fix, detect() dispatches on `flavor` and routes PatternSkills through
+  // runPatternSkill (the eval-free executor). This test registers a PatternSkill via the
+  // registry getter and asserts detect() returns a contributed score rather than throwing.
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('runs a declarative PatternSkill through the pattern-runner and contributes its score', async () => {
+    const patternSkill: PatternSkill = {
+      kind: 'signal',
+      id: 'milk-keyword',
+      flavor: 'pattern',
+      inputs: ['text'],
+      sync: true,
+      weightKey: 'buzzword.max', // resolves to 15 in detectionConfig.weights
+      rule: { kind: 'keyword-set', keywords: ['milk'], matchMode: 'any' },
+    };
+
+    // Append the declarative skill after the code seeds, mirroring getSignalSkills()'s
+    // real shape (CODE_SIGNAL_SKILLS + declarativeSignalSkills).
+    const seeds = skillRegistry.getSignalSkills();
+    vi.spyOn(skillRegistry, 'getSignalSkills').mockReturnValue([
+      ...seeds,
+      patternSkill,
+    ] as SignalSkill[]);
+
+    const detector = new HeuristicDetector();
+    // Clean prose so no code skill contributes — the only signal is the PatternSkill.
+    const result = await detector.detect({
+      urn: 'urn:li:activity:pattern1',
+      authorId: 'pattern-user',
+      authorName: 'Pat',
+      authorProfileUrl: 'https://linkedin.com/in/pat/',
+      postText: 'I went to the shops today and bought milk.',
+    });
+
+    expect(result.signalBreakdown['milk-keyword']).toBe(15);
+    expect(result.signals).toContain('milk-keyword');
+    expect(result.score).toBe(15);
   });
 });
 
