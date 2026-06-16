@@ -19,7 +19,7 @@
 - ✅ **v7.0 Adaptive DOM Scraper** — Phases 22–23 (shipped 2026-06-14)
 - ✅ **v8.0 Observability** — Phases 24–25 (shipped 2026-06-14)
 - ✅ **v9.0 Eval Harness** — Phases 25.1–28 (shipped 2026-06-15)
-- 🚧 **v10.0 Skill-Based Detection & Eval-Driven Tuning** — Phases 29–33 (in progress)
+- 🚧 **v10.0 Skill-Based Detection & Tool Abstraction** — Phases 29–32 (in progress)
 
 ---
 
@@ -129,7 +129,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 ---
 
-**v10.0 Skill-Based Detection & Eval-Driven Tuning (Phases 29–33)**
+**v10.0 Skill-Based Detection & Tool Abstraction (Phases 29–32)**
 
 - [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
 - [x] **Phase 30: Skill Registry Architecture** — Two-level skill registry (detectors/signals/exclusions); storage-hydrated declarative skills; zero behavior change (completed 2026-06-16)
