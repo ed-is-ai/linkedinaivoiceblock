@@ -348,7 +348,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 30-04-PLAN.md — SkillRegistry singleton mirroring SelectorRegistry: ordered code seeds, empty declarative lists, single-writer storage (SKILL-02)
+- [x] 30-04-PLAN.md — SkillRegistry singleton mirroring SelectorRegistry: ordered code seeds, empty declarative lists, single-writer storage (SKILL-02)
 
 **Wave 4** *(blocked on Wave 3)*
 
@@ -433,7 +433,7 @@ Plans:
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
-| 30. Skill Registry Architecture | v10.0 | 3/5 | In Progress|  |
+| 30. Skill Registry Architecture | v10.0 | 4/5 | In Progress|  |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |
