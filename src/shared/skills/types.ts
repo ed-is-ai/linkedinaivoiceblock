@@ -153,6 +153,28 @@ export type SignalSkill = CodeSkill | PatternSkill;
 export type AnySkill = DetectorSkill | SignalSkill | ExclusionSkill;
 
 // ---------------------------------------------------------------------------
+// Tool contract (Phase 32 — D-01, D-04)
+// ---------------------------------------------------------------------------
+
+/**
+ * A first-class imperative capability that MAY perform host I/O
+ * (network, chrome.storage, DOM read/write) — distinct from the
+ * host-agnostic skill types (SignalSkill / ExclusionSkill / DetectorSkill).
+ *
+ * Tools are NOT part of AnySkill — the I/O boundary is the discriminator (D-01).
+ * Tools live in src/skills/library/ with SKILL.md metadata.kind: 'tool'.
+ * ToolRegistry (src/shared/tool-registry.ts) is the runtime lookup point.
+ */
+export interface Tool<I, O> {
+  /** Unique identifier — matches the library folder name */
+  name: string;
+  /** One-sentence description of what this tool does */
+  description: string;
+  /** Execute the tool. May perform network, chrome.storage, or DOM I/O. */
+  execute(input: I): Promise<O>;
+}
+
+// ---------------------------------------------------------------------------
 // Registry storage schema
 // ---------------------------------------------------------------------------
 
