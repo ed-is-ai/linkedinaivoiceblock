@@ -9,6 +9,7 @@
     "generate-skill-registry": "tsx scripts/generate-skill-registry.ts",
     "prebuild": "npm run generate-skill-registry",
     "check-skill-registry": "npm run generate-skill-registry && git diff --exit-code src/content/generated-skill-registry.ts",
+    "check-tool-registry": "npm run generate-skill-registry && git diff --exit-code src/shared/generated-tool-registry.ts",
     "build": "vite build",
     "dev": "vite build --watch",
     "type-check": "tsc --noEmit",

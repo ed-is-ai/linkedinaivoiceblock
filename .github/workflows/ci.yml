@@ -26,6 +26,9 @@ jobs:
       - name: Stale-check generated skill registry (D-05)
         run: npm run check-skill-registry
 
+      - name: Stale-check generated tool registry (TOOL-01)
+        run: npm run check-tool-registry
+
       - name: Type check
         run: npm run type-check
 
