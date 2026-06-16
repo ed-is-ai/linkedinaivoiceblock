@@ -405,6 +405,34 @@ export interface SelectorRegistrySchema {
 }
 
 import type { EvalRun } from './eval/runs';
+import type { SkillRegistrySchema } from './skills/types';
+
+/**
+ * Result returned by checkExclusions.
+ * When excluded=true, detection must be skipped.
+ * When excluded=false, openToWork signals to the caller to raise the threshold.
+ *
+ * Re-homed from src/content/exclusions.ts to shared/types.ts so that
+ * src/shared/skills/types.ts can reference it host-agnostically (Phase 30, Plan 01).
+ * src/content/exclusions.ts re-exports it from here for backward compat.
+ */
+export interface ExclusionResult {
+  /** True if this post must be skipped entirely (no detection). */
+  excluded: boolean;
+  /**
+   * Reason for exclusion — only set when excluded=true.
+   *   'sponsored'    — DETECT-02
+   *   'company-page' — DETECT-03
+   *   'non-english'  — DETECT-04
+   */
+  reason?: 'sponsored' | 'company-page' | 'non-english';
+  /**
+   * True when the author has Open to Work enabled (D-12.4).
+   * Only meaningful when excluded=false. The +20 threshold adjustment is applied
+   * by the caller — checkExclusions merely exposes the metadata.
+   */
+  openToWork?: boolean;
+}
 
 /**
  * Typed schema for chrome.storage.local.
@@ -462,4 +490,11 @@ export interface StorageSchema {
    * CLI eval runs are written to eval/results-YYYY-MM-DD.json, NOT to this key.
    */
   evalRuns?: EvalRun[];
+  /**
+   * Versioned skill registry storing LLM-authored declarative skills (PatternSkill[]).
+   * Seeded with empty arrays on first load; code-defined skills are statically imported
+   * and merged at runtime — they are never written to storage (Phase 30, D-06).
+   * Only src/content/skill-registry.ts writes this key (CLAUDE.md constraint #1).
+   */
+  skillRegistry?: SkillRegistrySchema;
 }

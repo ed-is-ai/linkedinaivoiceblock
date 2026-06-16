@@ -19,30 +19,13 @@
 
 import { resolve } from './selector-registry';
 import { isNonEnglish } from './detector/language';
-import type { PostData } from '../shared/types';
+import type { PostData, ExclusionResult } from '../shared/types';
 
-/**
- * Result returned by checkExclusions.
- * When excluded=true, detection must be skipped.
- * When excluded=false, openToWork signals to the caller to raise the threshold.
- */
-export interface ExclusionResult {
-  /** True if this post must be skipped entirely (no detection). */
-  excluded: boolean;
-  /**
-   * Reason for exclusion — only set when excluded=true.
-   *   'sponsored'    — DETECT-02
-   *   'company-page' — DETECT-03
-   *   'non-english'  — DETECT-04
-   */
-  reason?: 'sponsored' | 'company-page' | 'non-english';
-  /**
-   * True when the author has Open to Work enabled (D-12.4).
-   * Only meaningful when excluded=false. The +20 threshold adjustment is applied
-   * by the caller — checkExclusions merely exposes the metadata.
-   */
-  openToWork?: boolean;
-}
+// ExclusionResult re-homed to src/shared/types.ts (Phase 30, Plan 01) so that
+// the host-agnostic skill types module can import it without a content→shared inversion.
+// Re-exported here so all existing importers of './exclusions' continue to resolve
+// ExclusionResult without any call-site changes.
+export type { ExclusionResult } from '../shared/types';
 
 /**
  * Checks whether a post should be excluded from heuristic detection.
