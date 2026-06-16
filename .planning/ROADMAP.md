@@ -433,7 +433,7 @@ Plans:
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
-| 30. Skill Registry Architecture | v10.0 | 5/5 | Complete   | 2026-06-16 |
+| 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |
