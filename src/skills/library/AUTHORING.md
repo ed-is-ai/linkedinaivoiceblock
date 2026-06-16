@@ -27,9 +27,10 @@ SKILL.md:
 | `exclude-`      | `exclusion`                | `exclude-sponsored`, `exclude-company-page`  |
 | `dom-selector-` | `tool`                     | `dom-selector-rederive` (runtime tool), `dom-selector-registry` (reclassified to `tool` via CR-01) |
 
-Tools carry the `kind: tool` discriminant. `dom-selector-rederive` is the first runtime tool
-(it has an `execute()` and is registered in `skill-order.json` `tools`). `dom-selector-registry`
-was reclassified from `exclusion` to `tool` (CR-01) because it is an imperative/I/O capability,
+Tools carry the `kind: tool` discriminant and live in a **separate tree**, `src/tools/library/`
+(not `src/skills/library/`). `dom-selector-rederive` is the first runtime tool (it has an
+`execute()` and is registered in `skill-order.json` `tools`). `dom-selector-registry` was
+reclassified from `exclusion` to `tool` (CR-01) because it is an imperative/I/O capability,
 not a host-agnostic detection skill — but it is metadata-only (no `execute()`) and is NOT added
 to the `tools` array. See "Skill-vs-Tool Decision Rule" and "Tool authoring workflow" below.
 
@@ -215,8 +216,12 @@ Mirrors the skill workflow, with these differences:
 
 ### Step 1 — Create the tool folder
 
+Tools live under `src/tools/library/` — a separate tree from skills (`src/skills/library/`).
+The import depth to `src/` is the same three levels (`../../../`), so tool implementation
+imports are identical to skill imports.
+
 ```
-src/skills/library/<prefix>-<name>/
+src/tools/library/<prefix>-<name>/
   SKILL.md                  (metadata.kind: tool)
   <prefix>-<name>.tool.ts   (NOT .skill.ts)
 ```
@@ -294,8 +299,8 @@ before committing.
 ### Selector-registry single-writer invariant (CLAUDE.md constraint #1)
 
 `src/content/selector-registry.ts` is the ONLY module that writes selector strings to
-`chrome.storage.local`.  The `src/skills/library/dom-selector-registry/` folder is a
-thin re-export for convention completeness only — it is NOT wired into any skill array and
+`chrome.storage.local`.  The `src/tools/library/dom-selector-registry/` folder is a
+thin re-export for convention completeness only — it is NOT wired into any tool array and
 MUST NOT call `storageSet`.
 
 ### SKILL.md files are never bundled

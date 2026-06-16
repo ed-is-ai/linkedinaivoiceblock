@@ -6,9 +6,9 @@
  * selector strings to chrome.storage.local. This file MUST contain NO
  * storageSet call and NO selector string literal.
  *
- * This file exists for Agent Skills convention completeness (D-02 — no skill
- * definition outside src/skills/library/). It is NOT wired into any skill
- * array and is NOT imported anywhere at runtime.
+ * This file exists for tool-library convention completeness (it is kind: tool;
+ * tools live under src/tools/library/). It is NOT wired into any tool array and
+ * is NOT imported anywhere at runtime.
  */
 export {
   buildSeedRegistry,

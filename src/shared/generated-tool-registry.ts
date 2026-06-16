@@ -7,7 +7,7 @@
 
 import type { Tool } from './skills/types';
 
-import { domSelectorRederiveTool } from '../skills/library/dom-selector-rederive/dom-selector-rederive.tool';
+import { domSelectorRederiveTool } from '../tools/library/dom-selector-rederive/dom-selector-rederive.tool';
 
 export const GENERATED_TOOLS: readonly Tool<unknown, unknown>[] = [
   domSelectorRederiveTool,

@@ -6,8 +6,8 @@ import { appendTrace } from '../shared/traceStore';
 import { storageSet } from '../shared/storage';
 import { SYSTEM_PROMPT, classifyPost, type AnthropicUsage } from '../shared/classifier';
 import { get as getTool } from '../shared/tool-registry';
-import type { RederiveCandidate } from '../skills/library/dom-selector-rederive/dom-selector-rederive.tool';
-import { REDERIVE_SYSTEM_PROMPT } from '../skills/library/dom-selector-rederive/dom-selector-rederive.tool';
+import type { RederiveCandidate } from '../tools/library/dom-selector-rederive/dom-selector-rederive.tool';
+import { REDERIVE_SYSTEM_PROMPT } from '../tools/library/dom-selector-rederive/dom-selector-rederive.tool';
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('[LLB] extension installed');

@@ -13,7 +13,7 @@
  * Requirements: ADAPT-03, ADAPT-06
  */
 
-import type { RederiveCandidate } from '../../skills/library/dom-selector-rederive/dom-selector-rederive.tool';
+import type { RederiveCandidate } from '../../tools/library/dom-selector-rederive/dom-selector-rederive.tool';
 
 export type { RederiveCandidate };
 
