@@ -25,7 +25,13 @@ SKILL.md:
 |-----------------|----------------------------|----------------------------------------------|
 | `detect-`       | `signal` and `detector`    | `detect-ai-vocab`, `detect-heuristic`        |
 | `exclude-`      | `exclusion`                | `exclude-sponsored`, `exclude-company-page`  |
-| `dom-selector-` | the selector registry skill| `dom-selector-registry`                      |
+| `dom-selector-` | `tool`                     | `dom-selector-rederive` (runtime tool), `dom-selector-registry` (reclassified to `tool` via CR-01) |
+
+Tools carry the `kind: tool` discriminant. `dom-selector-rederive` is the first runtime tool
+(it has an `execute()` and is registered in `skill-order.json` `tools`). `dom-selector-registry`
+was reclassified from `exclusion` to `tool` (CR-01) because it is an imperative/I/O capability,
+not a host-agnostic detection skill — but it is metadata-only (no `execute()`) and is NOT added
+to the `tools` array. See "Skill-vs-Tool Decision Rule" and "Tool authoring workflow" below.
 
 The **exported const name is NOT prefixed** — it keeps its plain camelCase form
 (`aiVocabSkill`, `sponsoredExclusionSkill`). The codegen strips the type prefix from the
@@ -60,7 +66,7 @@ metadata:
 ```
 
 Rules for `SKILL.md`:
-- `metadata.kind` must be one of `signal`, `exclusion`, or `detector`.
+- `metadata.kind` must be one of `signal`, `exclusion`, `detector`, or `tool`.
 - Do NOT add runtime fields (`flavor`, `inputs`, `sync`, `id`, `weightKey`, etc.).
   Those live in the `.skill.ts` implementation, not in the manifest.
 - SKILL.md is a build-time input only — it is never imported into the bundle (D-01).
@@ -168,6 +174,100 @@ exclude-sponsored/
   SKILL.md                     (name: exclude-sponsored, kind: exclusion, no runtime fields)
   exclude-sponsored.skill.ts   (exports sponsoredExclusionSkill — kind, id: 'sponsored', check())
 ```
+
+---
+
+## Skill-vs-Tool Decision Rule (D-01/D-02)
+
+**The discriminator is the I/O boundary**, not detection-vs-capability and not
+LLM-authorability:
+
+- A **skill** is host-agnostic, deterministic, and pure: data → result. It performs **no
+  network, no `chrome.*`, no runtime DOM query**. This matches the invariant in
+  `src/shared/skills/types.ts` (`SignalSkill` / `ExclusionSkill` / `DetectorSkill`).
+- A **tool** performs host I/O (network, `chrome.storage`, DOM read/write) and/or is
+  non-deterministic. It implements `Tool<I, O>` from `src/shared/skills/types.ts`
+  (`name` / `description` / `execute(input): Promise<O>`) and is intentionally NOT part of
+  the `AnySkill` union.
+
+**Rule of thumb: anything that does I/O is a tool.**
+
+### Composite detectors are composites, not exceptions
+
+`detect-generic-comments` and `detect-llm` are **composite**: they have a pure
+host-agnostic **scoring part (a skill)** and an **I/O part (a tool)**. The honest
+classification separates the concerns rather than forcing the whole detector into one bucket:
+
+- `detect-generic-comments` is **already decomposed** — the signal runner injects
+  `fetchComments` (the DOM-read **tool**), and `checkGenericComments(comments)` is the pure
+  **skill**. This is the canonical "composite already decomposed" example.
+- `detect-llm` — the network `fetch` (**tool**) lives in the service worker (`scorePost`);
+  `LLMDetector` is a thin relay and the prompt/parse/score logic is the **skill** part.
+
+Actually decomposing these composites into separate skill + tool implementations (extracting
+`detect-llm`'s network call into a score-post tool and formalizing `fetchComments` as a named
+comment-fetch tool) is a **DOCUMENTED FOLLOW-UP**, not done in Phase 32 (D-03). The seam is
+documented here; the refactor is deferred to keep the phase zero-behavior-change.
+
+## Tool authoring workflow
+
+Mirrors the skill workflow, with these differences:
+
+### Step 1 — Create the tool folder
+
+```
+src/skills/library/<prefix>-<name>/
+  SKILL.md                  (metadata.kind: tool)
+  <prefix>-<name>.tool.ts   (NOT .skill.ts)
+```
+
+**SKILL.md** frontmatter sets `metadata.kind: tool`:
+
+```yaml
+---
+name: dom-selector-rederive       # MUST equal the folder name
+description: "One-sentence description of the imperative capability."
+metadata:
+  kind: tool
+---
+```
+
+**`<name>.tool.ts`** implements `Tool<I, O>` (not `CodeSkill`):
+
+```typescript
+import type { Tool } from '../../../shared/skills/types';   // three levels up to src/
+
+export const myTool: Tool<MyInput, MyOutput> = {
+  name: 'my-tool',
+  description: 'What this tool does.',
+  async execute(input) {
+    // host I/O permitted here: fetch, chrome.storage, DOM, etc.
+    return result;
+  },
+};
+```
+
+`execute(input: I): Promise<O>` replaces the skill's `run(ctx)`. The export const name is
+UNPREFIXED, same convention as skills.
+
+### Step 2 — Add the folder name to `scripts/skill-order.json` `tools` array
+
+Append the prefixed folder name to the `tools` array (append-only, same order-pinning
+discipline as signals/exclusions).
+
+> Exception: a metadata-only reclassification (e.g. `dom-selector-registry`, which has no
+> `execute()`) sets `kind: tool` in SKILL.md but is **NOT** added to the `tools` array — the
+> array is only for tools the codegen must emit into `GENERATED_TOOLS`.
+
+### Step 3 — Regenerate and verify
+
+```bash
+npm run generate-skill-registry   # emits src/shared/generated-tool-registry.ts
+npm test && npm run check-tool-registry
+```
+
+The codegen emits the committed `src/shared/generated-tool-registry.ts`; `ToolRegistry`
+(`src/shared/tool-registry.ts`) resolves tools at runtime via `get(name)`.
 
 ---
 
