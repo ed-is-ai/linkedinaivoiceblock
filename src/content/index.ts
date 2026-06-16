@@ -306,9 +306,13 @@ async function init(): Promise<void> {
     seenToday++;
     seenProfileIdsToday.add(authorId);
 
+    // Read the live module-scope mirror (updated by the settings onChanged handler)
+    // rather than the init()-time `autoHideThreshold` constant, so moving the auto-hide
+    // slider takes effect on freshly scored posts without a page reload (WR-01).
+    const baseThreshold = currentThreshold;
     const effectiveHideThreshold = exclusionResult.openToWork
-      ? autoHideThreshold + detectionConfig.thresholds.openToWorkPenalty
-      : autoHideThreshold;
+      ? baseThreshold + detectionConfig.thresholds.openToWorkPenalty
+      : baseThreshold;
 
     // Extract profile signals once per author per session (D-10)
     if (profileSignalCache.has(authorId) === false) {
