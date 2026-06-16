@@ -9,8 +9,8 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 
 ### Skill Registry Architecture
 
-- [ ] **SKILL-01**: Detection logic is organized as a two-level skill registry — DetectorSkill (heuristic, llm), SignalSkill (the scoring signals), and ExclusionSkill (sponsored / company / non-English) — replacing the hand-wired signal pipeline in `heuristic.ts` and the inline exclusion checks in the content script.
-- [ ] **SKILL-02**: A `SkillRegistry` seeds built-in skills in code and hydrates additional declarative (data-only, LLM-authorable) skills from `chrome.storage.local` with a code-seed fallback (mirroring `SelectorRegistry`); seeded with zero declarative skills so behavior is unchanged, and only `SkillRegistry` writes skill definitions to storage.
+- [x] **SKILL-01**: Detection logic is organized as a two-level skill registry — DetectorSkill (heuristic, llm), SignalSkill (the scoring signals), and ExclusionSkill (sponsored / company / non-English) — replacing the hand-wired signal pipeline in `heuristic.ts` and the inline exclusion checks in the content script.
+- [x] **SKILL-02**: A `SkillRegistry` seeds built-in skills in code and hydrates additional declarative (data-only, LLM-authorable) skills from `chrome.storage.local` with a code-seed fallback (mirroring `SelectorRegistry`); seeded with zero declarative skills so behavior is unchanged, and only `SkillRegistry` writes skill definitions to storage.
 - [ ] **SKILL-03**: Hard-exclusion ordering is preserved — ExclusionSkills run and can short-circuit before any DetectorSkill/SignalSkill (upholds the hard-exclusions-before-detection constraint).
 - [ ] **SKILL-04**: Zero behavior change — same posts excluded and flagged, same scores and breakdown; the Phase 29 golden-score snapshot stays byte-identical and exclusion parity is verified on a representative fixture set.
 
@@ -68,8 +68,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SKILL-01 | Phase 30 | Pending |
-| SKILL-02 | Phase 30 | Pending |
+| SKILL-01 | Phase 30 | Complete |
+| SKILL-02 | Phase 30 | Complete |
 | SKILL-03 | Phase 30 | Pending |
 | SKILL-04 | Phase 30 | Pending |
 | COST-01 | Phase 31 | Pending |

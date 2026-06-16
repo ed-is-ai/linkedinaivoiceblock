@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
 status: executing
-last_updated: "2026-06-15T23:58:03.475Z"
-last_activity: 2026-06-15 -- Phase 30 planning complete
+last_updated: "2026-06-16T07:33:00.625Z"
+last_activity: 2026-06-16
 progress:
   total_phases: 13
   completed_phases: 9
   total_plans: 26
-  completed_plans: 21
+  completed_plans: 22
   percent: 69
 ---
 
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 30 — skill registry architecture
+**Current focus:** Phase 30 — skill-registry-architecture
 
 ---
 
 ## Current Position
 
-Phase: 30
-Plan: Not started
+Phase: 30 (skill-registry-architecture) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-06-15 -- Phase 30 planning complete
+Last activity: 2026-06-16
 
 ### Progress Bar
 
@@ -108,6 +108,7 @@ None.
 | Phase 25.1 P05 | 3m | 1 tasks | 1 files |
 | Phase 26-eval-runner P01 | 8m | 3 tasks | 3 files |
 | Phase 26-eval-runner P02 | 15m | 3 tasks | 4 files |
+| Phase 30 P01 | 8m | 2 tasks | 3 files |
 
 ## Operator Next Steps
 
