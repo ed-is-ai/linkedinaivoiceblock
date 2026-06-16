@@ -377,7 +377,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 31-02-PLAN.md — Move remaining 3 exclusions + all 8 signal skills into library folders; regenerate full ordered module; SkillRegistry sources both arrays from it; golden snapshot byte-identical (SKILL-05)
+- [x] 31-02-PLAN.md — Move remaining 3 exclusions + all 8 signal skills into library folders; regenerate full ordered module; SkillRegistry sources both arrays from it; golden snapshot byte-identical (SKILL-05)
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -453,6 +453,6 @@ Plans:
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
-| 31. Skill Library Alignment | v10.0 | 1/4 | In Progress|  |
+| 31. Skill Library Alignment | v10.0 | 2/4 | In Progress|  |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |

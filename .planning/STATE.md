@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
 status: executing
-last_updated: "2026-06-16T13:42:31.325Z"
-last_activity: 2026-06-16 -- Phase 31 execution started
+last_updated: "2026-06-16T15:32:26.568Z"
+last_activity: 2026-06-16
 progress:
   total_phases: 13
   completed_phases: 10
   total_plans: 30
-  completed_plans: 26
+  completed_plans: 28
   percent: 77
 ---
 
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 ## Current Position
 
 Phase: 31 (skill-library-alignment) — EXECUTING
-Plan: 1 of 4
+Plan: 2 of 4
 Status: Executing Phase 31
-Last activity: 2026-06-16 -- Phase 31 execution started
+Last activity: 2026-06-16 -- Phase 31 Plan 02 complete
 
 ### Progress Bar
 
@@ -97,8 +97,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-16
-**Last action:** Phase 30 Plan 05 complete — HeuristicDetector refactored to registry runner; LLMDetector + DetectorSkill; exclusion runner wired in content/index.ts; parity test added; 28 test files 417 tests all pass.
-**Next action:** Run /gsd-verify-work for Phase 30.
+**Last action:** Phase 31 Plan 02 complete — 11 library folders (8 signals + 3 exclusions); generated module wires all 12 via static imports; SkillRegistry rewired to generated arrays; 28 test files 418 tests all pass.
+**Next action:** Execute Phase 31 Plan 03.
 
 ## Performance Metrics
 
@@ -116,7 +116,9 @@ None.
 | Phase 30-skill-registry-architecture P03 | 145s | 2 tasks | 4 files |
 | Phase 30-skill-registry-architecture P04 | 4m | 1 tasks | 1 files |
 | Phase 30-skill-registry-architecture P05 | 8m | 3 tasks | 4 files |
+| Phase 31-skill-library-alignment P01 | 18m | 3 tasks | 7 files |
+| Phase 31-skill-library-alignment P02 | 17m | 3 tasks | 35 files |
 
 ## Operator Next Steps
 
-- `/gsd-plan-phase 29` — plan Config Foundation
+- `/gsd-execute-phase 31` — execute Phase 31 Plan 03

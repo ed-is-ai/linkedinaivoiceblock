@@ -16,7 +16,7 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 
 ### Skill Library Alignment
 
-- [ ] **SKILL-05**: The detector, exclusion, and selector skills are each defined as a self-contained folder under `skills/library/<name>/` following the Anthropic Agent Skills convention — a `SKILL.md` manifest (name/description/metadata frontmatter) alongside the bundled TypeScript implementation — and `SkillRegistry` hydrates skill metadata from the bundled manifests at build time (static imports only; no runtime filesystem load, MV3-CSP-safe), with zero behavior change. Delivered tracer-bullet style: spike one skill kind (exclusion) end-to-end, then build out the rest.
+- [x] **SKILL-05**: The detector, exclusion, and selector skills are each defined as a self-contained folder under `skills/library/<name>/` following the Anthropic Agent Skills convention — a `SKILL.md` manifest (name/description/metadata frontmatter) alongside the bundled TypeScript implementation — and `SkillRegistry` hydrates skill metadata from the bundled manifests at build time (static imports only; no runtime filesystem load, MV3-CSP-safe), with zero behavior change. Delivered tracer-bullet style: spike one skill kind (exclusion) end-to-end, then build out the rest.
 
 ### Eval-Derived Config
 
@@ -72,7 +72,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SKILL-02 | Phase 30 | Complete |
 | SKILL-03 | Phase 30 | Complete |
 | SKILL-04 | Phase 30 | Complete |
-| SKILL-05 | Phase 31 | Pending |
+| SKILL-05 | Phase 31 | Complete |
 | CFG-01 | Phase 29 | Complete |
 | CFG-02 | Phase 32 | Pending |
 | CFG-03 | Phase 32 | Pending |
