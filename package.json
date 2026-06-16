@@ -6,6 +6,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate-skill-registry": "tsx scripts/generate-skill-registry.ts",
+    "prebuild": "npm run generate-skill-registry",
+    "check-skill-registry": "npm run generate-skill-registry && git diff --exit-code src/content/generated-skill-registry.ts",
     "build": "vite build",
     "dev": "vite build --watch",
     "type-check": "tsc --noEmit",
@@ -26,6 +29,7 @@
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.0",
+    "@types/js-yaml": "^4.0.9",
     "archiver": "^7.0.0",
     "@types/archiver": "^6.0.0",
     "sharp": "^0.33.0",

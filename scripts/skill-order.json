@@ -1,0 +1,22 @@
+{
+  "signals": [
+    "listicle-cta",
+    "buzzword",
+    "em-dash",
+    "ai-vocab",
+    "hook-story",
+    "motivational",
+    "impersonal",
+    "generic-comments"
+  ],
+  "exclusions": [
+    "sponsored",
+    "company-page",
+    "non-english",
+    "open-to-work"
+  ],
+  "detectors": [
+    "heuristic",
+    "llm"
+  ]
+}
