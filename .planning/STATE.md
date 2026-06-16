@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
 status: executing
-last_updated: "2026-06-16T15:57:40.881Z"
+last_updated: "2026-06-16T16:18:02.336Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 13
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 30
-  completed_plans: 29
-  percent: 77
+  completed_plans: 30
+  percent: 85
 ---
 
 # State — LinkedIn Blocker
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 ## Current Position
 
-Phase: 31 (skill-library-alignment) — EXECUTING
-Plan: 3 of 4
-Status: Executing Phase 31
-Last activity: 2026-06-16 -- Phase 31 Plan 03 complete
+Phase: 31 (skill-library-alignment) — COMPLETE
+Plan: 4 of 4
+Status: Phase 31 complete — all 4 plans executed
+Last activity: 2026-06-16
 
 ### Progress Bar
 
@@ -97,8 +97,8 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-16
-**Last action:** Phase 31 Plan 03 complete — heuristic/llm library folders with re-export barrels; selector-registry library folder; GENERATED_DETECTOR_SKILLS metadata; 28 test files 418 tests all pass.
-**Next action:** Execute Phase 31 Plan 04.
+**Last action:** Phase 31 Plan 04 complete — order-pinning + kind-drift-guard tests, CI stale-check workflow, AUTHORING.md; 29 test files 422 tests all pass. Phase 31 fully complete.
+**Next action:** Execute Phase 32.
 
 ## Performance Metrics
 
@@ -119,10 +119,11 @@ None.
 | Phase 31-skill-library-alignment P01 | 18m | 3 tasks | 7 files |
 | Phase 31-skill-library-alignment P02 | 17m | 3 tasks | 35 files |
 | Phase 31-skill-library-alignment P03 | 8m | 3 tasks | 10 files |
+| Phase 31-skill-library-alignment P04 | 11m | 3 tasks | 3 files |
 
 ## Operator Next Steps
 
-- `/gsd-execute-phase 31` — execute Phase 31 Plan 04
+- `/gsd-execute-phase 32` — execute Phase 32
 
 ## Decisions
 

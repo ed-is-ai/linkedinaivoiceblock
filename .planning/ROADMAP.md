@@ -133,7 +133,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 - [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
 - [x] **Phase 30: Skill Registry Architecture** — Two-level skill registry (detectors/signals/exclusions); storage-hydrated declarative skills; zero behavior change (completed 2026-06-16)
-- [ ] **Phase 31: Skill Library Alignment** — Restructure detector/exclusion/selector skills into the Anthropic Agent Skills folder convention under `skills/library/`; tracer-bullet (spike exclusion, then build out); zero behavior change
+- [x] **Phase 31: Skill Library Alignment** — Restructure detector/exclusion/selector skills into the Anthropic Agent Skills folder convention under `skills/library/`; tracer-bullet (spike exclusion, then build out); zero behavior change (completed 2026-06-16)
 - [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
 - [ ] **Phase 33: Detection Tuning Run** — Run eval, bake precision-constrained config, commit baseline
 
@@ -385,7 +385,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 31-04-PLAN.md — Order-pinning + kind-drift-guard tests; check-skill-registry stale-check wired into CI; skill-authoring note (SKILL-05)
+- [x] 31-04-PLAN.md — Order-pinning + kind-drift-guard tests; check-skill-registry stale-check wired into CI; skill-authoring note (SKILL-05)
 
 ---
 
@@ -453,6 +453,6 @@ Plans:
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
-| 31. Skill Library Alignment | v10.0 | 3/4 | In Progress|  |
+| 31. Skill Library Alignment | v10.0 | 4/4 | Complete   | 2026-06-16 |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |
