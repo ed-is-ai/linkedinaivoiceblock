@@ -17,7 +17,7 @@
   ],
   "detectors": [
     "detect-heuristic",
-    "detect-llm"
+    "detect-aiwriting-llm"
   ],
   "tools": [
     "dom-selector-rederive"

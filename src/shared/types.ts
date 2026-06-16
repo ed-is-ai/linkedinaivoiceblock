@@ -9,6 +9,18 @@
  */
 
 /**
+ * Anthropic Messages API token-usage block (subset used for trace cost accounting).
+ * Lives here (neutral shared types) so the service worker, the LLM classifier, and the
+ * dom-selector-rederive tool can all reference it without coupling to a detection skill.
+ */
+export interface AnthropicUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+}
+
+/**
  * Represents a single LinkedIn post as extracted from the DOM by the content script.
  * Passed from the content script to detectors (Phase 2+).
  *

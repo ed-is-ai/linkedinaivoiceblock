@@ -208,18 +208,18 @@ LLM-authorability:
 
 ### Composite detectors are composites, not exceptions
 
-`detect-generic-comments` and `detect-llm` are **composite**: they have a pure
+`detect-generic-comments` and `detect-aiwriting-llm` are **composite**: they have a pure
 host-agnostic **scoring part (a skill)** and an **I/O part (a tool)**. The honest
 classification separates the concerns rather than forcing the whole detector into one bucket:
 
 - `detect-generic-comments` is **already decomposed** — the signal runner injects
   `fetchComments` (the DOM-read **tool**), and `checkGenericComments(comments)` is the pure
   **skill**. This is the canonical "composite already decomposed" example.
-- `detect-llm` — the network `fetch` (**tool**) lives in the service worker (`scorePost`);
+- `detect-aiwriting-llm` — the network `fetch` (**tool**) lives in the service worker (`scorePost`);
   `LLMDetector` is a thin relay and the prompt/parse/score logic is the **skill** part.
 
 Actually decomposing these composites into separate skill + tool implementations (extracting
-`detect-llm`'s network call into a score-post tool and formalizing `fetchComments` as a named
+`detect-aiwriting-llm`'s network call into a score-post tool and formalizing `fetchComments` as a named
 comment-fetch tool) is a **DOCUMENTED FOLLOW-UP**, not done in Phase 32 (D-03). The seam is
 documented here; the refactor is deferred to keep the phase zero-behavior-change.
 
@@ -323,7 +323,7 @@ build time.  Do not add any `import '...SKILL.md'` statement anywhere in TypeScr
 
 ### Detectors are not in skill arrays
 
-`detect-heuristic` and `detect-llm` appear in `scripts/skill-order.json` `detectors` array
+`detect-heuristic` and `detect-aiwriting-llm` appear in `scripts/skill-order.json` `detectors` array
 for metadata completeness only.  Detectors are NOT added to `GENERATED_SIGNAL_SKILLS` or
 `GENERATED_EXCLUSION_SKILLS`.  They are instantiated directly in `src/content/index.ts`
 and `scripts/eval.ts` via the barrel re-exports at `src/content/detector/heuristic.ts`

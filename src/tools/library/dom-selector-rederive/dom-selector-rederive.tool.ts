@@ -18,7 +18,7 @@
  */
 
 import type { Tool } from '../../../shared/skills/types';
-import type { AnthropicUsage } from '../../../shared/classifier';
+import type { AnthropicUsage } from '../../../shared/types';
 
 // ---------------------------------------------------------------------------
 // System prompt (exported — background re-imports for error-trace calls, D-06)

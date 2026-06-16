@@ -12,15 +12,9 @@
  *   - scripts/eval.ts           (CLI eval runner — reads API key from ANTHROPIC_API_KEY env var)
  */
 
-import type { DetectionResult } from './types';
-
-/** Anthropic /v1/messages `usage` shape — cache buckets optional, whole object may be absent. */
-export interface AnthropicUsage {
-  input_tokens: number;
-  output_tokens: number;
-  cache_creation_input_tokens?: number;
-  cache_read_input_tokens?: number;
-}
+// AnthropicUsage now lives in src/shared/types.ts (neutral) so the service worker and the
+// dom-selector-rederive tool can reference it without importing from this detection skill.
+import type { DetectionResult, AnthropicUsage } from '../../../shared/types';
 
 /** Return type of classifyPost — DetectionResult plus optional usage for cost recording. */
 export type ClassifyResult = { result: DetectionResult; usage?: AnthropicUsage };
