@@ -12,9 +12,9 @@
  * and open-to-work, matching the strict priority order of checkExclusions().
  */
 
-import { resolve } from '../selector-registry';
-import type { ExclusionSkill } from '../../shared/skills/types';
-import type { PostData } from '../../shared/types';
+import { resolve } from '../../../content/selector-registry';
+import type { ExclusionSkill } from '../../../shared/skills/types';
+import type { PostData } from '../../../shared/types';
 
 export const sponsoredExclusionSkill: ExclusionSkill = {
   kind: 'exclusion',
