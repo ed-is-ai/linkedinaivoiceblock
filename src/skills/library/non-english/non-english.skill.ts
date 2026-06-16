@@ -15,9 +15,9 @@
  * the strict priority order of checkExclusions().
  */
 
-import { isNonEnglish } from '../detector/language';
-import type { ExclusionSkill } from '../../shared/skills/types';
-import type { PostData } from '../../shared/types';
+import { isNonEnglish } from '../../../content/detector/language';
+import type { ExclusionSkill } from '../../../shared/skills/types';
+import type { PostData } from '../../../shared/types';
 
 export const nonEnglishExclusionSkill: ExclusionSkill = {
   kind: 'exclusion',

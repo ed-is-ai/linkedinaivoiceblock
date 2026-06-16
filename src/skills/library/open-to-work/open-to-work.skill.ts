@@ -20,9 +20,9 @@
  * reaches this branch when the other three do not short-circuit.
  */
 
-import { resolve } from '../selector-registry';
-import type { ExclusionSkill } from '../../shared/skills/types';
-import type { PostData } from '../../shared/types';
+import { resolve } from '../../../content/selector-registry';
+import type { ExclusionSkill } from '../../../shared/skills/types';
+import type { PostData } from '../../../shared/types';
 
 export const openToWorkExclusionSkill: ExclusionSkill = {
   kind: 'exclusion',
