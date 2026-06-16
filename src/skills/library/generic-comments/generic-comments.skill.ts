@@ -5,8 +5,8 @@
  * Weights are NOT redeclared here (they live in the underlying function).
  */
 
-import { checkGenericComments } from './comments';
-import type { CodeSkill } from '../../../shared/skills/types';
+import { checkGenericComments } from '../../content/detector/signals/comments';
+import type { CodeSkill } from '../../shared/skills/types';
 
 export const genericCommentsSkill: CodeSkill = {
   kind: 'signal',

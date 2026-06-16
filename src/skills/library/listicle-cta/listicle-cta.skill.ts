@@ -4,10 +4,10 @@
  * Weight tier is read from detectionConfig.weights.listicleCta — NOT redeclared here (D-05, Landmine 1).
  */
 
-import { checkListicle } from './listicle';
-import { checkCta } from './cta';
-import { detectionConfig } from '../../../shared/detectionConfig';
-import type { CodeSkill } from '../../../shared/skills/types';
+import { checkListicle } from '../../content/detector/signals/listicle';
+import { checkCta } from '../../content/detector/signals/cta';
+import { detectionConfig } from '../../shared/detectionConfig';
+import type { CodeSkill } from '../../shared/skills/types';
 
 export const listicleCtaSkill: CodeSkill = {
   kind: 'signal',
