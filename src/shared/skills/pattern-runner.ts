@@ -25,6 +25,24 @@ import { detectionConfig } from '../detectionConfig';
 
 const _compiledPatterns = new Map<string, RegExp[]>();
 
+/**
+ * Invalidate the compiled-regex cache (WR-02).
+ *
+ * The cache assumes skill.id → patterns is immutable for the process lifetime.
+ * The registry's write path (addDeclarativeSkill) and cross-tab onChanged refresh
+ * can replace a skill with the same id but different rule.patterns, which would
+ * otherwise return stale compiled regexes. The registry calls this on every write.
+ *
+ * @param id - When provided, clears only that skill's entry; otherwise clears all.
+ */
+export function clearCompiledCache(id?: string): void {
+  if (id === undefined) {
+    _compiledPatterns.clear();
+    return;
+  }
+  _compiledPatterns.delete(id);
+}
+
 // ---------------------------------------------------------------------------
 // Dotted-path resolver into detectionConfig.weights
 // ---------------------------------------------------------------------------
