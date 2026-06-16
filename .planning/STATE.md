@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
-status: ready_to_plan
-last_updated: 2026-06-16T08:22:26.763Z
+status: planning
+last_updated: "2026-06-16T13:01:23.525Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 13
   completed_phases: 10
   total_plans: 26
-  completed_plans: 42
+  completed_plans: 26
   percent: 77
-stopped_at: Phase 30 complete (5/5) — ready to discuss Phase 31
 ---
 
 # State — LinkedIn Blocker
