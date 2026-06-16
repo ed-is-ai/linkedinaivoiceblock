@@ -133,7 +133,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 - [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
 - [x] **Phase 30: Skill Registry Architecture** — Two-level skill registry (detectors/signals/exclusions); storage-hydrated declarative skills; zero behavior change (completed 2026-06-16)
-- [ ] **Phase 31: Cost Guardrail** — Storage-backed per-session cap; heuristic fallback when cap hit
+- [ ] **Phase 31: Skill Library Alignment** — Restructure detector/exclusion/selector skills into the Anthropic Agent Skills folder convention under `skills/library/`; tracer-bullet (spike exclusion, then build out); zero behavior change
 - [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
 - [ ] **Phase 33: Detection Tuning Run** — Run eval, bake precision-constrained config, commit baseline
 
@@ -356,16 +356,17 @@ Plans:
 
 ---
 
-### Phase 31: Cost Guardrail
+### Phase 31: Skill Library Alignment
 
-**Goal**: A storage-backed per-session LLM call cap prevents runaway cost when the extension is used across long LinkedIn sessions; once the cap is hit, all scoring falls back to heuristic silently; the counter survives service-worker termination
+**Goal**: The detector, exclusion, and selector skills are restructured into the Anthropic Agent Skills folder convention — each a self-contained `skills/library/<name>/` folder with a `SKILL.md` manifest (name/description/metadata frontmatter) alongside its bundled TypeScript implementation — and the `SkillRegistry` hydrates skill metadata from those bundled manifests, with zero behavior change. Built tracer-bullet style: the exclusion skill is spiked end-to-end as wave 1, then the detector and selector skills follow.
 **Depends on**: Phase 30
-**Requirements**: COST-01
+**Requirements**: SKILL-05
 **Success Criteria** (what must be TRUE):
-  1. After the Nth LLM-scored post in a session (default N = 50), all subsequent posts in that session are scored by heuristic — no further LLM calls appear in traces for that session
-  2. Terminating and restarting the service worker mid-session does not reset the counter — the cap is enforced consistently across SW restarts by reading state from `chrome.storage.local` on every `SCORE_POST` message
-  3. Starting a new browser session (epoch-ms window boundary crossed) resets the counter and LLM scoring resumes
-  4. The cap value is read from `detectionConfig.ts`, making it a single-location change to adjust the default
+  1. (Wave 1 tracer) One ExclusionSkill lives at `skills/library/<name>/` with a `SKILL.md` whose frontmatter (`name`, `description`) parses per the Anthropic Agent Skills standard, plus its bundled TS implementation; the `SkillRegistry` resolves it from the library and the content-script exclusion run is byte-identical on the fixture set
+  2. After build-out, every DetectorSkill (heuristic, llm), every ExclusionSkill (sponsored, company-page, non-english, open-to-work), and the selector registry has a `skills/library/<name>/SKILL.md` + bundled implementation; no skill definition remains outside `skills/library/`
+  3. All skills are bundled at build time via static imports — no dynamic `import`, no `eval`/`new Function`, no runtime filesystem access (MV3-CSP-safe); the production build runs with no new CSP violations
+  4. Zero behavior change — the Phase 29 golden-score snapshot stays byte-identical and exclusion parity holds on the representative fixture set (same posts excluded/flagged, same scores)
+  5. Adding a new skill is "drop a `skills/library/<name>/` folder (SKILL.md + impl) + one registry entry" — captured in a short skill-authoring note
 **Plans**: TBD
 
 ---
@@ -373,7 +374,7 @@ Plans:
 ### Phase 32: Eval Tuning Machinery
 
 **Goal**: The eval pipeline has a precision-constrained threshold selector and a held-out train/test split so that the operating point chosen for deployment is validated on data it was not selected from
-**Depends on**: Phase 31
+**Depends on**: Phase 29 (config foundation + v9.0 eval harness; independent of the Phase 31 skill-library work)
 **Requirements**: CFG-02, CFG-03
 **Success Criteria** (what must be TRUE):
   1. `selectThreshold(rows, minPrecision = 0.90, minRecall = 0.60)` exists in `src/shared/eval/metrics.ts` and returns the threshold with the highest F1 among rows where precision >= 0.90 and recall >= 0.60 (not the raw best-F1 row)
@@ -434,6 +435,6 @@ Plans:
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
-| 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
+| 31. Skill Library Alignment | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |

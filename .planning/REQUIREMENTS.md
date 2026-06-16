@@ -14,9 +14,9 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 - [x] **SKILL-03**: Hard-exclusion ordering is preserved — ExclusionSkills run and can short-circuit before any DetectorSkill/SignalSkill (upholds the hard-exclusions-before-detection constraint).
 - [x] **SKILL-04**: Zero behavior change — same posts excluded and flagged, same scores and breakdown; the Phase 29 golden-score snapshot stays byte-identical and exclusion parity is verified on a representative fixture set.
 
-### Cost Guardrail
+### Skill Library Alignment
 
-- [ ] **COST-01**: A storage-backed per-session cap (default 50 LLM-scored posts, persisted in `chrome.storage.local` so it survives service-worker termination, reset at the session boundary) falls back to heuristic scoring once the cap is exceeded.
+- [ ] **SKILL-05**: The detector, exclusion, and selector skills are each defined as a self-contained folder under `skills/library/<name>/` following the Anthropic Agent Skills convention — a `SKILL.md` manifest (name/description/metadata frontmatter) alongside the bundled TypeScript implementation — and `SkillRegistry` hydrates skill metadata from the bundled manifests at build time (static imports only; no runtime filesystem load, MV3-CSP-safe), with zero behavior change. Delivered tracer-bullet style: spike one skill kind (exclusion) end-to-end, then build out the rest.
 
 ### Eval-Derived Config
 
@@ -72,7 +72,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SKILL-02 | Phase 30 | Complete |
 | SKILL-03 | Phase 30 | Complete |
 | SKILL-04 | Phase 30 | Complete |
-| COST-01 | Phase 31 | Pending |
+| SKILL-05 | Phase 31 | Pending |
 | CFG-01 | Phase 29 | Complete |
 | CFG-02 | Phase 32 | Pending |
 | CFG-03 | Phase 32 | Pending |
@@ -86,3 +86,4 @@ Which phases cover which requirements. Populated during roadmap creation.
 ---
 *Requirements defined: 2026-06-15*
 *Last updated: 2026-06-16 — Phase 30 re-scoped from LLM-Primary Promotion to Skill Registry Architecture; LLM-01/02/03 dropped, SKILL-01..04 added; milestone retitled Skill-Based Detection*
+*Last updated: 2026-06-16 — Phase 31 re-scoped from Cost Guardrail to Skill Library Alignment; COST-01 dropped, SKILL-05 added; Phase 32 dependency moved from Phase 31 → Phase 29 (eval tuning is independent of the skill-library work). Note: future COST-02/03/04 now presuppose a revived COST-01.*

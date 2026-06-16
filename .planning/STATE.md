@@ -47,6 +47,7 @@ v10.0: [░░░░░░░░░░░░░░░░░░░░] 0% (0/5 ph
 - Phase 25.1 inserted after Phase 25: Capture and export unflagged posts for eval negatives (URGENT)
 - Phase 25.2 inserted after Phase 25: Symmetric export redesign (blockedAccounts + flaggedPosts + unflaggedPosts) (URGENT)
 - Phases 29–33 added: v10.0 LLM-Primary Detection & Eval-Driven Tuning
+- Phase 31 re-scoped (2026-06-16): Cost Guardrail → Skill Library Alignment (COST-01 dropped, SKILL-05 added); Phase 32 dep moved 31 → 29
 
 ### Key Decisions
 
