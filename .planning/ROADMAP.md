@@ -402,10 +402,19 @@ Plans:
   5. Existing skills are audited against the skill-vs-tool decision rule; any imperative/I/O capability masquerading as a detection skill is reclassified as a tool, and the decision rule is documented in `AUTHORING.md`
   6. Zero behavior change: full test suite + `check-skill-registry` stale-check pass; golden-score snapshot and exclusion parity remain byte-identical
 
-**Plans:** 0 plans
+**Plans:** 3 plans
 
-Plans:
-- [ ] TBD (run /gsd-plan-phase 34 to break down)
+**Wave 1**
+
+- [ ] 32-01-PLAN.md — Tool<I, O> contract in shared types + migrate rederiveSelector into dom-selector-rederive tool (TOOL-01/TOOL-02)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 32-02-PLAN.md — Extend codegen with tools bucket + ToolRegistry + generated-tool-registry + check-tool-registry stale-check (TOOL-01)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 32-03-PLAN.md — Rewire background to ToolRegistry, dedup RederiveCandidate, CR-01 kind fix, AUTHORING.md skill-vs-tool rule, zero-behavior-change guard sweep (TOOL-02)
 
 ---
 
