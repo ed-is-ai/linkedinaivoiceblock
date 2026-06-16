@@ -13,11 +13,9 @@
  * Requirements: ADAPT-03, ADAPT-06
  */
 
-/** A single LLM-proposed selector candidate returned from the service worker. */
-export interface RederiveCandidate {
-  selector: string;
-  rationale: string;
-}
+import type { RederiveCandidate } from '../../skills/library/dom-selector-rederive/dom-selector-rederive.tool';
+
+export type { RederiveCandidate };
 
 export class LLMRederiver {
   /**
