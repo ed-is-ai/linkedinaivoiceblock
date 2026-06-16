@@ -134,9 +134,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 - [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
 - [x] **Phase 30: Skill Registry Architecture** — Two-level skill registry (detectors/signals/exclusions); storage-hydrated declarative skills; zero behavior change (completed 2026-06-16)
 - [x] **Phase 31: Skill Library Alignment** — Restructure detector/exclusion/selector skills into the Anthropic Agent Skills folder convention under `skills/library/`; tracer-bullet (spike exclusion, then build out); zero behavior change (completed 2026-06-16)
-- [ ] **Phase 32: Eval Tuning Machinery** — Precision-constrained threshold selector; held-out train/test split
-- [ ] **Phase 33: Detection Tuning Run** — Run eval, bake precision-constrained config, commit baseline
-- [ ] **Phase 34: Tool Abstraction Layer** — Introduce a `Tool` contract + tools folder convention; migrate `rederiveSelector` as the first tool; reclassify skills that are really tools
+- [ ] **Phase 32: Tool Abstraction Layer** — Introduce a `Tool` contract + tools folder convention; migrate `rederiveSelector` as the first tool; reclassify skills that are really tools
 
 ---
 
@@ -390,36 +388,10 @@ Plans:
 
 ---
 
-### Phase 32: Eval Tuning Machinery
-
-**Goal**: The eval pipeline has a precision-constrained threshold selector and a held-out train/test split so that the operating point chosen for deployment is validated on data it was not selected from
-**Depends on**: Phase 29 (config foundation + v9.0 eval harness; independent of the Phase 31 skill-library work)
-**Requirements**: CFG-02, CFG-03
-**Success Criteria** (what must be TRUE):
-  1. `selectThreshold(rows, minPrecision = 0.90, minRecall = 0.60)` exists in `src/shared/eval/metrics.ts` and returns the threshold with the highest F1 among rows where precision >= 0.90 and recall >= 0.60 (not the raw best-F1 row)
-  2. Running `npm run eval` with a labeled dataset automatically reserves a held-out test split before any threshold selection — no threshold value is selected and validated on the same rows
-  3. The eval output table marks the precision-constrained operating point with a `*` so it is distinguishable from the raw best-F1 row
-  4. Supplying a dataset where no threshold meets the precision floor causes the CLI to report this clearly rather than silently falling back to raw best-F1
-**Plans**: TBD
-
----
-
-### Phase 33: Detection Tuning Run
-
-**Goal**: One real eval run selects the precision-constrained operating point from labeled data, bakes the winning threshold into `detectionConfig.ts`, and commits `eval/baseline.json` as the accepted regression reference — the milestone's meaningful deliverable
-**Depends on**: Phase 32
-**Requirements**: TUNE-01
-**Success Criteria** (what must be TRUE):
-  1. An eval run completes against the labeled dataset; the output shows precision >= 0.90 at the selected threshold on the held-out test split
-  2. `src/shared/detectionConfig.ts` contains the eval-derived `autoHideThreshold` value (not the original hand-tuned constant) committed to git
-  3. `eval/baseline.json` is committed and contains the EvalRunSummary from this run (threshold, precision, recall, F1) as the accepted baseline reference — the automated regression gate that consumes it is deferred (Future: GATE-01)
-  4. The deployed operating point is reproducible: re-running `selectThreshold` against the committed labeled split yields the same threshold that was baked into `detectionConfig.ts`
-**Plans**: TBD
-
-### Phase 34: Tool Abstraction Layer
+### Phase 32: Tool Abstraction Layer
 
 **Goal**: A first-class `Tool` abstraction exists, separate from the host-agnostic detection skills. Tools are imperative capabilities that may perform host I/O (network, `chrome.storage`) and expose a typed `name` / `description` / `execute(input)` contract; they live under the `skills/library/` folder convention with a `SKILL.md` manifest (`metadata.kind: tool`). `rederiveSelector` is migrated out of `background/index.ts` into the library as the first tool, the `dom-selector-registry` mislabel is corrected, and existing "skills" that are really imperative/I/O capabilities are audited and reclassified as tools — with zero behavior change.
-**Depends on**: Phase 31 (skill-library folder convention; independent of the Phase 32–33 eval work)
+**Depends on**: Phase 31 (skill-library folder convention)
 **Requirements**: TOOL-01, TOOL-02
 **Success Criteria** (what must be TRUE):
 
@@ -474,5 +446,4 @@ Plans:
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
 | 31. Skill Library Alignment | v10.0 | 4/4 | Complete    | 2026-06-16 |
-| 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
-| 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |
+| 32. Tool Abstraction Layer | v10.0 | 0/? | Not started | - |

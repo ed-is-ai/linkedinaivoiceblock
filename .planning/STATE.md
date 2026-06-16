@@ -21,7 +21,7 @@ stopped_at: Phase 31 complete (4/4) — ready to discuss Phase 32
 See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 32 — eval tuning machinery
+**Current focus:** Phase 32 — tool abstraction layer
 
 ---
 
@@ -35,7 +35,7 @@ Last activity: 2026-06-16
 ### Progress Bar
 
 ```
-v10.0: [░░░░░░░░░░░░░░░░░░░░] 0% (0/5 phases)
+v10.0: [███████████████░░░░░] 75% (3/4 phases)
 ```
 
 ## Accumulated Context
@@ -48,7 +48,8 @@ v10.0: [░░░░░░░░░░░░░░░░░░░░] 0% (0/5 ph
 - Phase 25.2 inserted after Phase 25: Symmetric export redesign (blockedAccounts + flaggedPosts + unflaggedPosts) (URGENT)
 - Phases 29–33 added: v10.0 LLM-Primary Detection & Eval-Driven Tuning
 - Phase 31 re-scoped (2026-06-16): Cost Guardrail → Skill Library Alignment (COST-01 dropped, SKILL-05 added); Phase 32 dep moved 31 → 29
-- Phase 34 added (2026-06-16): Tool Abstraction Layer (TOOL-01/02) — Tool contract distinct from host-agnostic skills, migrate rederiveSelector as first tool, fix dom-selector-registry CR-01 mislabel, audit skills for tool reclassification; depends on Phase 31, independent of eval phases 32–33
+- Phase 32 added (2026-06-16) as Tool Abstraction Layer (TOOL-01/02) — Tool contract distinct from host-agnostic skills, migrate rederiveSelector as first tool, fix dom-selector-registry CR-01 mislabel, audit skills for tool reclassification; depends on Phase 31
+- Eval-tuning phases dropped (2026-06-16): removed Phase 32 (Eval Tuning Machinery) and Phase 33 (Detection Tuning Run) + reqs CFG-02/CFG-03/TUNE-01; Tool Abstraction renumbered 34 → 32
 
 ### Key Decisions
 
@@ -73,8 +74,6 @@ v10.0: [░░░░░░░░░░░░░░░░░░░░] 0% (0/5 ph
 | detectionConfig module (v10.0) | Use .ts module (not .json) for compile-time type safety via `as const`; resolveJsonModule already true in tsconfig so either would work, but .ts prevents drift | Phase 29 |
 | LLM-primary coupling (v10.0) | LLM-01/02/03 ship together — scored-URN dedup cache (LLM-02) and optimistic pre-hide (LLM-03) are preconditions for LLM-primary being cost-safe and UX-safe; splitting risks 3-10x cost blowup and flash-of-bot-content | Phase 30 |
 | Session cap default (v10.0) | 50 posts/session (conservative); expose as user-configurable later (COST-02 deferred); calibrate from real trace data once live | Phase 31 |
-| Precision-constrained threshold (v10.0) | selectThreshold(rows, minPrecision = 0.90, minRecall = 0.60) — hard precision floor (FP-averse use case: hiding human posts is worse than missing AI posts); recall floor prevents degenerate zero-hide solution | Phase 32 |
-| Regression gate engine (v10.0) | CI gate runs heuristic engine only (deterministic, free, fast); LLM gate is offline diagnostic only — LLM non-determinism makes a live-LLM CI gate flaky on small datasets | Phase 33 |
 | listicle-cta composite skill (v10.0) | Single CodeSkill with id 'listicle-cta' calls both checkListicle+checkCta; reads tier weight from detectionConfig.weights.listicleCta — never split into two skills | Phase 30 |
 | generic-comments gate placement (v10.0) | score>20 gate stays in the runner, not in the skill's run(); skill just fetches+scores; only sync:false skill in registry | Phase 30 |
 

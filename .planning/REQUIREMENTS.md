@@ -26,12 +26,6 @@ Requirements for this milestone. Each maps to exactly one roadmap phase.
 ### Eval-Derived Config
 
 - [x] **CFG-01**: One committed detection-config module (decision threshold + heuristic-fallback signal weights) is the single source of truth, imported by both the runtime (content script / service worker) and the eval CLI.
-- [ ] **CFG-02**: Threshold selection is precision-constrained (`selectThreshold` with `minPrecision = 0.90`, `minRecall = 0.60`) rather than raw best-F1 — the correct operating point for a false-positive-averse feed-hider.
-- [ ] **CFG-03**: Tuning uses a held-out test split so the operating point is not selected and validated on the same labeled data (no train/test leakage).
-
-### Detection Tuning Run
-
-- [ ] **TUNE-01**: One real eval run selects the precision-constrained operating point, bakes the winning config into the config module, and commits the eval result as the accepted baseline artifact.
 
 ## Future Requirements
 
@@ -79,19 +73,16 @@ Which phases cover which requirements. Populated during roadmap creation.
 | SKILL-04 | Phase 30 | Complete |
 | SKILL-05 | Phase 31 | Complete |
 | CFG-01 | Phase 29 | Complete |
-| CFG-02 | Phase 32 | Pending |
-| CFG-03 | Phase 32 | Pending |
-| TUNE-01 | Phase 33 | Pending |
-| TOOL-01 | Phase 34 | Pending |
-| TOOL-02 | Phase 34 | Pending |
+| TOOL-01 | Phase 32 | Pending |
+| TOOL-02 | Phase 32 | Pending |
 
 **Coverage:**
-- v10.0 requirements: 11 total
-- Mapped to phases: 11 (roadmap complete)
+- v10.0 requirements: 8 total
+- Mapped to phases: 8 (roadmap complete)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-15*
 *Last updated: 2026-06-16 — Phase 30 re-scoped from LLM-Primary Promotion to Skill Registry Architecture; LLM-01/02/03 dropped, SKILL-01..04 added; milestone retitled Skill-Based Detection*
 *Last updated: 2026-06-16 — Phase 31 re-scoped from Cost Guardrail to Skill Library Alignment; COST-01 dropped, SKILL-05 added; Phase 32 dependency moved from Phase 31 → Phase 29 (eval tuning is independent of the skill-library work). Note: future COST-02/03/04 now presuppose a revived COST-01.*
-*Last updated: 2026-06-16 — Phase 34 (Tool Abstraction Layer) added: TOOL-01/02. Introduces a `Tool` contract distinct from the host-agnostic detection skills, migrates `rederiveSelector` as the first tool, fixes the dom-selector-registry CR-01 mislabel, and audits skills for tool reclassification. Depends on Phase 31; independent of eval phases 32–33.*
+*Last updated: 2026-06-16 — Eval-tuning phases dropped: removed Phase 32 (Eval Tuning Machinery) and Phase 33 (Detection Tuning Run) and their requirements CFG-02, CFG-03, TUNE-01. Tool Abstraction Layer (TOOL-01/02) renumbered 34 → 32. Milestone v10.0 now scopes Skill-Based Detection + the Tool abstraction; eval-driven tuning deferred.*
