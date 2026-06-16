@@ -7,8 +7,10 @@
  */
 
 import type { PostData, DetectionResult, Detector } from '../../shared/types';
+import type { DetectorSkill } from '../../shared/skills/types';
 
-export class LLMDetector implements Detector {
+export class LLMDetector implements Detector, DetectorSkill {
+  readonly kind = 'detector' as const;
   readonly name = 'llm';
 
   constructor(private readonly fallback?: Detector) {}

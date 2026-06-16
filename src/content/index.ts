@@ -1,9 +1,10 @@
 import { SELECTORS_VERSION } from './selectors';
 import { startObserving } from './observer';
 import { seedIfNeeded, load } from './selector-registry';
+import { seedIfNeeded as skillRegistrySeedIfNeeded, load as skillRegistryLoad, getExclusionSkills } from './skill-registry';
 import { HeuristicDetector } from './detector/heuristic';
 import { LLMDetector } from './detector/llm';
-import { checkExclusions } from './exclusions';
+import type { ExclusionResult } from '../shared/types';
 import { injectTombstone, injectBlockedTombstone } from './detector/tombstone';
 import { expandComments, resetExpansionBudget } from './detector/comment-expand';
 import { extractProfileSignals } from './detector/signals/profile';
@@ -207,6 +208,9 @@ async function init(): Promise<void> {
   // Warm the selector registry cache before starting observation
   await seedIfNeeded();
   await load();
+  // Warm the skill registry cache before starting observation (SKILL-02)
+  await skillRegistrySeedIfNeeded();
+  await skillRegistryLoad();
 
   const autoHideThreshold = settings?.autoHideThreshold ?? detectionConfig.thresholds.autoHideDefault;
   const captureUnflaggedPosts = settings?.captureUnflaggedPosts ?? false;
@@ -288,13 +292,21 @@ async function init(): Promise<void> {
       return;
     }
 
-    const exclusion = checkExclusions(postData, postNode);
-    if (exclusion.excluded) return;
+    // Exclusion runner — iterates ExclusionSkills in priority order, short-circuits on
+    // first excluded:true (CLAUDE.md #5: hard exclusions before detection, D-09 parity)
+    // Priority: sponsored → company-page → non-english → open-to-work
+    let exclusionResult: ExclusionResult = { excluded: false };
+    for (const skill of getExclusionSkills()) {
+      const r = skill.check(postData, postNode);
+      if (r.excluded) { exclusionResult = r; break; }
+      if (r.openToWork) exclusionResult = { ...exclusionResult, openToWork: true };
+    }
+    if (exclusionResult.excluded) return;
 
     seenToday++;
     seenProfileIdsToday.add(authorId);
 
-    const effectiveHideThreshold = exclusion.openToWork
+    const effectiveHideThreshold = exclusionResult.openToWork
       ? autoHideThreshold + detectionConfig.thresholds.openToWorkPenalty
       : autoHideThreshold;
 
