@@ -25,18 +25,20 @@ interface SkillOrder {
   signals: string[];
   exclusions: string[];
   detectors: string[];
+  // Phase 32: tools bucket (D-05)
+  tools?: string[];
 }
 
 interface SkillFrontmatter {
   name: string;
   description: string;
-  metadata: { kind: 'signal' | 'exclusion' | 'detector' };
+  metadata: { kind: 'signal' | 'exclusion' | 'detector' | 'tool' };
 }
 
 interface SkillEntry {
   name: string;
   description: string;
-  kind: 'signal' | 'exclusion' | 'detector';
+  kind: 'signal' | 'exclusion' | 'detector' | 'tool';
   folder: string;
 }
 
@@ -60,9 +62,9 @@ function validateFrontmatter(fm: unknown, skillName: string): SkillFrontmatter {
   }
   const meta = f['metadata'] as Record<string, unknown> | undefined;
   const kind = meta?.['kind'];
-  if (!['signal', 'exclusion', 'detector'].includes(kind as string)) {
+  if (!['signal', 'exclusion', 'detector', 'tool'].includes(kind as string)) {
     process.stderr.write(
-      `ERROR: ${skillName}: SKILL.md metadata.kind must be 'signal' | 'exclusion' | 'detector', got: ${String(kind)}\n`,
+      `ERROR: ${skillName}: SKILL.md metadata.kind must be 'signal' | 'exclusion' | 'detector' | 'tool', got: ${String(kind)}\n`,
     );
     process.exit(1);
   }
@@ -112,7 +114,13 @@ function parseSkillMd(folderName: string): SkillEntry | null {
 // Emit helpers
 // ---------------------------------------------------------------------------
 
-function importVarName(folder: string, kind: 'signal' | 'exclusion' | 'detector'): string {
+function importVarName(folder: string, kind: 'signal' | 'exclusion' | 'detector' | 'tool'): string {
+  if (kind === 'tool') {
+    // Full folder name camelCased (no prefix strip) + Tool suffix (RESEARCH §ToolRegistry Design)
+    // e.g. dom-selector-rederive → domSelectorRederiveTool
+    const camel = folder.replace(/-([a-z])/g, (_, c: string) => (c as string).toUpperCase());
+    return `${camel}Tool`;
+  }
   // Convert kebab-case folder names to camelCase variable names,
   // matching the existing codebase naming convention:
   //   signal skills:    <camel>Skill           (e.g., listicleCtaSkill)
@@ -130,7 +138,12 @@ function importVarName(folder: string, kind: 'signal' | 'exclusion' | 'detector'
   return `${camel}${suffix}`;
 }
 
-function importPath(folder: string): string {
+function importPath(folder: string, kind: 'signal' | 'exclusion' | 'detector' | 'tool'): string {
+  if (kind === 'tool') {
+    // Relative from src/shared/ (generated-tool-registry.ts lives there)
+    return `../skills/library/${folder}/${folder}.tool`;
+  }
+  // Relative from src/content/ (generated-skill-registry.ts lives there)
   return `../skills/library/${folder}/${folder}.skill`;
 }
 
@@ -147,6 +160,8 @@ function main(): void {
   const signalEntries: SkillEntry[] = order.signals.map(parseSkillMd).filter((e): e is SkillEntry => e !== null);
   const exclusionEntries: SkillEntry[] = order.exclusions.map(parseSkillMd).filter((e): e is SkillEntry => e !== null);
   const detectorEntries: SkillEntry[] = order.detectors.map(parseSkillMd).filter((e): e is SkillEntry => e !== null);
+  // Phase 32: tools bucket (D-05)
+  const toolEntries: SkillEntry[] = (order.tools ?? []).map(parseSkillMd).filter((e): e is SkillEntry => e !== null);
 
   // 3. Build the generated module source
   const lines: string[] = [];
@@ -168,7 +183,7 @@ function main(): void {
   if (signalEntries.length > 0) {
     lines.push('// Signal skill imports (pipeline step-order — DO NOT reorder, golden-score snapshot depends on it D-06)');
     for (const entry of signalEntries) {
-      lines.push(`import { ${importVarName(entry.folder, entry.kind)} } from '${importPath(entry.folder)}';`);
+      lines.push(`import { ${importVarName(entry.folder, entry.kind)} } from '${importPath(entry.folder, entry.kind)}';`);
     }
     lines.push('');
   }
@@ -177,7 +192,7 @@ function main(): void {
   if (exclusionEntries.length > 0) {
     lines.push('// Exclusion skill imports (priority order — DO NOT reorder, exclusion parity depends on it D-06)');
     for (const entry of exclusionEntries) {
-      lines.push(`import { ${importVarName(entry.folder, entry.kind)} } from '${importPath(entry.folder)}';`);
+      lines.push(`import { ${importVarName(entry.folder, entry.kind)} } from '${importPath(entry.folder, entry.kind)}';`);
     }
     lines.push('');
   }
@@ -230,7 +245,7 @@ function main(): void {
   lines.push('} as const;');
   lines.push('');
 
-  // 4. Write the generated file
+  // 4. Write the generated skill file
   const outputPath = path.join(repoRoot, 'src', 'content', 'generated-skill-registry.ts');
   const output = lines.join('\n');
   fs.writeFileSync(outputPath, output, 'utf-8');
@@ -244,6 +259,57 @@ function main(): void {
   );
   process.stdout.write(
     `  Detector skills:  ${detectorEntries.length} (${detectorEntries.map(e => e.folder).join(', ') || 'none'})\n`,
+  );
+
+  // 5. Build and write the generated tool registry (src/shared/ — separate from src/content/)
+  // CRITICAL (RESEARCH Pitfall 1): this is a SEPARATE toolLines array and a SEPARATE writeFileSync.
+  // The existing lines array and skill outputPath above are NOT altered.
+  const toolLines: string[] = [];
+
+  // Header
+  toolLines.push('// src/shared/generated-tool-registry.ts');
+  toolLines.push('// ============================================================');
+  toolLines.push('// DO NOT EDIT — generated by scripts/generate-skill-registry.ts');
+  toolLines.push('// Regenerate: npm run generate-skill-registry');
+  toolLines.push('// Stale-check: npm run check-tool-registry');
+  toolLines.push('// ============================================================');
+  toolLines.push('');
+
+  // Type import
+  toolLines.push("import type { Tool } from './skills/types';");
+  toolLines.push('');
+
+  // Static tool imports (no dynamic import, no import.meta.glob — MV3-CSP-safe, D-07)
+  if (toolEntries.length > 0) {
+    for (const entry of toolEntries) {
+      toolLines.push(`import { ${importVarName(entry.folder, entry.kind)} } from '${importPath(entry.folder, entry.kind)}';`);
+    }
+    toolLines.push('');
+  }
+
+  // GENERATED_TOOLS array
+  toolLines.push('export const GENERATED_TOOLS: readonly Tool<unknown, unknown>[] = [');
+  for (const entry of toolEntries) {
+    toolLines.push(`  ${importVarName(entry.folder, entry.kind)},`);
+  }
+  toolLines.push('];');
+  toolLines.push('');
+
+  // GENERATED_TOOL_METADATA object (descriptive — for documentation/LLM use)
+  toolLines.push('export const GENERATED_TOOL_METADATA = {');
+  for (const entry of toolEntries) {
+    const escapedDesc = entry.description.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    toolLines.push(`  '${entry.folder}': { name: '${entry.name}', description: '${escapedDesc}', kind: 'tool' as const },`);
+  }
+  toolLines.push('} as const;');
+  toolLines.push('');
+
+  const toolOutputPath = path.join(repoRoot, 'src', 'shared', 'generated-tool-registry.ts');
+  fs.writeFileSync(toolOutputPath, toolLines.join('\n'), 'utf-8');
+
+  process.stdout.write(`Generated: ${toolOutputPath}\n`);
+  process.stdout.write(
+    `  Tools:            ${toolEntries.length} (${toolEntries.map(e => e.folder).join(', ') || 'none'})\n`,
   );
 }
 

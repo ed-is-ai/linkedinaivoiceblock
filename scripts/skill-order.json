@@ -18,5 +18,8 @@
   "detectors": [
     "detect-heuristic",
     "detect-llm"
+  ],
+  "tools": [
+    "dom-selector-rederive"
   ]
 }
