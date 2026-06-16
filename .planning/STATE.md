@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
 status: executing
-last_updated: "2026-06-16T07:33:00.625Z"
+last_updated: "2026-06-16T07:40:49.305Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 13
   completed_phases: 9
   total_plans: 26
-  completed_plans: 22
+  completed_plans: 23
   percent: 69
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 ## Current Position
 
 Phase: 30 (skill-registry-architecture) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-06-16
 
@@ -72,6 +72,8 @@ v10.0: [░░░░░░░░░░░░░░░░░░░░] 0% (0/5 ph
 | Session cap default (v10.0) | 50 posts/session (conservative); expose as user-configurable later (COST-02 deferred); calibrate from real trace data once live | Phase 31 |
 | Precision-constrained threshold (v10.0) | selectThreshold(rows, minPrecision = 0.90, minRecall = 0.60) — hard precision floor (FP-averse use case: hiding human posts is worse than missing AI posts); recall floor prevents degenerate zero-hide solution | Phase 32 |
 | Regression gate engine (v10.0) | CI gate runs heuristic engine only (deterministic, free, fast); LLM gate is offline diagnostic only — LLM non-determinism makes a live-LLM CI gate flaky on small datasets | Phase 33 |
+| listicle-cta composite skill (v10.0) | Single CodeSkill with id 'listicle-cta' calls both checkListicle+checkCta; reads tier weight from detectionConfig.weights.listicleCta — never split into two skills | Phase 30 |
+| generic-comments gate placement (v10.0) | score>20 gate stays in the runner, not in the skill's run(); skill just fetches+scores; only sync:false skill in registry | Phase 30 |
 
 ### Todos
 
@@ -93,9 +95,9 @@ None.
 
 ## Session Continuity
 
-**Last updated:** 2026-06-15
-**Last action:** v10.0 roadmap written — 5 phases (29–33), 8 requirements mapped, 100% coverage.
-**Next action:** `/gsd-plan-phase 29` — Config Foundation (detectionConfig.ts, zero behavior change).
+**Last updated:** 2026-06-16
+**Last action:** Phase 30 Plan 02 complete — 8 CodeSkill wrappers + PatternSkillRunner created; all tests pass.
+**Next action:** Execute Plan 03 of Phase 30.
 
 ## Performance Metrics
 
@@ -109,6 +111,7 @@ None.
 | Phase 26-eval-runner P01 | 8m | 3 tasks | 3 files |
 | Phase 26-eval-runner P02 | 15m | 3 tasks | 4 files |
 | Phase 30 P01 | 8m | 2 tasks | 3 files |
+| Phase 30-skill-registry-architecture P02 | 10m | 2 tasks | 9 files |
 
 ## Operator Next Steps
 

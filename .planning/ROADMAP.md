@@ -343,7 +343,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 30-02-PLAN.md — 8 CodeSkill signal wrappers (incl. listicle-cta composite, async generic-comments) + MV3-CSP-safe PatternSkillRunner (SKILL-01, SKILL-02)
+- [x] 30-02-PLAN.md — 8 CodeSkill signal wrappers (incl. listicle-cta composite, async generic-comments) + MV3-CSP-safe PatternSkillRunner (SKILL-01, SKILL-02)
 - [ ] 30-03-PLAN.md — 4 ExclusionSkill modules (sponsored/company-page/non-english/open-to-work) extracted from checkExclusions (SKILL-01, SKILL-03)
 
 **Wave 3** *(blocked on Wave 2)*
@@ -433,7 +433,7 @@ Plans:
 | 27. Eval Improvements | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
-| 30. Skill Registry Architecture | v10.0 | 1/5 | In Progress|  |
+| 30. Skill Registry Architecture | v10.0 | 2/5 | In Progress|  |
 | 31. Cost Guardrail | v10.0 | 0/? | Not started | - |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |
