@@ -402,7 +402,7 @@ Plans:
   5. Existing skills are audited against the skill-vs-tool decision rule; any imperative/I/O capability masquerading as a detection skill is reclassified as a tool, and the decision rule is documented in `AUTHORING.md`
   6. Zero behavior change: full test suite + `check-skill-registry` stale-check pass; golden-score snapshot and exclusion parity remain byte-identical
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 **Wave 1**
 
@@ -410,7 +410,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 32-02-PLAN.md — Extend codegen with tools bucket + ToolRegistry + generated-tool-registry + check-tool-registry stale-check (TOOL-01)
+- [x] 32-02-PLAN.md — Extend codegen with tools bucket + ToolRegistry + generated-tool-registry + check-tool-registry stale-check (TOOL-01)
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -455,4 +455,4 @@ Plans:
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
 | 31. Skill Library Alignment | v10.0 | 4/4 | Complete    | 2026-06-16 |
-| 32. Tool Abstraction Layer | v10.0 | 1/3 | In Progress|  |
+| 32. Tool Abstraction Layer | v10.0 | 2/3 | In Progress|  |
