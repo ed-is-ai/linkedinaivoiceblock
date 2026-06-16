@@ -381,7 +381,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 31-03-PLAN.md — Move heuristic + llm DetectorSkills into library folders (re-export barrels); selector-registry thin wrapper (single-writer preserved); emit detector metadata (SKILL-05)
+- [x] 31-03-PLAN.md — Move heuristic + llm DetectorSkills into library folders (re-export barrels); selector-registry thin wrapper (single-writer preserved); emit detector metadata (SKILL-05)
 
 **Wave 4** *(blocked on Wave 3)*
 
@@ -453,6 +453,6 @@ Plans:
 | 28. Evals Dashboard | v9.0 | 3/3 | Complete    | 2026-06-15 |
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
-| 31. Skill Library Alignment | v10.0 | 2/4 | In Progress|  |
+| 31. Skill Library Alignment | v10.0 | 3/4 | In Progress|  |
 | 32. Eval Tuning Machinery | v10.0 | 0/? | Not started | - |
 | 33. Detection Tuning Run | v10.0 | 0/? | Not started | - |
