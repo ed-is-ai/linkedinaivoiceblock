@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
-status: executing
-last_updated: "2026-06-16T16:18:02.336Z"
+status: ready_to_plan
+last_updated: 2026-06-16T16:49:54.628Z
 last_activity: 2026-06-16
 progress:
   total_phases: 13
   completed_phases: 11
   total_plans: 30
-  completed_plans: 30
+  completed_plans: 46
   percent: 85
+stopped_at: Phase 31 complete (4/4) — ready to discuss Phase 32
 ---
 
 # State — LinkedIn Blocker
@@ -20,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 31 — skill-library-alignment
+**Current focus:** Phase 32 — eval tuning machinery
 
 ---
 
 ## Current Position
 
-Phase: 31 (skill-library-alignment) — COMPLETE
-Plan: 4 of 4
-Status: Phase 31 complete — all 4 plans executed
+Phase: 32
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-06-16
 
 ### Progress Bar
