@@ -50,6 +50,7 @@ v10.0: [███████████████░░░░░] 75% (3/4 p
 - Phase 31 re-scoped (2026-06-16): Cost Guardrail → Skill Library Alignment (COST-01 dropped, SKILL-05 added); Phase 32 dep moved 31 → 29
 - Phase 32 added (2026-06-16) as Tool Abstraction Layer (TOOL-01/02) — Tool contract distinct from host-agnostic skills, migrate rederiveSelector as first tool, fix dom-selector-registry CR-01 mislabel, audit skills for tool reclassification; depends on Phase 31
 - Eval-tuning phases dropped (2026-06-16): removed Phase 32 (Eval Tuning Machinery) and Phase 33 (Detection Tuning Run) + reqs CFG-02/CFG-03/TUNE-01; Tool Abstraction renumbered 34 → 32
+- Post-32 refactor (2026-06-16): tools relocated from `src/skills/library/` to a dedicated `src/tools/library/` tree (commit 58b74d9) — reverses the Phase 32 D-02/D-05 "tools under skills/library" path choice; both `dom-selector-rederive` and `dom-selector-registry` moved; codegen + consumers + AUTHORING.md updated; zero behavior change (433 tests green). Phase 32 SUMMARY/VERIFICATION/SECURITY cite the old paths as point-in-time records.
 
 ### Key Decisions
 
@@ -76,6 +77,7 @@ v10.0: [███████████████░░░░░] 75% (3/4 p
 | Session cap default (v10.0) | 50 posts/session (conservative); expose as user-configurable later (COST-02 deferred); calibrate from real trace data once live | Phase 31 |
 | listicle-cta composite skill (v10.0) | Single CodeSkill with id 'listicle-cta' calls both checkListicle+checkCta; reads tier weight from detectionConfig.weights.listicleCta — never split into two skills | Phase 30 |
 | generic-comments gate placement (v10.0) | score>20 gate stays in the runner, not in the skill's run(); skill just fetches+scores; only sync:false skill in registry | Phase 30 |
+| Tool folder location (v10.0) | Tools live in a dedicated `src/tools/library/<name>/` tree, separate from `src/skills/library/` (skills). Import depth to `src/` stays 3 levels so tool internals are unchanged; codegen `parseSkillMd` takes a per-bucket baseDir, tool importPath = `../tools/library/<n>/<n>.tool`. Supersedes Phase 32 D-02/D-05. | Post-32 (2026-06-16) |
 
 ### Todos
 
