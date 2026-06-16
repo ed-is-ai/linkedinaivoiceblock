@@ -43,6 +43,13 @@ export const GENERATED_EXCLUSION_SKILLS: readonly ExclusionSkill[] = [
   openToWorkExclusionSkill,
 ];
 
+// Detector skill metadata (descriptive only — detectors are instantiated in index.ts/eval.ts,
+// NOT consumed via this registry. This export satisfies D-02 completeness only.)
+export const GENERATED_DETECTOR_SKILLS = {
+  'heuristic': { name: 'heuristic-detector', description: 'Rule-based detector that scores posts using registered signal skills via the registry runner. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Two-pass runner: sync skills in pipeline step-order (Pass 1), then async gated skills (Pass 2, generic-comments only). Orchestration layer only — all scoring logic lives in the individual signal modules. DOM-free and unit-testable without a browser.', kind: 'detector' as const },
+  'llm': { name: 'llm-detector', description: 'LLM-based detector that asks the service worker to score posts via Claude Sonnet 4.6. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Content scripts cannot call the Anthropic API directly (CORS) — the actual fetch lives in background/index.ts; this class sends a SCORE_POST message and awaits the response. Falls back to a provided Detector on error.', kind: 'detector' as const },
+} as const;
+
 // Descriptive metadata from SKILL.md manifests.
 // NOT consumed by the runtime registry — skill objects carry their own kind/id/etc.
 // Available for documentation and future LLM skill-authoring tooling.
@@ -59,4 +66,6 @@ export const GENERATED_SKILL_METADATA = {
   'company-page': { name: 'company-page-exclusion', description: 'Excludes company/organization page posts before any detection runs. Checks whether the post author profile URL contains the COMPANY_PAGE_MARKER selector resolved via SelectorRegistry. Must run second (priority 2) in the exclusion pipeline, after sponsored and before non-english and open-to-work.', kind: 'exclusion' as const },
   'non-english': { name: 'non-english-exclusion', description: 'Excludes non-English posts before any detection runs. Delegates to isNonEnglish() from src/content/detector/language.ts which checks DOM lang attribute and Unicode script analysis. Must run third (priority 3) in the exclusion pipeline, after sponsored and company-page and before open-to-work.', kind: 'exclusion' as const },
   'open-to-work': { name: 'open-to-work-exclusion', description: 'Metadata passthrough skill that detects open-to-work frames on posts. CRITICAL: always returns excluded:false — this is NOT an exclusion. A detected open-to-work frame only raises the auto-hide threshold by +20 points (fail-safe toward showing content). Must run last (priority 4) in the exclusion pipeline, after sponsored, company-page, and non-english.', kind: 'exclusion' as const },
+  'heuristic': { name: 'heuristic-detector', description: 'Rule-based detector that scores posts using registered signal skills via the registry runner. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Two-pass runner: sync skills in pipeline step-order (Pass 1), then async gated skills (Pass 2, generic-comments only). Orchestration layer only — all scoring logic lives in the individual signal modules. DOM-free and unit-testable without a browser.', kind: 'detector' as const },
+  'llm': { name: 'llm-detector', description: 'LLM-based detector that asks the service worker to score posts via Claude Sonnet 4.6. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Content scripts cannot call the Anthropic API directly (CORS) — the actual fetch lives in background/index.ts; this class sends a SCORE_POST message and awaits the response. Falls back to a provided Detector on error.', kind: 'detector' as const },
 } as const;

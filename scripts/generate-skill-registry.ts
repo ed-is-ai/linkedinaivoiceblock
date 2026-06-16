@@ -175,14 +175,8 @@ function main(): void {
     lines.push('');
   }
 
-  // Detector skill imports (not consumed by arrays below — detectors are instantiated in index.ts)
-  if (detectorEntries.length > 0) {
-    lines.push('// Detector skill imports (for completeness — consumed via index.ts, not via arrays below)');
-    for (const entry of detectorEntries) {
-      lines.push(`// import { ${importVarName(entry.folder, entry.kind)} } from '${importPath(entry.folder)}'; // not yet migrated`);
-    }
-    lines.push('');
-  }
+  // Detector skills are NOT imported here — detectors are instantiated in index.ts/eval.ts
+  // directly and are NOT consumed via registry arrays. Metadata only (Open Question 2 resolution).
 
   // GENERATED_SIGNAL_SKILLS array
   lines.push('// Order MUST match CODE_SIGNAL_SKILLS from Phase 30 — golden-score snapshot depends on it (D-06)');
@@ -201,6 +195,20 @@ function main(): void {
   }
   lines.push('];');
   lines.push('');
+
+  // GENERATED_DETECTOR_SKILLS metadata (descriptive only — detectors are NOT in registry arrays)
+  // Detectors are instantiated directly in index.ts/eval.ts; this export exists for completeness (Open Question 2).
+  if (detectorEntries.length > 0) {
+    lines.push('// Detector skill metadata (descriptive only — detectors are instantiated in index.ts/eval.ts,');
+    lines.push('// NOT consumed via this registry. This export satisfies D-02 completeness only.)');
+    lines.push('export const GENERATED_DETECTOR_SKILLS = {');
+    for (const entry of detectorEntries) {
+      const escapedDesc = entry.description.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      lines.push(`  '${entry.folder}': { name: '${entry.name}', description: '${escapedDesc}', kind: '${entry.kind}' as const },`);
+    }
+    lines.push('} as const;');
+    lines.push('');
+  }
 
   // GENERATED_SKILL_METADATA object (descriptive — for documentation/LLM use, not consumed at runtime)
   const allEntries = [...signalEntries, ...exclusionEntries, ...detectorEntries];
