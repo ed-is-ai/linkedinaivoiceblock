@@ -402,11 +402,11 @@ Plans:
   5. Existing skills are audited against the skill-vs-tool decision rule; any imperative/I/O capability masquerading as a detection skill is reclassified as a tool, and the decision rule is documented in `AUTHORING.md`
   6. Zero behavior change: full test suite + `check-skill-registry` stale-check pass; golden-score snapshot and exclusion parity remain byte-identical
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 **Wave 1**
 
-- [ ] 32-01-PLAN.md — Tool<I, O> contract in shared types + migrate rederiveSelector into dom-selector-rederive tool (TOOL-01/TOOL-02)
+- [x] 32-01-PLAN.md — Tool<I, O> contract in shared types + migrate rederiveSelector into dom-selector-rederive tool (TOOL-01/TOOL-02)
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -455,4 +455,4 @@ Plans:
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
 | 31. Skill Library Alignment | v10.0 | 4/4 | Complete    | 2026-06-16 |
-| 32. Tool Abstraction Layer | v10.0 | 0/? | Not started | - |
+| 32. Tool Abstraction Layer | v10.0 | 1/3 | In Progress|  |
