@@ -30,6 +30,15 @@ export class LLMDetector implements Detector, DetectorSkill {
       chrome.runtime.sendMessage({ type: 'SCORE_POST', postText }, (response) => {
         if (chrome.runtime.lastError) { reject(chrome.runtime.lastError); return; }
         if (response?.error) { reject(new Error(response.error as string)); return; }
+        // Validate the response shape before resolving (WR-05). If the worker
+        // terminates mid-flight or replies with undefined/malformed data without
+        // setting lastError, response.result is undefined; resolving it would let
+        // `undefined` flow into the scoring path and throw outside the fallback.
+        // Reject instead so this routes through the LLMDetector fallback in detect().
+        if (!response || typeof (response.result as DetectionResult | undefined)?.score !== 'number') {
+          reject(new Error('malformed SCORE_POST response'));
+          return;
+        }
         resolve(response.result as DetectionResult);
       });
     });
