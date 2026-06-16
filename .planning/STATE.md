@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v10.0
 milestone_name: Skill-Based Detection & Eval-Driven Tuning
-status: planning
-last_updated: "2026-06-16T13:01:23.525Z"
-last_activity: 2026-06-16
+status: executing
+last_updated: "2026-06-16T13:42:31.325Z"
+last_activity: 2026-06-16 -- Phase 31 execution started
 progress:
   total_phases: 13
   completed_phases: 10
-  total_plans: 26
+  total_plans: 30
   completed_plans: 26
   percent: 77
 ---
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 **Core value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
-**Current focus:** Phase 31 — cost guardrail
+**Current focus:** Phase 31 — skill-library-alignment
 
 ---
 
 ## Current Position
 
-Phase: 31
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-16
+Phase: 31 (skill-library-alignment) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 31
+Last activity: 2026-06-16 -- Phase 31 execution started
 
 ### Progress Bar
 
