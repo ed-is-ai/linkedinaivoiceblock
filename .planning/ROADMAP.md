@@ -367,7 +367,25 @@ Plans:
   3. All skills are bundled at build time via static imports — no dynamic `import`, no `eval`/`new Function`, no runtime filesystem access (MV3-CSP-safe); the production build runs with no new CSP violations
   4. Zero behavior change — the Phase 29 golden-score snapshot stays byte-identical and exclusion parity holds on the representative fixture set (same posts excluded/flagged, same scores)
   5. Adding a new skill is "drop a `skills/library/<name>/` folder (SKILL.md + impl) + one registry entry" — captured in a short skill-authoring note
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+
+**Wave 1** *(tracer bullet — standalone end-to-end slice)*
+
+- [ ] 31-01-PLAN.md — Spike sponsored exclusion end-to-end: library folder + SKILL.md + moved impl, codegen script + skill-order.json, committed generated module, SkillRegistry rewire, exclusion parity byte-identical (SKILL-05)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 31-02-PLAN.md — Move remaining 3 exclusions + all 8 signal skills into library folders; regenerate full ordered module; SkillRegistry sources both arrays from it; golden snapshot byte-identical (SKILL-05)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 31-03-PLAN.md — Move heuristic + llm DetectorSkills into library folders (re-export barrels); selector-registry thin wrapper (single-writer preserved); emit detector metadata (SKILL-05)
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 31-04-PLAN.md — Order-pinning + kind-drift-guard tests; check-skill-registry stale-check wired into CI; skill-authoring note (SKILL-05)
 
 ---
 
