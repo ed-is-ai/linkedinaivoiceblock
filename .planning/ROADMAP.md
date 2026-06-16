@@ -134,7 +134,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 - [x] **Phase 29: Config Foundation** — Single-source `detectionConfig.ts`, zero behavior change (completed 2026-06-15)
 - [x] **Phase 30: Skill Registry Architecture** — Two-level skill registry (detectors/signals/exclusions); storage-hydrated declarative skills; zero behavior change (completed 2026-06-16)
 - [x] **Phase 31: Skill Library Alignment** — Restructure detector/exclusion/selector skills into the Anthropic Agent Skills folder convention under `skills/library/`; tracer-bullet (spike exclusion, then build out); zero behavior change (completed 2026-06-16)
-- [ ] **Phase 32: Tool Abstraction Layer** — Introduce a `Tool` contract + tools folder convention; migrate `rederiveSelector` as the first tool; reclassify skills that are really tools
+- [x] **Phase 32: Tool Abstraction Layer** — Introduce a `Tool` contract + tools folder convention; migrate `rederiveSelector` as the first tool; reclassify skills that are really tools (completed 2026-06-16)
 
 ---
 
@@ -402,7 +402,7 @@ Plans:
   5. Existing skills are audited against the skill-vs-tool decision rule; any imperative/I/O capability masquerading as a detection skill is reclassified as a tool, and the decision rule is documented in `AUTHORING.md`
   6. Zero behavior change: full test suite + `check-skill-registry` stale-check pass; golden-score snapshot and exclusion parity remain byte-identical
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 **Wave 1**
 
@@ -414,7 +414,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 32-03-PLAN.md — Rewire background to ToolRegistry, dedup RederiveCandidate, CR-01 kind fix, AUTHORING.md skill-vs-tool rule, zero-behavior-change guard sweep (TOOL-02)
+- [x] 32-03-PLAN.md — Rewire background to ToolRegistry, dedup RederiveCandidate, CR-01 kind fix, AUTHORING.md skill-vs-tool rule, zero-behavior-change guard sweep (TOOL-02)
 
 ---
 
@@ -455,4 +455,4 @@ Plans:
 | 29. Config Foundation | v10.0 | 2/2 | Complete    | 2026-06-15 |
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
 | 31. Skill Library Alignment | v10.0 | 4/4 | Complete    | 2026-06-16 |
-| 32. Tool Abstraction Layer | v10.0 | 2/3 | In Progress|  |
+| 32. Tool Abstraction Layer | v10.0 | 3/3 | Complete   | 2026-06-16 |
