@@ -1,22 +1,22 @@
 {
   "signals": [
-    "listicle-cta",
-    "buzzword",
-    "em-dash",
-    "ai-vocab",
-    "hook-story",
-    "motivational",
-    "impersonal",
-    "generic-comments"
+    "detect-listicle-cta",
+    "detect-buzzword",
+    "detect-em-dash",
+    "detect-ai-vocab",
+    "detect-hook-story",
+    "detect-motivational",
+    "detect-impersonal",
+    "detect-generic-comments"
   ],
   "exclusions": [
-    "sponsored",
-    "company-page",
-    "non-english",
-    "open-to-work"
+    "exclude-sponsored",
+    "exclude-company-page",
+    "exclude-non-english",
+    "exclude-open-to-work"
   ],
   "detectors": [
-    "heuristic",
-    "llm"
+    "detect-heuristic",
+    "detect-llm"
   ]
 }

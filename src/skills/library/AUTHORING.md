@@ -15,23 +15,44 @@ The codegen script (`scripts/generate-skill-registry.ts`) reads every folder lis
 `scripts/skill-order.json`, validates the SKILL.md frontmatter at build time (D-08), and
 emits the committed generated module `src/content/generated-skill-registry.ts` (D-05).
 
+### Folder name = type prefix + base name
+
+The folder name (and the matching `SKILL.md` `name:` field and `<name>.skill.ts` filename)
+carries a **type prefix** so the skill kind is visible in the file tree without opening
+SKILL.md:
+
+| Prefix          | Kind                       | Examples                                     |
+|-----------------|----------------------------|----------------------------------------------|
+| `detect-`       | `signal` and `detector`    | `detect-ai-vocab`, `detect-heuristic`        |
+| `exclude-`      | `exclusion`                | `exclude-sponsored`, `exclude-company-page`  |
+| `dom-selector-` | the selector registry skill| `dom-selector-registry`                      |
+
+The **exported const name is NOT prefixed** — it keeps its plain camelCase form
+(`aiVocabSkill`, `sponsoredExclusionSkill`). The codegen strips the type prefix from the
+folder name before deriving the import variable, so folder `exclude-sponsored` binds to the
+export `sponsoredExclusionSkill`. The runtime skill object's `id` is also unprefixed
+(`'sponsored'`, `'ai-vocab'`) — order-pinning (D-06) keys on `id`, so prefixes never affect
+ordering.
+
 ---
 
 ## Four-Step Authoring Workflow
 
 ### Step 1 — Create the skill folder
 
+Use the prefixed folder name throughout (e.g. a new buzzword-style signal `detect-foo`):
+
 ```
-src/skills/library/<name>/
+src/skills/library/detect-foo/
   SKILL.md
-  <name>.skill.ts
+  detect-foo.skill.ts
 ```
 
 **SKILL.md** — frontmatter only; no runtime fields.  Three mandatory fields:
 
 ```yaml
 ---
-name: <name>-signal           # or -exclusion / -detector
+name: detect-foo              # MUST equal the folder name (type-prefixed)
 description: "One-sentence description of what the skill detects."
 metadata:
   kind: signal                # signal | exclusion | detector
@@ -51,10 +72,10 @@ Rules for `SKILL.md`:
 import { checkMyFunction } from '../../../content/detector/signals/my-function';
 import type { CodeSkill } from '../../../shared/skills/types';
 
-export const mySkill: CodeSkill = {
+export const fooSkill: CodeSkill = {   // export name is UNPREFIXED (no detect-)
   kind: 'signal',
+  id: 'foo',                            // id is UNPREFIXED — order-pinning keys on it (D-06)
   flavor: 'code',
-  id: '<name>',
   inputs: ['text'],
   sync: true,
   run({ postData }) {
@@ -77,18 +98,20 @@ underlying function files or in `src/shared/detectionConfig.ts` (D-04).
 
 **APPEND to the END of the `signals` array only.**  Never insert between existing entries.
 
+List the **prefixed folder name**.
+
 ```json
 {
   "signals": [
-    "listicle-cta",
-    "buzzword",
-    "em-dash",
-    "ai-vocab",
-    "hook-story",
-    "motivational",
-    "impersonal",
-    "generic-comments",
-    "<name>"          // <-- append here, at the end
+    "detect-listicle-cta",
+    "detect-buzzword",
+    "detect-em-dash",
+    "detect-ai-vocab",
+    "detect-hook-story",
+    "detect-motivational",
+    "detect-impersonal",
+    "detect-generic-comments",
+    "detect-foo"          // <-- append here, at the end
   ],
   "exclusions": [ ... ],
   "detectors":  [ ... ]
@@ -138,12 +161,12 @@ Checks that catch mistakes:
 
 ## Reference Example
 
-`src/skills/library/sponsored/` is the canonical tracer skill:
+`src/skills/library/exclude-sponsored/` is the canonical tracer skill:
 
 ```
-sponsored/
-  SKILL.md             (kind: exclusion, no runtime fields)
-  sponsored.skill.ts   (ExclusionSkill object — kind, id, check())
+exclude-sponsored/
+  SKILL.md                     (name: exclude-sponsored, kind: exclusion, no runtime fields)
+  exclude-sponsored.skill.ts   (exports sponsoredExclusionSkill — kind, id: 'sponsored', check())
 ```
 
 ---
@@ -171,7 +194,7 @@ before committing.
 ### Selector-registry single-writer invariant (CLAUDE.md constraint #1)
 
 `src/content/selector-registry.ts` is the ONLY module that writes selector strings to
-`chrome.storage.local`.  The `src/skills/library/selector-registry/` folder is a
+`chrome.storage.local`.  The `src/skills/library/dom-selector-registry/` folder is a
 thin re-export for convention completeness only — it is NOT wired into any skill array and
 MUST NOT call `storageSet`.
 
@@ -182,8 +205,8 @@ build time.  Do not add any `import '...SKILL.md'` statement anywhere in TypeScr
 
 ### Detectors are not in skill arrays
 
-`heuristic` and `llm` appear in `scripts/skill-order.json` `detectors` array for metadata
-completeness only.  Detectors are NOT added to `GENERATED_SIGNAL_SKILLS` or
+`detect-heuristic` and `detect-llm` appear in `scripts/skill-order.json` `detectors` array
+for metadata completeness only.  Detectors are NOT added to `GENERATED_SIGNAL_SKILLS` or
 `GENERATED_EXCLUSION_SKILLS`.  They are instantiated directly in `src/content/index.ts`
 and `scripts/eval.ts` via the barrel re-exports at `src/content/detector/heuristic.ts`
 and `src/content/detector/llm.ts`.

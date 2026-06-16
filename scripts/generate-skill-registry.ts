@@ -118,7 +118,14 @@ function importVarName(folder: string, kind: 'signal' | 'exclusion' | 'detector'
   //   signal skills:    <camel>Skill           (e.g., listicleCtaSkill)
   //   exclusion skills: <camel>ExclusionSkill  (e.g., sponsoredExclusionSkill)
   //   detector skills:  <camel>Skill           (e.g., heuristicSkill)
-  const camel = folder.replace(/-([a-z])/g, (_, c: string) => (c as string).toUpperCase());
+  //
+  // Folder names carry a type prefix (detect-/exclude-/dom-selector-) so the skill
+  // kind is visible in the file tree without opening SKILL.md, but the exported
+  // const names are NOT prefixed. Strip the type prefix before camelCasing so the
+  // generated import binds to the real export (e.g. folder `exclude-sponsored`
+  // imports `sponsoredExclusionSkill`, not `excludeSponsoredExclusionSkill`).
+  const base = folder.replace(/^(detect|exclude|dom-selector)-/, '');
+  const camel = base.replace(/-([a-z])/g, (_, c: string) => (c as string).toUpperCase());
   const suffix = kind === 'exclusion' ? 'ExclusionSkill' : 'Skill';
   return `${camel}${suffix}`;
 }
