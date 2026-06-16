@@ -51,8 +51,10 @@ import { motivationalSkill } from './detector/signals/motivational.skill';
 import { impersonalSkill } from './detector/signals/impersonal.skill';
 import { genericCommentsSkill } from './detector/signals/generic-comments.skill';
 
-// Exclusion skills — imported in priority order (matches checkExclusions())
-import { sponsoredExclusionSkill } from './exclusions/sponsored.skill';
+// Exclusion skills — sponsored resolves via the generated module (Phase 31 tracer);
+// remaining three exclusion skills still imported directly until wave 2 migrates them.
+// sponsored MUST appear exactly once — only via GENERATED_EXCLUSION_SKILLS (Pitfall 6).
+import { GENERATED_EXCLUSION_SKILLS } from './generated-skill-registry';
 import { companyPageExclusionSkill } from './exclusions/company-page.skill';
 import { nonEnglishExclusionSkill } from './exclusions/non-english.skill';
 import { openToWorkExclusionSkill } from './exclusions/open-to-work.skill';
@@ -86,9 +88,13 @@ const CODE_SIGNAL_SKILLS: SignalSkill[] = [
 /**
  * Ordered array of code-defined exclusion skills.
  * Priority order matches checkExclusions() — sponsored → company-page → non-english → open-to-work.
+ *
+ * Wave-1 tracer: sponsored resolves via GENERATED_EXCLUSION_SKILLS (Phase 31 skill-library path).
+ * company-page / non-english / open-to-work still imported directly until wave 2 migrates them.
+ * sponsored MUST appear exactly once — sourced only via the generated array (Pitfall 6).
  */
 const CODE_EXCLUSION_SKILLS: ExclusionSkill[] = [
-  sponsoredExclusionSkill,
+  ...GENERATED_EXCLUSION_SKILLS,
   companyPageExclusionSkill,
   nonEnglishExclusionSkill,
   openToWorkExclusionSkill,
