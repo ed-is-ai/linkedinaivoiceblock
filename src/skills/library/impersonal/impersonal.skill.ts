@@ -3,8 +3,8 @@
  * Wraps checkImpersonalVoice from ./impersonal — weights are NOT redeclared here (they live in the underlying function).
  */
 
-import { checkImpersonalVoice } from '../../content/detector/signals/impersonal';
-import type { CodeSkill } from '../../shared/skills/types';
+import { checkImpersonalVoice } from '../../../content/detector/signals/impersonal';
+import type { CodeSkill } from '../../../shared/skills/types';
 
 export const impersonalSkill: CodeSkill = {
   kind: 'signal',

@@ -7,21 +7,56 @@
 
 import type { SignalSkill, ExclusionSkill } from '../shared/skills/types';
 
+// Signal skill imports (pipeline step-order — DO NOT reorder, golden-score snapshot depends on it D-06)
+import { listicleCtaSkill } from '../skills/library/listicle-cta/listicle-cta.skill';
+import { buzzwordSkill } from '../skills/library/buzzword/buzzword.skill';
+import { emDashSkill } from '../skills/library/em-dash/em-dash.skill';
+import { aiVocabSkill } from '../skills/library/ai-vocab/ai-vocab.skill';
+import { hookStorySkill } from '../skills/library/hook-story/hook-story.skill';
+import { motivationalSkill } from '../skills/library/motivational/motivational.skill';
+import { impersonalSkill } from '../skills/library/impersonal/impersonal.skill';
+import { genericCommentsSkill } from '../skills/library/generic-comments/generic-comments.skill';
+
 // Exclusion skill imports (priority order — DO NOT reorder, exclusion parity depends on it D-06)
 import { sponsoredExclusionSkill } from '../skills/library/sponsored/sponsored.skill';
+import { companyPageExclusionSkill } from '../skills/library/company-page/company-page.skill';
+import { nonEnglishExclusionSkill } from '../skills/library/non-english/non-english.skill';
+import { openToWorkExclusionSkill } from '../skills/library/open-to-work/open-to-work.skill';
 
 // Order MUST match CODE_SIGNAL_SKILLS from Phase 30 — golden-score snapshot depends on it (D-06)
 export const GENERATED_SIGNAL_SKILLS: readonly SignalSkill[] = [
+  listicleCtaSkill,
+  buzzwordSkill,
+  emDashSkill,
+  aiVocabSkill,
+  hookStorySkill,
+  motivationalSkill,
+  impersonalSkill,
+  genericCommentsSkill,
 ];
 
 // Order MUST match CODE_EXCLUSION_SKILLS from Phase 30 — exclusion parity depends on it (D-06)
 export const GENERATED_EXCLUSION_SKILLS: readonly ExclusionSkill[] = [
   sponsoredExclusionSkill,
+  companyPageExclusionSkill,
+  nonEnglishExclusionSkill,
+  openToWorkExclusionSkill,
 ];
 
 // Descriptive metadata from SKILL.md manifests.
 // NOT consumed by the runtime registry — skill objects carry their own kind/id/etc.
 // Available for documentation and future LLM skill-authoring tooling.
 export const GENERATED_SKILL_METADATA = {
+  'listicle-cta': { name: 'listicle-cta-signal', description: 'Composite signal that scores posts containing listicle formatting (numbered lists, bullet patterns) combined with call-to-action phrases. Single CodeSkill calling both checkListicle and checkCta — MUST NOT be split into two skills. Tier weight read from detectionConfig.weights.listicleCta.', kind: 'signal' as const },
+  'buzzword': { name: 'buzzword-signal', description: 'Scores posts by buzzword density — detects LinkedIn-common corporate phrases and AI-generated filler language. Wraps checkBuzzwords() from the underlying signals module. Weights live in the underlying function, not redeclared here.', kind: 'signal' as const },
+  'em-dash': { name: 'em-dash-signal', description: 'Scores posts by em-dash usage patterns — AI-generated text characteristically overuses em-dashes as sentence connectors. Wraps checkEmDash() from the underlying signals module. Weights live in the underlying function, not redeclared here.', kind: 'signal' as const },
+  'ai-vocab': { name: 'ai-vocab-signal', description: 'Scores posts by AI-vocabulary density — detects characteristic AI-generated phrases like \'leverage\', \'paradigm shift\', \'game-changer\', and similar constructs. Wraps checkAiVocab() from the underlying signals module. Weights live in the underlying function, not redeclared here.', kind: 'signal' as const },
+  'hook-story': { name: 'hook-story-signal', description: 'Scores posts that open with a hook-story pattern (\'I was Xing when...\' opener form). Wraps checkHookStory() from the underlying signals module. The regex requires \'I was \\w+ing\' form to avoid false positives. Weights live in the underlying function, not redeclared here.', kind: 'signal' as const },
+  'motivational': { name: 'motivational-signal', description: 'Scores posts with motivational rhythm patterns — repetitive short sentences, rhetorical questions, and inspirational conclusion phrases characteristic of AI-generated motivational content. Wraps checkMotivational() from the underlying signals module. Weights live in the underlying function, not redeclared here.', kind: 'signal' as const },
+  'impersonal': { name: 'impersonal-signal', description: 'Scores posts written in impersonal voice — passive constructions and third-person framing that AI-generated content favors over authentic first-person narrative. Wraps checkImpersonalVoice() from the underlying signals module. Weights live in the underlying function, not redeclared here.', kind: 'signal' as const },
+  'generic-comments': { name: 'generic-comments-signal', description: 'Async signal that fetches post comments and scores by generic-comment density. The only sync:false skill in the registry — requires fetchComments context. The score>20 gate is enforced by the runner, not this skill. Wraps checkGenericComments() from the underlying signals module.', kind: 'signal' as const },
   'sponsored': { name: 'sponsored-exclusion', description: 'Excludes sponsored/promoted posts before any detection runs. Checks for the SPONSORED_MARKER selector resolved via SelectorRegistry. Must run first (priority 1) to short-circuit before other exclusion checks.', kind: 'exclusion' as const },
+  'company-page': { name: 'company-page-exclusion', description: 'Excludes company/organization page posts before any detection runs. Checks whether the post author profile URL contains the COMPANY_PAGE_MARKER selector resolved via SelectorRegistry. Must run second (priority 2) in the exclusion pipeline, after sponsored and before non-english and open-to-work.', kind: 'exclusion' as const },
+  'non-english': { name: 'non-english-exclusion', description: 'Excludes non-English posts before any detection runs. Delegates to isNonEnglish() from src/content/detector/language.ts which checks DOM lang attribute and Unicode script analysis. Must run third (priority 3) in the exclusion pipeline, after sponsored and company-page and before open-to-work.', kind: 'exclusion' as const },
+  'open-to-work': { name: 'open-to-work-exclusion', description: 'Metadata passthrough skill that detects open-to-work frames on posts. CRITICAL: always returns excluded:false — this is NOT an exclusion. A detected open-to-work frame only raises the auto-hide threshold by +20 points (fail-safe toward showing content). Must run last (priority 4) in the exclusion pipeline, after sponsored, company-page, and non-english.', kind: 'exclusion' as const },
 } as const;

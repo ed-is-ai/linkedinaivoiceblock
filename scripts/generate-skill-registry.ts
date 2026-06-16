@@ -89,7 +89,9 @@ function parseSkillMd(folderName: string): SkillEntry | null {
   }
 
   const raw = fs.readFileSync(skillMdPath, 'utf-8');
-  const match = raw.match(/^---\n([\s\S]*?)\n---/);
+  // Support both LF and CRLF line endings in SKILL.md files (Windows checkout behaviour)
+  const normalised = raw.replace(/\r\n/g, '\n');
+  const match = normalised.match(/^---\n([\s\S]*?)\n---/);
   if (!match) {
     process.stderr.write(`ERROR: ${folderName}: SKILL.md has no valid YAML frontmatter block (expected ---...---)\n`);
     process.exit(1);

@@ -37,27 +37,17 @@ import { storageGet, storageSet } from '../shared/storage';
 import { clearCompiledCache } from '../shared/skills/pattern-runner';
 
 // ---------------------------------------------------------------------------
-// Static imports of all built-in CodeSkill modules (D-07 — no dynamic import,
-// no import.meta.glob; MV3-CSP-safe and tree-shakeable)
+// Static imports from the committed generated registry module.
+// DO NOT import skill modules directly here — skill-registry.ts is no longer
+// the registration point. To add a skill: drop a skills/library/<name>/ folder
+// + rerun `npm run generate-skill-registry`.
+// (D-07 — no dynamic import, no import.meta.glob; MV3-CSP-safe and tree-shakeable)
 // ---------------------------------------------------------------------------
 
-// Signal skills — imported in EXACT pipeline step-order (Landmine 2)
-import { listicleCtaSkill } from './detector/signals/listicle-cta.skill';
-import { buzzwordSkill } from './detector/signals/buzzword.skill';
-import { emDashSkill } from './detector/signals/em-dash.skill';
-import { aiVocabSkill } from './detector/signals/ai-vocab.skill';
-import { hookStorySkill } from './detector/signals/hook-story.skill';
-import { motivationalSkill } from './detector/signals/motivational.skill';
-import { impersonalSkill } from './detector/signals/impersonal.skill';
-import { genericCommentsSkill } from './detector/signals/generic-comments.skill';
-
-// Exclusion skills — sponsored resolves via the generated module (Phase 31 tracer);
-// remaining three exclusion skills still imported directly until wave 2 migrates them.
-// sponsored MUST appear exactly once — only via GENERATED_EXCLUSION_SKILLS (Pitfall 6).
-import { GENERATED_EXCLUSION_SKILLS } from './generated-skill-registry';
-import { companyPageExclusionSkill } from './exclusions/company-page.skill';
-import { nonEnglishExclusionSkill } from './exclusions/non-english.skill';
-import { openToWorkExclusionSkill } from './exclusions/open-to-work.skill';
+import {
+  GENERATED_SIGNAL_SKILLS,
+  GENERATED_EXCLUSION_SKILLS,
+} from './generated-skill-registry';
 
 // ---------------------------------------------------------------------------
 // Module-scope state
@@ -73,32 +63,16 @@ let _cache: SkillRegistrySchema | null = null;
  * Ordered array of code-defined signal skills.
  * Insertion order === pipeline step-order === signalBreakdown key order (Landmine 2).
  * DO NOT reorder — the golden-score snapshot pins this exact order.
+ * Order sourced from skill-order.json via the generated module (D-06).
  */
-const CODE_SIGNAL_SKILLS: SignalSkill[] = [
-  listicleCtaSkill,
-  buzzwordSkill,
-  emDashSkill,
-  aiVocabSkill,
-  hookStorySkill,
-  motivationalSkill,
-  impersonalSkill,
-  genericCommentsSkill,
-];
+const CODE_SIGNAL_SKILLS: SignalSkill[] = [...GENERATED_SIGNAL_SKILLS];
 
 /**
  * Ordered array of code-defined exclusion skills.
  * Priority order matches checkExclusions() — sponsored → company-page → non-english → open-to-work.
- *
- * Wave-1 tracer: sponsored resolves via GENERATED_EXCLUSION_SKILLS (Phase 31 skill-library path).
- * company-page / non-english / open-to-work still imported directly until wave 2 migrates them.
- * sponsored MUST appear exactly once — sourced only via the generated array (Pitfall 6).
+ * Order sourced from skill-order.json via the generated module (D-06).
  */
-const CODE_EXCLUSION_SKILLS: ExclusionSkill[] = [
-  ...GENERATED_EXCLUSION_SKILLS,
-  companyPageExclusionSkill,
-  nonEnglishExclusionSkill,
-  openToWorkExclusionSkill,
-];
+const CODE_EXCLUSION_SKILLS: ExclusionSkill[] = [...GENERATED_EXCLUSION_SKILLS];
 
 // ---------------------------------------------------------------------------
 // Seed registry builder
