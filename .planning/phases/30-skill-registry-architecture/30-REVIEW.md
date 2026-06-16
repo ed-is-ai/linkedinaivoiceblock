@@ -26,233 +26,274 @@ files_reviewed_list:
   - src/shared/skills/types.ts
   - src/shared/types.ts
 findings:
-  critical: 2
-  warning: 4
-  info: 3
-  total: 9
+  critical: 1
+  warning: 5
+  info: 4
+  total: 10
 status: issues_found
 ---
 
 # Phase 30: Code Review Report
 
-**Reviewed:** 2026-06-16T00:00:00Z
+**Reviewed:** 2026-06-16
 **Depth:** standard
 **Files Reviewed:** 21
 **Status:** issues_found
 
 ## Summary
 
-Phase 30 introduced a SkillRegistry architecture to wrap eight signal skills and four exclusion skills in a pluggable registry pattern mirroring SelectorRegistry. The zero-behavior-change contract requires the registry runner to produce byte-identical scores to the original hand-wired pipeline.
+This phase introduces a skill-registry architecture: a host-agnostic skill type system
+(`src/shared/skills/types.ts`), an eval-free declarative pattern executor
+(`src/shared/skills/pattern-runner.ts`), a storage-backed registry singleton
+(`src/content/skill-registry.ts`), and CodeSkill/ExclusionSkill wrappers around the
+existing Phase 2 signal and exclusion functions. The stated invariant is "zero behavior
+change at launch" because zero declarative skills are seeded (D-06).
 
-The core pipeline wiring is correct: signal step-order is preserved in `CODE_SIGNAL_SKILLS`, the async generic-comments gate runs on post-sync-pass score, and the listicle-cta composite is correctly kept as a single skill. The exclusion short-circuit loop in `content/index.ts` faithfully replicates `checkExclusions()` priority order.
+The CodeSkill wrappers and the exclusion-runner refactor are clean and behavior-preserving;
+the exclusion parity test (`exclusions/exclusions.test.ts`) exercises the new runner path
+directly and covers the priority short-circuit correctly.
 
-Two critical issues found: a storage–memory split that silently desynchronizes the skill registry on a failed write, and a schema type lie where `declarativeExclusionSkills` is typed as `ExclusionSkill[]` (containing a method) when chrome.storage cannot serialize functions. Four warnings cover a hardcoded debug flag shipping to production, dead `aiSignalsToday`/`botSignalsToday` counters, a misleading engine identity on LLM fallback, and a dead guard branch in the pattern-runner.
+However, the central capability the phase claims to deliver — a runtime path for
+LLM-authored declarative `PatternSkill`s — is **not wired in**. The `HeuristicDetector`
+unconditionally treats every registered skill as a `CodeSkill` and calls `.run()` on it.
+A `PatternSkill` has no `run()` method, so the moment any declarative skill is added through
+the registry's own public `addDeclarativeSkill()` API, `detect()` throws. `runPatternSkill`
+— the eval-free executor that is the entire point of the phase — has no caller anywhere in
+`src/`. The "zero behavior change because zero declarative skills" framing hides a latent
+crash rather than a working-but-empty feature.
 
----
-
-## Structural Findings (fallow)
-
-No structural pre-pass was provided for this review.
-
----
-
-## Narrative Findings (AI reviewer)
+Secondary findings: a live threshold-slider change does not affect freshly scored posts
+(only pre-flagged authors); the pattern-runner's compiled-regex cache is never invalidated
+when a same-id skill is replaced; `seedIfNeeded()` destructively wipes user/LLM-authored
+skills on any version mismatch; and there is dead/inconsistent daily-stats state in
+`content/index.ts`.
 
 ## Critical Issues
 
-### CR-01: `addDeclarativeSkill` mutates in-memory cache before persisting — storage and memory can permanently diverge
+### CR-01: Declarative PatternSkills crash the detector — pattern-runner is never invoked
 
-**File:** `src/content/skill-registry.ts:185-188`
+**File:** `src/content/detector/heuristic.ts:77-99`, `src/shared/skills/pattern-runner.ts:81`, `src/content/skill-registry.ts:153-156,183-189`
 
-**Issue:** `_cache.declarativeSignalSkills.push(skill)` mutates the in-memory array on line 185 before the storage write. The write on line 188 uses `.catch(() => {})` which silently swallows storage failures. If `storageSet` throws (e.g., storage quota exceeded, extension context invalidated), the skill exists in `_cache` but was never persisted. No `onChanged` event fires on a failed write, so other tabs are not notified. On next load, `load()` reads from storage — the skill is gone. The in-memory state is now unrecoverably ahead of storage for the lifetime of this tab.
+**Issue:**
+`getSignalSkills()` returns `[...CODE_SIGNAL_SKILLS, ..._cache.declarativeSignalSkills]`,
+where `declarativeSignalSkills` is typed `PatternSkill[]`. In `HeuristicDetector.detect()`,
+both passes cast unconditionally to `CodeSkill` and call `run()`:
 
 ```typescript
-// Current (line 185-188):
-_cache.declarativeSignalSkills.push(skill);      // mutates before write
-_cache.lastModifiedAt = new Date().toISOString();
-await storageSet({ skillRegistry: _cache }).catch(() => {});  // failure silently swallowed
+const result = (skill as CodeSkill).run({ postData: post });   // Pass 1, L79
+const r = await (skill as CodeSkill).run({ ... });             // Pass 2, L93
 ```
 
-**Fix:** Write to storage first; only update `_cache` on success. This matches the single-writer contract's intent and mirrors how `SelectorRegistry.insertCandidate()` should be structured:
+`PatternSkill` deliberately has **no** `run()` method (`types.ts:110` — "Deliberately NO run()").
+The skill's `flavor` discriminant (`'code'` vs `'pattern'`) is never checked, and
+`runPatternSkill()` from `pattern-runner.ts` has **zero callers** anywhere in `src/`
+(verified by grep). Consequences:
+
+1. The instant any declarative skill is persisted via `addDeclarativeSkill()` — a public,
+   exported, single-writer API the phase ships and intends callers to use — the next
+   `detect()` call hits `(skill as CodeSkill).run` === `undefined` and throws
+   `TypeError: skill.run is not a function`. In `content/index.ts:319` this rejects the
+   `detector.detect(post)` promise, landing in the `.catch` at L367 and silently dropping
+   detection for that post (and every subsequent post, since the bad skill stays in cache).
+2. The eval-free pattern executor — the headline deliverable and the entire justification
+   for the MV3-CSP-safe DATA-not-code design (D-02) — is dead code. The phase cannot
+   actually run a declarative skill end to end.
+
+The "zero declarative skills at launch → zero behavior change" claim is technically true
+only because the feature is inert. It is not a safe empty state; it is an unguarded crash
+waiting on the first use of the registry's own write API.
+
+**Fix:** Dispatch on `flavor` in the runner instead of blind-casting to `CodeSkill`. For
+example, in `heuristic.ts` Pass 1:
 
 ```typescript
-export async function addDeclarativeSkill(skill: PatternSkill): Promise<void> {
-  if (!_cache) return;
-  const updated: SkillRegistrySchema = {
-    ..._cache,
-    declarativeSignalSkills: [..._cache.declarativeSignalSkills, skill],
-    lastModifiedAt: new Date().toISOString(),
-  };
-  await storageSet({ skillRegistry: updated }); // let the error propagate to caller
-  _cache = updated; // only update in-memory state after successful persist
+import { runPatternSkill } from '../../shared/skills/pattern-runner';
+
+for (const skill of skills) {
+  if (!skill.sync) continue;
+  let result: number;
+  if (skill.flavor === 'code') {
+    result = (skill as CodeSkill).run({ postData: post }) as number;
+  } else {
+    // PatternSkill — eval-free executor (the whole point of the phase)
+    result = runPatternSkill(skill, { postData: post });
+  }
+  if (result > 0) { breakdown[skill.id] = result; score += result; }
 }
 ```
 
----
-
-### CR-02: `SkillRegistrySchema.declarativeExclusionSkills` typed as `ExclusionSkill[]` — `ExclusionSkill` contains a `check()` method, which `chrome.storage` cannot serialize
-
-**File:** `src/shared/skills/types.ts:170` and `src/content/skill-registry.ts:107-108`
-
-**Issue:** The `SkillRegistrySchema` interface declares `declarativeExclusionSkills: ExclusionSkill[]`. The `ExclusionSkill` interface (types.ts:122-127) includes a `check(postData, postNode)` method. `chrome.storage.local` silently strips functions when serializing — on write, all `check` methods are dropped; on read, objects without `check` are returned, and any code that calls `.check()` on them will throw `TypeError: skill.check is not a function` at runtime.
-
-The schema comment in `skill-registry.ts` (lines 14-15) says "Code skills are NEVER written to storage — only declarative (PatternSkill) skills live in storage." This comment is correct in intent but the TypeScript type directly contradicts it: `declarativeExclusionSkills` is typed `ExclusionSkill[]` not `PatternSkill[]` (or a new declarative-only type).
-
-Currently the array is always empty (seeded as `[]` in `buildSeedRegistry`) and `addDeclarativeSkill` only appends to `declarativeSignalSkills`, so no runtime crash occurs today. But the type is wrong and any future code that adds an entry to `declarativeExclusionSkills` will silently produce broken skills after a round-trip through storage.
-
-**Fix:** Change the type to `PatternSkill[]` (matching `declarativeSignalSkills`) and update `getExclusionSkills()` to call `runPatternSkill` for each declarative entry, or define a new `DeclarativeExclusionSkill` type that carries only serializable data and extend `getExclusionSkills()` to execute them via the pattern-runner:
-
-```typescript
-// In SkillRegistrySchema (types.ts):
-declarativeExclusionSkills: PatternSkill[]; // PatternSkill is pure data — no functions
-
-// In getExclusionSkills() (skill-registry.ts), declarative entries must be
-// wrapped in an adapter that calls runPatternSkill() if they are to function as ExclusionSkill.
-// The simplest fix at this phase: keep the field empty and assert the type is PatternSkill[].
-```
-
----
+Pattern skills are synchronous, so they belong in Pass 1; the Pass 2 `(skill as CodeSkill)`
+cast at L93 is safe only as long as `generic-comments` remains a CodeSkill, but it should
+still guard `flavor === 'code'` before calling `run()`. Add a test that registers a
+`PatternSkill` via `addDeclarativeSkill()` and asserts `detect()` returns a contributed
+score rather than throwing — this is the test that would have caught the dead wiring.
 
 ## Warnings
 
-### WR-01: `DEBUG = true` hardcoded — every scored post logs author name, signals, and post text to console in the shipped extension
+### WR-01: Live auto-hide threshold change does not affect newly scored posts
 
-**File:** `src/content/index.ts:22`
+**File:** `src/content/index.ts:73,166,217,309-311,338`
 
-**Issue:** `const DEBUG = true;` is hardcoded unconditionally. The `if (DEBUG)` block on lines 325-328 logs `authorName`, all scored signals, and the raw `postText` for every post that enters the scoring pipeline. In a production Chrome extension this output is visible to anyone who opens DevTools on LinkedIn. This constitutes an information disclosure of post text and author identity, and produces significant console noise in production.
+**Issue:** `currentThreshold` is maintained as a module-scope mirror and updated by the
+`settings` `onChanged` handler (L166), but it is **never read** in the scoring path
+(verified by grep — it has no readers). The detect callback computes `effectiveHideThreshold`
+from `autoHideThreshold` (L309-311), which is a `const` captured in the `init()` closure at
+L215 and never reassigned. Result: when the user moves the auto-hide slider,
+`thresholdAuthors` is rebuilt for already-flagged authors (L167-174), but every freshly
+scored post continues to use the stale init-time threshold until a full page reload. The
+comment at L162-163 ("moving the slider takes effect on the next scrolled-in post without a
+page reload") is contradicted by the code for the common case of a not-yet-flagged author.
 
-**Fix:** Gate behind a build-time constant or use a production-false default:
+**Fix:** Read the live mirror in the hide decision rather than the closure constant:
 
 ```typescript
-// Option A — Vite build-time constant (preferred for MV3 extensions):
-const DEBUG = import.meta.env.DEV;
-
-// Option B — manual toggle (safe fallback):
-const DEBUG = false;
+const baseThreshold = currentThreshold; // live mirror, updated by onChanged
+const effectiveHideThreshold = exclusionResult.openToWork
+  ? baseThreshold + detectionConfig.thresholds.openToWorkPenalty
+  : baseThreshold;
 ```
 
----
+### WR-02: Pattern-runner regex cache is never invalidated on same-id skill replacement
 
-### WR-02: `aiSignalsToday` and `botSignalsToday` are tracked, reset, and never written to storage
+**File:** `src/shared/skills/pattern-runner.ts:26,102-108`; `src/content/skill-registry.ts:183-189`
 
-**File:** `src/content/index.ts:80-81, 250-251`
+**Issue:** `_compiledPatterns` is a module-scope `Map<string, RegExp[]>` keyed by `skill.id`,
+populated lazily and never cleared. `addDeclarativeSkill()` pushes new `PatternSkill`s into
+the registry at runtime, and the `onChanged` listener (`skill-registry.ts:215-217`) replaces
+`_cache` wholesale from other tabs. If a declarative skill with an existing `id` is ever
+re-added or updated with different `rule.patterns`, the runner returns the **stale** compiled
+regexes from first use and silently ignores the new patterns. (`addDeclarativeSkill` only
+appends, so duplicate ids can also accumulate — see WR-04 — compounding this.) The cache
+assumes `skill.id` → patterns is immutable for process lifetime, but the registry's own write
+path does not enforce that.
 
-**Issue:** `aiSignalsToday` and `botSignalsToday` are declared as module-scope counters (lines 80-81), reset in the `popstate` handler (line 250-251), but never incremented with signal data and never written to `writeDailyStats()`. The `DailyStats` interface has optional `aiSignals` and `botSignals` fields (shared/types.ts:163-164) that remain permanently `undefined` in storage. This is dead code that signals an incomplete feature — the counters exist in the pre-Phase-30 codebase but were apparently never wired up. They could mislead future developers who add increment calls expecting them to be flushed.
+**Fix:** Key the cache by skill identity that includes the rule (e.g. invalidate on add), or
+have `addDeclarativeSkill()` / the `onChanged` handler clear the relevant cache entry. Minimum:
+export a `clearCompiledCache(id?)` from the runner and call it from the registry on every write.
 
-**Fix:** Either wire the counters (increment them when the merged breakdown contains AI/bot signals, then include them in `writeDailyStats`) or remove the declarations and reset calls until the feature is complete:
+### WR-03: seedIfNeeded() destructively discards declarative skills on any version mismatch
+
+**File:** `src/content/skill-registry.ts:122-129`
+
+**Issue:** `seedIfNeeded()` overwrites storage with `buildSeedRegistry()` (empty arrays)
+whenever `skillRegistry.version !== SKILL_REGISTRY_VERSION` — including a version *downgrade*
+or any non-equal mismatch. The seed deliberately wipes `declarativeSignalSkills` and
+`declarativeExclusionSkills`. Those arrays are LLM-authored / user-accumulated data (the
+phase's whole premise). The class comment and `SelectorRegistry` (which this file claims to
+mirror) perform *additive* migration that preserves adapted candidates; this implementation
+silently destroys user data on the first `SKILL_REGISTRY_VERSION` bump. Latent today (version
+`1.0.0`, empty arrays), but it becomes data loss the moment both (a) the version is bumped
+and (b) any declarative skill exists.
+
+**Fix:** Make the version-mismatch branch migrate additively — preserve existing
+`declarativeSignalSkills` / `declarativeExclusionSkills` and only update `version` (and apply
+any field migrations), mirroring `SelectorRegistry`'s additive migration rather than a
+destructive reset.
+
+### WR-04: addDeclarativeSkill() appends without dedup and mutates cache in place against onChanged
+
+**File:** `src/content/skill-registry.ts:183-189,215-217`
+
+**Issue:** `addDeclarativeSkill()` does `_cache.declarativeSignalSkills.push(skill)` with no
+check for an existing skill of the same `id`, so repeated calls (e.g. an LLM re-authoring the
+same skill, or a retried write) produce duplicate entries that all run on every post —
+double-counting that skill's weight into the composite score. Additionally it mutates the
+shared `_cache` object in place *before* the async `storageSet`; the `onChanged` listener
+(L216) can concurrently replace `_cache` with a fresh object from another tab's write,
+producing a lost-update / inconsistent-cache race. The persisted write also swallows all
+errors with `.catch(() => {})` (L188), so a failed persist leaves the in-memory cache ahead
+of storage with no signal to the caller.
+
+**Fix:** Dedup by `id` (replace existing or reject duplicates) before pushing; build the new
+array immutably and reassign `_cache` rather than mutating in place; and surface persist
+failures (or at least roll back the in-memory mutation) instead of silently dropping them.
+
+### WR-05: LLMDetector dereferences response without null guard
+
+**File:** `src/content/detector/llm.ts:30-34`
+
+**Issue:** In `scoreViaBackground`, after the `lastError` and `response?.error` guards, the
+code does `resolve(response.result as DetectionResult)` with no check that `response` is
+defined or that `result` exists. If the background worker terminates mid-flight or replies
+with `undefined` / a malformed object (no `lastError` set), `response.result` is `undefined`
+and the promise resolves to `undefined`. That `DetectionResult` then flows into
+`content/index.ts:319` where `result.score` (L322) dereferences `undefined` and throws inside
+the `.then` — defeating the deliberate `fallback` design (the throw lands in `.catch` at L367,
+not in the LLMDetector fallback at `llm.ts:23`). The optional-chaining on `response?.error`
+at L32 acknowledges `response` may be nullish, but L33 then assumes it is not.
+
+**Fix:** Validate the shape before resolving and route failures through the fallback:
 
 ```typescript
-// Remove from index.ts if deferring:
-// let aiSignalsToday = 0;   // line 80
-// let botSignalsToday = 0;  // line 81
-
-// Remove from popstate handler:
-// aiSignalsToday = 0;   // line 250
-// botSignalsToday = 0;  // line 251
-```
-
----
-
-### WR-03: `LLMDetector` no-fallback error path returns `engineUsed: 'heuristic'` for a failed LLM attempt
-
-**File:** `src/content/detector/llm.ts:24`
-
-**Issue:** When `LLMDetector.detect()` catches an error and has no `fallback` detector, it returns a zero-score `DetectionResult` with `engineUsed: 'heuristic'` (line 24). This falsely attributes a failed LLM call to the heuristic engine. Any downstream consumer (popup, dashboard, trace log) that reads `engineUsed` will see `'heuristic'` and assume heuristic scoring was performed, when in fact no detection occurred and the score is 0 because of an error.
-
-```typescript
-// Current (line 24):
-return { score: 0, signals: [], signalBreakdown: {}, confidence: 'low', engineUsed: 'heuristic' };
-```
-
-**Fix:** Use `'llm'` as the engine identifier (the actual engine that was attempted), or introduce a third literal like `'none'` to signal that no scoring was performed:
-
-```typescript
-return { score: 0, signals: [], signalBreakdown: {}, confidence: 'low', engineUsed: 'llm' };
-```
-
----
-
-### WR-04: `extractEmDashDensity` divide-by-zero guard is dead code — `"".split(/\s+/)` returns `[""]`, not `[]`
-
-**File:** `src/shared/skills/pattern-runner.ts:57-60`
-
-**Issue:** The guard `if (words === 0) return 0` on line 59 can never be reached. `"".trim().split(/\s+/)` returns `[""]` (an array with one empty string), so `words` is always at least 1 regardless of whether the input is empty. The function produces the numerically correct result (0/1 * 100 = 0) for empty input by coincidence, but the guard does not protect what it appears to protect. The same pattern appears in `extractWordCount` (line 65) and in the `keyword-set`/`density` branch (lines 94-95 of the runner), where `extractWordCount` would return 1 for empty strings instead of 0, meaning the density check could fire on a single empty-string "word."
-
-**Fix:** Use a non-empty-string-aware split:
-
-```typescript
-function extractEmDashDensity(postText: string): number {
-  const trimmed = postText.trim();
-  if (!trimmed) return 0;  // empty-string guard that actually works
-  const words = trimmed.split(/\s+/).length;
-  const emDashes = (postText.match(/—/g) ?? []).length;
-  return (emDashes / words) * 100;
+if (!response || typeof response.result?.score !== 'number') {
+  reject(new Error('malformed SCORE_POST response'));
+  return;
 }
-
-function extractWordCount(postText: string): number {
-  const trimmed = postText.trim();
-  if (!trimmed) return 0;
-  return trimmed.split(/\s+/).length;
-}
+resolve(response.result as DetectionResult);
 ```
-
-Apply the same fix to the `matchMode === 'density'` branch (line 94):
-
-```typescript
-const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-if (words === 0) return 0;
-```
-
----
 
 ## Info
 
-### IN-01: `PatternRule` operator union is locked to `'>'` only — `>=`, `<`, `<=` are inexpressible
+### IN-01: Dead and inconsistently-reset daily-stats counters
 
-**File:** `src/shared/skills/types.ts:96`
+**File:** `src/content/index.ts:80-81,250-251,260-263`
 
-**Issue:** The `numeric-threshold` rule's `operator` field is typed as the single literal `'>'`. A LLM-authored skill requiring `>=`, `<`, or `<=` comparisons cannot express them in the schema. The pattern-runner would return 0 for any unknown operator (the `if (rule.operator === '>')` check on line 128 only handles `>`). This is not a current bug (the operator union is enforced by TypeScript), but is a design limitation that would require a type change and a runner update to extend.
+**Issue:** `aiSignalsToday` and `botSignalsToday` are declared (L80-81) and reset in the
+`popstate` handler (L250-251) but are **never incremented** and never written by
+`writeDailyStats()` (which only persists `seen`, `hidden`, `seenProfileIds`) — pure dead
+state. Separately, the `pushState` override (L255-263) resets `seenProfileIdsToday` but omits
+`botSignalsToday` (and `aiSignalsToday`), so the two SPA-navigation paths diverge. Since the
+counters are unused the divergence is currently harmless, but it is a latent bug if either
+counter is ever wired to `DailyStats.aiSignals` / `botSignals`.
 
-**Fix (future):** Expand the union and add corresponding runner branches:
+**Fix:** Either remove `aiSignalsToday` / `botSignalsToday` entirely, or wire them into
+`writeDailyStats()` and reset them identically in both the `popstate` and `pushState` paths.
 
-```typescript
-// In types.ts:
-operator: '>' | '>=' | '<' | '<=';
+### IN-02: Pattern-runner numeric extractors silently diverge from CodeSkill semantics
 
-// In pattern-runner.ts:
-if (rule.operator === '>') return extracted > rule.value ? resolveWeight(skill.weightKey) : 0;
-if (rule.operator === '>=') return extracted >= rule.value ? resolveWeight(skill.weightKey) : 0;
-if (rule.operator === '<') return extracted < rule.value ? resolveWeight(skill.weightKey) : 0;
-if (rule.operator === '<=') return extracted <= rule.value ? resolveWeight(skill.weightKey) : 0;
-return 0;
-```
+**File:** `src/shared/skills/pattern-runner.ts:56-61,119-133`
+
+**Issue:** `extractEmDashDensity` lacks the 30-word floor and the tiered `>2`/`>1` scoring
+that the real `checkEmDash` applies (`em-dash.ts:18,23-24`), and the `numeric-threshold` rule
+only supports operator `'>'` (any other operator falls through to `return 0` at L132). A
+declarative em-dash skill authored against `detectionConfig.weights.emDash.max` would score
+differently from the code skill and produce false positives on very short posts. This is only
+a latent concern because the declarative path is unreachable today (CR-01), but it means the
+"declarative flavor is expressible" claim (file header L15-16) is not equivalent to the code
+skills it purports to mirror.
+
+**Fix:** Document that declarative extractors are intentionally simplified, or align
+`extractEmDashDensity` with `checkEmDash` (word floor + tiers) so the two flavors are
+genuinely interchangeable.
+
+### IN-03: Detector-failure path is silent — no fallback score, lost detection
+
+**File:** `src/content/index.ts:367-369`
+
+**Issue:** The top-level `.catch` for `detector.detect(post)` only `console.warn`s. Any
+detector throw (including the CR-01 crash and the WR-05 malformed-response path) results in
+the post being neither scored, flagged, nor hidden, with no user-visible signal and no
+metric. Combined with CR-01, a single bad declarative skill silently disables detection for
+the remainder of the session.
+
+**Fix:** On detector failure, fall back to a safe default result (e.g. score 0) or at minimum
+increment a health counter so silent total-detection-loss is observable.
+
+### IN-04: Two same-named exclusion test files invite confusion
+
+**File:** `src/content/exclusions/exclusions.test.ts` (and sibling `src/content/exclusions.test.ts`)
+
+**Issue:** The phase adds `src/content/exclusions/exclusions.test.ts` (new runner-path parity
+test) alongside the pre-existing `src/content/exclusions.test.ts` (legacy `checkExclusions()`
+test). Two files named `exclusions.test.ts` differing only by directory is a maintenance trap —
+easy to edit the wrong one. The new file is correct and well-scoped; this is purely a naming
+clarity note.
+
+**Fix:** Rename the new file to something path-distinct, e.g. `exclusion-runner.test.ts`, to
+make the runner-vs-legacy distinction obvious in editor tabs and test output.
 
 ---
 
-### IN-02: `getExclusionSkills()` appends `declarativeExclusionSkills` after code skills — but `ExclusionSkill` entries from storage will have no `check()` method after deserialization
-
-**File:** `src/content/skill-registry.ts:167`
-
-**Issue:** Directly related to CR-02. `getExclusionSkills()` returns `[...CODE_EXCLUSION_SKILLS, ..._cache.declarativeExclusionSkills]`. The spread will include any objects loaded from storage, which are plain JSON without methods. This is currently safe because `declarativeExclusionSkills` is always `[]`, but the logic path is pre-wired for failure: the caller in `content/index.ts` iterates and calls `skill.check(...)` on every element. If any entry were ever added, `TypeError: skill.check is not a function` would be thrown inside the `startObserving` callback, silently caught by the `.catch((err) => console.warn(...))` at line 367, and the post would receive no scoring.
-
-This is a companion note to CR-02; fixing CR-02's type resolves the root cause.
-
----
-
-### IN-03: `console.log` in production path of `content/index.ts` line 114
-
-**File:** `src/content/index.ts:114`
-
-**Issue:** `console.log('[LLB] content script starting on', location.href, 'selectors v', SELECTORS_VERSION)` runs unconditionally at module top level on every page load. This is a startup log rather than a debug log and its value is limited in production. Minor but logs the visited URL, which could be surprising to privacy-conscious users who inspect the console.
-
-**Fix:** Gate behind `DEBUG` or remove it from the production build via Vite define:
-
-```typescript
-if (DEBUG) console.log('[LLB] content script starting on', location.href, 'selectors v', SELECTORS_VERSION);
-```
-
----
-
-_Reviewed: 2026-06-16T00:00:00Z_
+_Reviewed: 2026-06-16_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
