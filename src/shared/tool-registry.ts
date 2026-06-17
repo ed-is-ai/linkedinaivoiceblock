@@ -16,7 +16,7 @@
  *   const result = await tool.execute(input);
  *
  * To add a tool:
- *   1. Create src/skills/library/<name>/ with SKILL.md (kind: tool) + <name>.tool.ts
+ *   1. Create src/tools/library/<name>/ with TOOL.md (kind: tool) + <name>.tool.ts
  *   2. Add folder name to skill-order.json "tools" array
  *   3. Run npm run generate-skill-registry
  *   4. Run npm test && npm run check-tool-registry
@@ -24,7 +24,7 @@
 
 // Static import from the committed generated registry module.
 // DO NOT import tool modules directly here — tool-registry.ts is not the
-// registration point. To add a tool: drop a skills/library/<name>/ folder
+// registration point. To add a tool: drop a tools/library/<name>/ folder
 // + rerun `npm run generate-skill-registry`.
 // (No dynamic import, no import.meta.glob — MV3-CSP-safe, D-07)
 import { GENERATED_TOOLS } from './generated-tool-registry';
