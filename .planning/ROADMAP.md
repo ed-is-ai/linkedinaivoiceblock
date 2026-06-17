@@ -167,7 +167,7 @@ Plans:
 
 **Wave 1**
 
-- [ ] 33-01-PLAN.md — Track 1+2 (coupled): delete heuristic/llm barrels + repoint; move rederiver/heal/heuristic/sanitizer/validator into dom-selector-rederive tool; rename dom-selector-registry SKILL.md->TOOL.md / .skill.ts->.tool.ts (MOD-01, MOD-02)
+- [x] 33-01-PLAN.md — Track 1+2 (coupled): delete heuristic/llm barrels + repoint; move rederiver/heal/heuristic/sanitizer/validator into dom-selector-rederive tool; rename dom-selector-registry SKILL.md->TOOL.md / .skill.ts->.tool.ts (MOD-01, MOD-02)
 
 **Wave 2** *(blocked on Wave 1)*
 
