@@ -161,6 +161,26 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
   5. `src/modules/{dashboard,evals,popup}/` exist as self-contained peer modules with their own entry points; build config resolves all three
   6. Zero behavior change — the full test suite passes green and the detection golden-score snapshot / exclusion parity holds
 
+**Plans**: 4 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 33-01-PLAN.md — Track 1+2 (coupled): delete heuristic/llm barrels + repoint; move rederiver/heal/heuristic/sanitizer/validator into dom-selector-rederive tool; rename dom-selector-registry SKILL.md->TOOL.md / .skill.ts->.tool.ts (MOD-01, MOD-02)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 33-02-PLAN.md — Track 4: regroup src/shared/ into memory/ (storage cluster) + llm/ (pricing, signals); repoint all importers (MOD-04)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 33-03-PLAN.md — Track 3: verify unified codegen emits both registries (D-05 already satisfied); regenerate clean; fix stale tools-folder comment (MOD-03)
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 33-04-PLAN.md — Track 5: split src/dashboard + src/popup into src/modules/{dashboard,evals,popup}; repoint manifest.json + vite.config.ts; human-verify all 3 pages load (MOD-05)
+
 **UI hint**: no
 
 ---
