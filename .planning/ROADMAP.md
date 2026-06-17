@@ -141,7 +141,7 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 **v11.0 Modularity & Maintainability (Phase 33)**
 
-- [ ] **Phase 33: Improve Modularity** — Finish the skill/tool migration the Phase 29–32 refactors started: pull skill/tool-owned logic out of `src/content/`, finish the `dom-selector-registry` tool migration, unify the registry codegen, reorganize `src/shared/` by concern, and split the UX surfaces into self-contained `src/modules/` modules; zero behavior change
+- [x] **Phase 33: Improve Modularity** — Finish the skill/tool migration the Phase 29–32 refactors started: pull skill/tool-owned logic out of `src/content/`, finish the `dom-selector-registry` tool migration, unify the registry codegen, reorganize `src/shared/` by concern, and split the UX surfaces into self-contained `src/modules/` modules; zero behavior change (completed 2026-06-17)
 
 ---
 
@@ -179,7 +179,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 33-04-PLAN.md — Track 5: split src/dashboard + src/popup into src/modules/{dashboard,evals,popup}; repoint manifest.json + vite.config.ts; human-verify all 3 pages load (MOD-05)
+- [x] 33-04-PLAN.md — Track 5: split src/dashboard + src/popup into src/modules/{dashboard,evals,popup}; repoint manifest.json + vite.config.ts; human-verify all 3 pages load (MOD-05)
 
 **UI hint**: no
 
