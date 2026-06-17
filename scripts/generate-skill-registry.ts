@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // scripts/generate-skill-registry.ts
 // Run with: tsx scripts/generate-skill-registry.ts
-// Reads:  scripts/skill-order.json + src/skills/library/**/SKILL.md (skills) + src/tools/library/**/SKILL.md (tools)
+// Reads:  scripts/skill-order.json + src/skills/library/**/SKILL.md (skills) + src/tools/library/**/TOOL.md (tools)
 // Writes: src/content/generated-skill-registry.ts + src/shared/generated-tool-registry.ts
 //
 // Codegen step for the Skill Library Alignment (Phase 31).
@@ -81,14 +81,19 @@ function validateFrontmatter(fm: unknown, skillName: string): SkillFrontmatter {
 // Skills live under src/skills/library/; tools live under src/tools/library/.
 // The base dir is selected per bucket in main() so each kind reads from the
 // correct location.
-function parseSkillMd(folderName: string, baseDir: string[] = ['src', 'skills', 'library']): SkillEntry | null {
-  const skillMdPath = path.join(repoRoot, ...baseDir, folderName, 'SKILL.md');
+// Skills declare their manifest in SKILL.md; tools declare theirs in TOOL.md.
+function parseSkillMd(
+  folderName: string,
+  baseDir: string[] = ['src', 'skills', 'library'],
+  manifest = 'SKILL.md',
+): SkillEntry | null {
+  const skillMdPath = path.join(repoRoot, ...baseDir, folderName, manifest);
 
   if (!fs.existsSync(skillMdPath)) {
     // Skip-and-continue for not-yet-migrated skill folders (tracer-phase-only behavior).
     // This will be removed once all skill folders exist (wave 3+ cleanup).
     process.stderr.write(
-      `INFO: Skipping '${folderName}' — SKILL.md not found at ${skillMdPath} (not yet migrated)\n`,
+      `INFO: Skipping '${folderName}' — ${manifest} not found at ${skillMdPath} (not yet migrated)\n`,
     );
     return null;
   }
@@ -172,9 +177,9 @@ function main(): void {
   const signalEntries: SkillEntry[] = order.signals.map(f => parseSkillMd(f)).filter((e): e is SkillEntry => e !== null);
   const exclusionEntries: SkillEntry[] = order.exclusions.map(f => parseSkillMd(f)).filter((e): e is SkillEntry => e !== null);
   const detectorEntries: SkillEntry[] = order.detectors.map(f => parseSkillMd(f)).filter((e): e is SkillEntry => e !== null);
-  // Phase 32: tools bucket (D-05). Tools live under src/tools/library/.
+  // Phase 32: tools bucket (D-05). Tools live under src/tools/library/ and declare TOOL.md.
   const toolEntries: SkillEntry[] = (order.tools ?? [])
-    .map(folder => parseSkillMd(folder, ['src', 'tools', 'library']))
+    .map(folder => parseSkillMd(folder, ['src', 'tools', 'library'], 'TOOL.md'))
     .filter((e): e is SkillEntry => e !== null);
 
   // 3. Build the generated module source

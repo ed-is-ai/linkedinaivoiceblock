@@ -272,11 +272,12 @@ imports are identical to skill imports.
 
 ```
 src/tools/library/<prefix>-<name>/
-  SKILL.md                  (metadata.kind: tool)
+  TOOL.md                   (manifest — NOT SKILL.md; metadata.kind: tool)
   <prefix>-<name>.tool.ts   (NOT .skill.ts)
 ```
 
-**SKILL.md** frontmatter sets `metadata.kind: tool`:
+**TOOL.md** frontmatter sets `metadata.kind: tool` (the codegen reads `TOOL.md` for the
+`tools` bucket, vs `SKILL.md` for skills):
 
 ```yaml
 ---
