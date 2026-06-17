@@ -27,7 +27,7 @@ import {
 // Direct import from src/content/detector/heuristic.ts — safe because HeuristicDetector
 // is already completely DOM-free (no document.*, no chrome.*, no selector literals).
 // The Phase 28 dashboard reuses this SAME import (it is DOM-free; no re-homing needed).
-import { HeuristicDetector } from '../src/content/detector/heuristic.js';
+import { HeuristicDetector } from '../src/skills/library/detect-aiwriting-heuristic/detect-aiwriting-heuristic.skill.js';
 import type { PostData } from '../src/shared/types.js';
 import { detectionConfig } from '../src/skills/library/detect-aiwriting-heuristic/detectionConfig.js';
 

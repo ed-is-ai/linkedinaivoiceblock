@@ -15,7 +15,7 @@ import type {
   EvalRunComparison,
 } from '../shared/eval/index';
 import { assembleRun } from './evalsRunEngine';
-import { HeuristicDetector } from '../content/detector/heuristic';
+import { HeuristicDetector } from '../skills/library/detect-aiwriting-heuristic/detect-aiwriting-heuristic.skill';
 import { MODEL_PRICING, computeCostUsd } from '../shared/pricing';
 import { labelPost, seedLabels, countLabeled } from './evalsLabeling';
 

@@ -3,7 +3,7 @@
  * All tests run without a browser (no DOM access inside HeuristicDetector).
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { HeuristicDetector } from './heuristic';
+import { HeuristicDetector } from '../../skills/library/detect-aiwriting-heuristic/detect-aiwriting-heuristic.skill';
 import type { PostData } from '../../shared/types';
 import type { PatternSkill, SignalSkill } from '../../shared/skills/types';
 import * as skillRegistry from '../skill-registry';
