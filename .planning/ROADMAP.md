@@ -175,7 +175,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 33-03-PLAN.md — Track 3: verify unified codegen emits both registries (D-05 already satisfied); regenerate clean; fix stale tools-folder comment (MOD-03)
+- [x] 33-03-PLAN.md — Track 3: verify unified codegen emits both registries (D-05 already satisfied); regenerate clean; fix stale tools-folder comment (MOD-03)
 
 **Wave 4** *(blocked on Wave 3)*
 
