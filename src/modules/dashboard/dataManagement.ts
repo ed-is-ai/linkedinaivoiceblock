@@ -1,4 +1,4 @@
-import type { FlaggedAccount, FlaggedPost, StoredPost, TraceEntry, UnflaggedPost } from '../shared/types';
+import type { FlaggedAccount, FlaggedPost, StoredPost, TraceEntry, UnflaggedPost } from '../../shared/types';
 
 export function csvEscape(value: string | number): string {
   const str = String(value);

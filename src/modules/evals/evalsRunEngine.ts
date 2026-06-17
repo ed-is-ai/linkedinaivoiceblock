@@ -16,7 +16,7 @@ import {
   computeMetrics,
   filterErrors,
   safe,
-} from '../shared/eval/index';
+} from '../../shared/eval/index';
 
 import type {
   ScoredEntry,
@@ -24,7 +24,7 @@ import type {
   ThresholdRow,
   EvalRun,
   EvalCost,
-} from '../shared/eval/index';
+} from '../../shared/eval/index';
 
 export type { ScoredEntry, PostDetail, ThresholdRow };
 
@@ -62,7 +62,7 @@ export interface AssembleRunArgs {
  * IMPORTANT: filterErrors is always called with bestF1Threshold derived POST-sweep,
  * never with a hard-coded threshold (eval pitfall 4).
  *
- * THRESHOLDS is imported from ../shared/eval — this function never hard-codes the
+ * THRESHOLDS is imported from ../../shared/eval — this function never hard-codes the
  * threshold array; CLI and dashboard sweeps cannot drift (D-03).
  */
 export function assembleRun(args: AssembleRunArgs): EvalRun {

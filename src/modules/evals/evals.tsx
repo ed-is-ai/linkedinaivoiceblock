@@ -1,22 +1,22 @@
 import { render } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import type { StoredPost, UnflaggedPost } from '../shared/types';
+import type { StoredPost, UnflaggedPost } from '../../shared/types';
 import {
   buildPostData,
   appendEvalRun,
   getEvalRuns,
   summarize,
   compareRuns,
-} from '../shared/eval/index';
+} from '../../shared/eval/index';
 import type {
   EvalRun,
   PostDetail,
   ScoredEntry,
   EvalRunComparison,
-} from '../shared/eval/index';
+} from '../../shared/eval/index';
 import { assembleRun } from './evalsRunEngine';
-import { HeuristicDetector } from '../skills/library/detect-aiwriting-heuristic/detect-aiwriting-heuristic.skill';
-import { MODEL_PRICING, computeCostUsd } from '../shared/llm/pricing';
+import { HeuristicDetector } from '../../skills/library/detect-aiwriting-heuristic/detect-aiwriting-heuristic.skill';
+import { MODEL_PRICING, computeCostUsd } from '../../shared/llm/pricing';
 import { labelPost, seedLabels, countLabeled } from './evalsLabeling';
 
 // ---------------------------------------------------------------------------

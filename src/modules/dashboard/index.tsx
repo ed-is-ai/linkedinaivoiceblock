@@ -1,10 +1,10 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegistrySchema, SelectorTarget, UnflaggedPost } from '../shared/types';
+import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegistrySchema, SelectorTarget, UnflaggedPost } from '../../shared/types';
 import { buildJsonExport, buildPostsCsvExport, buildTracesExport, deriveCleanseCount, filterCleansed } from './dataManagement';
 import SelectorView from './SelectorView';
-import { buildSeedRegistry } from '../content/selector-registry';
-import { storageSet } from '../shared/memory/storage';
+import { buildSeedRegistry } from '../../content/selector-registry';
+import { storageSet } from '../../shared/memory/storage';
 
 
 function NetPostsChart({ stats, timeWindow }: { stats: DailyStats[], timeWindow: 7 | 30 }) {
@@ -258,7 +258,7 @@ function App() {
         <div style={{ marginBottom: 12 }}>
           <button
             style={s.actionBtn}
-            onClick={() => window.open(chrome.runtime.getURL('dashboard/evals.html'), '_blank', 'noreferrer')}
+            onClick={() => window.open(chrome.runtime.getURL('modules/evals/evals.html'), '_blank', 'noreferrer')}
           >
             Open Evals console
           </button>
@@ -362,6 +362,7 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     padding: '6px 16px', border: 'none', borderRadius: 6,
     background: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed', fontSize: 13, marginTop: 8,
   },
+  categoryNote: { fontSize: 12, color: '#9ca3af', marginBottom: 4 },
 };
 
 render(<App />, document.getElementById('root')!);

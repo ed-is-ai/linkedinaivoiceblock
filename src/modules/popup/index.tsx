@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { JSX } from 'preact';
-import type { FlaggedAccount, DailyStats, StoredPost, Settings } from '../shared/types';
+import type { FlaggedAccount, DailyStats, StoredPost, Settings } from '../../shared/types';
 import AccountRow from './AccountRow';
 import BatchBlockBar from './BatchBlockBar';
 
@@ -112,11 +112,11 @@ function App() {
   }
 
   function openDashboard() {
-    window.open(chrome.runtime.getURL('dashboard/index.html'), '_blank', 'noreferrer');
+    window.open(chrome.runtime.getURL('modules/dashboard/index.html'), '_blank', 'noreferrer');
   }
 
   function openEvals() {
-    window.open(chrome.runtime.getURL('dashboard/evals.html'), '_blank', 'noreferrer');
+    window.open(chrome.runtime.getURL('modules/evals/evals.html'), '_blank', 'noreferrer');
   }
 
   function save() {

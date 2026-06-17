@@ -7,7 +7,7 @@ import {
   buildPostsCsvExport,
   buildTracesExport,
 } from './dataManagement';
-import type { FlaggedAccount, StoredPost, TraceEntry, UnflaggedPost } from '../shared/types';
+import type { FlaggedAccount, StoredPost, TraceEntry, UnflaggedPost } from '../../shared/types';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 

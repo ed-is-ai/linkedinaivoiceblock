@@ -4,7 +4,7 @@
  * Tests call the extracted pure handler functions directly WITHOUT rendering the
  * Preact component, so no @testing-library/preact is needed.
  *
- * vi.mock('../shared/memory/postStore') intercepts the static import in evalsLabeling.ts
+ * vi.mock('../../shared/memory/postStore') intercepts the static import in evalsLabeling.ts
  * at module-graph time, before any test code runs.
  */
 
@@ -14,14 +14,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock postStore — must be declared before any import that resolves it
 // ---------------------------------------------------------------------------
 
-vi.mock('../shared/memory/postStore', () => ({
+vi.mock('../../shared/memory/postStore', () => ({
   setPostLabel: vi.fn().mockResolvedValue(undefined),
   bulkSeedLabels: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Import the helpers AFTER vi.mock so the mock is already in place
 import { labelPost, seedLabels, countLabeled } from './evalsLabeling';
-import { setPostLabel, bulkSeedLabels } from '../shared/memory/postStore';
+import { setPostLabel, bulkSeedLabels } from '../../shared/memory/postStore';
 import { assembleRun } from './evalsRunEngine';
 import type { ScoredEntry, PostDetail } from './evalsRunEngine';
 
@@ -346,7 +346,7 @@ describe('assembleRun — EvalRun shape conformance', () => {
 // compareRuns Δ table (Task 3 TDD — verify compareRuns is used, not recomputed)
 // ---------------------------------------------------------------------------
 
-import { compareRuns } from '../shared/eval/index';
+import { compareRuns } from '../../shared/eval/index';
 
 describe('compareRuns — Δ table (Task 3)', () => {
   it('(w) compareRuns(current, baseline) computes f1 delta = current.f1 - baseline.f1', () => {

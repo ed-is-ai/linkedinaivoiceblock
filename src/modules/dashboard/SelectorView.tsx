@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import type { JSX } from 'preact';
-import type { SelectorRegistrySchema, SelectorTarget } from '../shared/types';
+import type { SelectorRegistrySchema, SelectorTarget } from '../../shared/types';
 
 interface SelectorViewProps {
   registry: SelectorRegistrySchema | null;

@@ -1,4 +1,4 @@
-import type { FlaggedAccount, StoredPost } from '../shared/types';
+import type { FlaggedAccount, StoredPost } from '../../shared/types';
 import type { JSX } from 'preact';
 
 interface AccountRowProps {
