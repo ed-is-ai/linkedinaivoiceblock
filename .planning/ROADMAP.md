@@ -19,7 +19,8 @@
 - ✅ **v7.0 Adaptive DOM Scraper** — Phases 22–23 (shipped 2026-06-14)
 - ✅ **v8.0 Observability** — Phases 24–25 (shipped 2026-06-14)
 - ✅ **v9.0 Eval Harness** — Phases 25.1–28 (shipped 2026-06-15)
-- 🚧 **v10.0 Skill-Based Detection & Tool Abstraction** — Phases 29–32 (in progress)
+- ✅ **v10.0 Skill-Based Detection & Tool Abstraction** — Phases 29–32 (shipped 2026-06-16)
+- 🚧 **v11.0 Modularity & Maintainability** — Phase 33 (in progress)
 
 ---
 
@@ -138,7 +139,31 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 ---
 
+**v11.0 Modularity & Maintainability (Phase 33)**
+
+- [ ] **Phase 33: Improve Modularity** — Finish the skill/tool migration the Phase 29–32 refactors started: pull skill/tool-owned logic out of `src/content/`, finish the `dom-selector-registry` tool migration, unify the registry codegen, reorganize `src/shared/` by concern, and split the UX surfaces into self-contained `src/modules/` modules; zero behavior change
+
+---
+
 ## Phase Details
+
+### Phase 33: Improve Modularity
+
+**Goal**: Every detection skill, tool, and UX surface is genuinely self-contained — skill/tool-owned logic lives with its skill/tool, `src/shared/` is grouped by concern, and the dashboard/evals/popup apps are peer modules — with zero behavior change (the existing test suite stays green and detection outcomes are byte-identical)
+**Depends on**: Phase 32
+**Requirements**: MOD-01, MOD-02, MOD-03, MOD-04, MOD-05
+**Success Criteria** (what must be TRUE):
+
+  1. Skill/tool-owned logic that lived in `src/content/detector/` and `src/content/selector/` lives with its owning skill/tool; only genuinely cross-cutting DOM/content pipeline utilities remain in `src/content/`
+  2. `dom-selector-registry` follows the same tool convention as `dom-selector-rederive` (`TOOL.md` + `.tool.ts`); selector internals (heal/sanitizer/validator/heuristic) are co-located in the tool folders
+  3. One shared codegen mechanism generates both the skill and tool registry modules; `SkillRegistry` and `ToolRegistry` remain distinct runtime contracts
+  4. `src/shared/` is grouped into concern-based subfolders — `memory/` (storage cluster), `llm/`, `eval/`, `skills/`
+  5. `src/modules/{dashboard,evals,popup}/` exist as self-contained peer modules with their own entry points; build config resolves all three
+  6. Zero behavior change — the full test suite passes green and the detection golden-score snapshot / exclusion parity holds
+
+**UI hint**: no
+
+---
 
 ### Phase 18: Popup Interaction Fixes
 
