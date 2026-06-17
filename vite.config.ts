@@ -9,7 +9,7 @@ export default defineConfig({
     preact(),
     webExtension({
       manifest: 'manifest.json',
-      additionalInputs: ['dashboard/evals.html'],
+      additionalInputs: ['modules/evals/evals.html'],
     }),
   ],
   build: {
