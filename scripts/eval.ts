@@ -10,7 +10,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { computeCostUsd } from '../src/shared/pricing.js';
+import { computeCostUsd } from '../src/shared/llm/pricing.js';
 import { classifyPost } from '../src/skills/library/detect-aiwriting-llm/classifier.js';
 import {
   THRESHOLDS,

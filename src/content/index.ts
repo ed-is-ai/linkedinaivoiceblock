@@ -11,7 +11,7 @@ import { extractProfileSignals } from './detector/signals/profile';
 import { storageGet, storageSet } from '../shared/memory/storage';
 import { persistFlaggedAccount } from '../shared/memory/queue';
 import { persistStoredPost, persistUnflaggedPost } from '../shared/memory/postStore';
-import { AI_LANGUAGE_SIGNALS } from '../shared/signals';
+import { AI_LANGUAGE_SIGNALS } from '../shared/llm/signals';
 import type { Detector, PostData, ObservedPost, DailyStats } from '../shared/types';
 import { detectionConfig } from '../skills/library/detect-aiwriting-heuristic/detectionConfig';
 

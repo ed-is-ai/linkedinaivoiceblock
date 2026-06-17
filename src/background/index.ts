@@ -1,7 +1,7 @@
 console.log('[LLB] service worker started');
 
 import type { DetectionResult, TraceEntry, AnthropicUsage } from '../shared/types';
-import { MODEL_PRICING, computeCostUsd } from '../shared/pricing';
+import { MODEL_PRICING, computeCostUsd } from '../shared/llm/pricing';
 import { appendTrace } from '../shared/memory/traceStore';
 import { storageSet } from '../shared/memory/storage';
 import { SYSTEM_PROMPT, classifyPost } from '../skills/library/detect-aiwriting-llm/classifier';

@@ -13,7 +13,7 @@
  * costUsd can be recomputed against updated prices in Phase 25.
  */
 
-import type { ModelPricing } from './types';
+import type { ModelPricing } from '../types';
 
 // ---------------------------------------------------------------------------
 // MODEL_PRICING — authoritative Anthropic pricing constant (priced 2026-06)

@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { computeCostUsd } from '../src/shared/pricing.js';
+import { computeCostUsd } from '../src/shared/llm/pricing.js';
 import type { TraceEntry } from '../src/shared/types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
