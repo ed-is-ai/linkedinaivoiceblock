@@ -12,7 +12,7 @@
 
 import { SELECTORS_VERSION } from './selectors';
 import { resolve, updateCandidate } from './selector-registry';
-import { triggerHeal, isFeedUrl, hasFeedContainer } from './selector/heal';
+import { triggerHeal, isFeedUrl, hasFeedContainer } from '../tools/library/dom-selector-rederive/heal';
 import type { ObservedPost } from '../shared/types';
 
 // ---------------------------------------------------------------------------

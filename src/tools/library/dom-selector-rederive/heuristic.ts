@@ -14,7 +14,7 @@
  * Requirement: ADAPT-02
  */
 
-import { resolve } from '../selector-registry';
+import { resolve } from '../../../content/selector-registry';
 
 /**
  * A single heuristic-derived selector candidate.

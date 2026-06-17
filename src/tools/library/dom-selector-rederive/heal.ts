@@ -22,12 +22,12 @@
  * Requirements: ADAPT-01, ADAPT-02, ADAPT-03, ADAPT-06, ADAPT-09
  */
 
-import { resolve, insertCandidate } from '../selector-registry';
+import { resolve, insertCandidate } from '../../../content/selector-registry';
 import { deriveHeuristicCandidates } from './heuristic';
 import { validateCandidate } from './validator';
 import { buildDomSkeleton } from './sanitizer';
-import { LLMRederiver } from '../detector/rederiver';
-import { storageGet } from '../../shared/storage';
+import { LLMRederiver } from './rederiver';
+import { storageGet } from '../../../shared/storage';
 
 /**
  * Core-4 guard #1: only the LinkedIn feed route is eligible for breakage detection.

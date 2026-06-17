@@ -17,25 +17,25 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const { rederiveMock } = vi.hoisted(() => ({ rederiveMock: vi.fn() }));
 
-vi.mock('../selector-registry', () => ({
+vi.mock('../../../content/selector-registry', () => ({
   resolve: vi.fn(),
   insertCandidate: vi.fn(),
 }));
 vi.mock('./heuristic', () => ({ deriveHeuristicCandidates: vi.fn() }));
-vi.mock('../detector/rederiver', () => ({
+vi.mock('./rederiver', () => ({
   // Regular function (not arrow) so `new LLMRederiver()` works; returns the mocked instance.
   LLMRederiver: vi.fn(function () {
     return { rederive: rederiveMock };
   }),
 }));
-vi.mock('../../shared/storage', () => ({ storageGet: vi.fn() }));
+vi.mock('../../../shared/storage', () => ({ storageGet: vi.fn() }));
 
 import { triggerHeal, isFeedUrl, hasFeedContainer } from './heal';
 import { deriveHeuristicCandidates } from './heuristic';
-import { resolve, insertCandidate } from '../selector-registry';
-import { storageGet } from '../../shared/storage';
+import { resolve, insertCandidate } from '../../../content/selector-registry';
+import { storageGet } from '../../../shared/storage';
 
-const FIXDIR = path.join(process.cwd(), 'src', 'content', 'selector', '__fixtures__');
+const FIXDIR = path.join(process.cwd(), 'src', 'tools', 'library', 'dom-selector-rederive', '__fixtures__');
 
 function loadFixture(name: string): string {
   return readFileSync(path.join(FIXDIR, `${name}.html`), 'utf8');

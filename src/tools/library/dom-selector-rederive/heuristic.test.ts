@@ -14,7 +14,7 @@ import { deriveHeuristicCandidates } from './heuristic';
 import { validateCandidate } from './validator';
 
 // Mock the selector-registry resolve() so tests control what the "broken" seed returns
-vi.mock('../selector-registry', () => ({
+vi.mock('../../../content/selector-registry', () => ({
   resolve: vi.fn((target: string) => {
     if (target === 'POST_CARD') return 'div[componentkey]';
     if (target === 'POST_BODY_TEXT') return 'span[data-testid="expandable-text-box"]';
