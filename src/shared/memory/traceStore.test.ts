@@ -43,7 +43,7 @@ beforeEach(() => {
 // Helper to build a minimal valid TraceEntry
 // ---------------------------------------------------------------------------
 
-import type { TraceEntry } from './types';
+import type { TraceEntry } from '../types';
 
 function makeEntry(overrides: Partial<TraceEntry> = {}): TraceEntry {
   return {

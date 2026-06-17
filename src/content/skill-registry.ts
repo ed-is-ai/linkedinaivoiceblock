@@ -33,7 +33,7 @@ import type {
   PatternSkill,
 } from '../shared/skills/types';
 import { SKILL_REGISTRY_VERSION } from '../shared/skills/types';
-import { storageGet, storageSet } from '../shared/storage';
+import { storageGet, storageSet } from '../shared/memory/storage';
 import { clearCompiledCache } from '../shared/skills/pattern-runner';
 
 // ---------------------------------------------------------------------------

@@ -13,7 +13,7 @@
  * document or the extension runtime. Only chrome.storage.local (via storage wrappers).
  */
 
-import { storageGet, storageSet } from '../storage';
+import { storageGet, storageSet } from '../memory/storage';
 import type { EvalRun } from './runs';
 
 // ---------------------------------------------------------------------------

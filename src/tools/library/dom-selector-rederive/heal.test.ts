@@ -28,12 +28,12 @@ vi.mock('./rederiver', () => ({
     return { rederive: rederiveMock };
   }),
 }));
-vi.mock('../../../shared/storage', () => ({ storageGet: vi.fn() }));
+vi.mock('../../../shared/memory/storage', () => ({ storageGet: vi.fn() }));
 
 import { triggerHeal, isFeedUrl, hasFeedContainer } from './heal';
 import { deriveHeuristicCandidates } from './heuristic';
 import { resolve, insertCandidate } from '../../../content/selector-registry';
-import { storageGet } from '../../../shared/storage';
+import { storageGet } from '../../../shared/memory/storage';
 
 const FIXDIR = path.join(process.cwd(), 'src', 'tools', 'library', 'dom-selector-rederive', '__fixtures__');
 

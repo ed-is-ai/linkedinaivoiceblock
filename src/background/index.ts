@@ -2,8 +2,8 @@ console.log('[LLB] service worker started');
 
 import type { DetectionResult, TraceEntry, AnthropicUsage } from '../shared/types';
 import { MODEL_PRICING, computeCostUsd } from '../shared/pricing';
-import { appendTrace } from '../shared/traceStore';
-import { storageSet } from '../shared/storage';
+import { appendTrace } from '../shared/memory/traceStore';
+import { storageSet } from '../shared/memory/storage';
 import { SYSTEM_PROMPT, classifyPost } from '../skills/library/detect-aiwriting-llm/classifier';
 import { get as getTool } from '../shared/tool-registry';
 import type { RederiveCandidate } from '../tools/library/dom-selector-rederive/dom-selector-rederive.tool';

@@ -10,7 +10,7 @@
  */
 
 import { storageGet, storageSet } from './storage';
-import type { FlaggedAccount } from './types';
+import type { FlaggedAccount } from '../types';
 
 // ---------------------------------------------------------------------------
 // Constants

@@ -4,7 +4,7 @@ import type { FlaggedAccount, DailyStats, StoredPost, TraceEntry, SelectorRegist
 import { buildJsonExport, buildPostsCsvExport, buildTracesExport, deriveCleanseCount, filterCleansed } from './dataManagement';
 import SelectorView from './SelectorView';
 import { buildSeedRegistry } from '../content/selector-registry';
-import { storageSet } from '../shared/storage';
+import { storageSet } from '../shared/memory/storage';
 
 
 function NetPostsChart({ stats, timeWindow }: { stats: DailyStats[], timeWindow: 7 | 30 }) {

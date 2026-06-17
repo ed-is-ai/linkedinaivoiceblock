@@ -10,7 +10,7 @@
  */
 
 import { storageGet, storageSet } from './storage';
-import type { StoredPost, UnflaggedPost } from './types';
+import type { StoredPost, UnflaggedPost } from '../types';
 
 // ---------------------------------------------------------------------------
 // Label write-back (Phase 28, D-08 / D-09)

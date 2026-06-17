@@ -13,7 +13,7 @@
  */
 
 import { storageGet, storageSet } from './storage';
-import type { TraceEntry } from './types';
+import type { TraceEntry } from '../types';
 
 // ---------------------------------------------------------------------------
 // Constants

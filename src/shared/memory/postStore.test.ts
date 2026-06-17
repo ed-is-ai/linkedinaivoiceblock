@@ -44,7 +44,7 @@ beforeEach(() => {
 // Tests for persistUnflaggedPost
 // ---------------------------------------------------------------------------
 
-import type { UnflaggedPost, StoredPost } from './types';
+import type { UnflaggedPost, StoredPost } from '../types';
 
 describe('persistUnflaggedPost — basic behaviour', () => {
   it('(a) appending to an empty store writes a 1-entry unflaggedPosts array, newest-first', async () => {

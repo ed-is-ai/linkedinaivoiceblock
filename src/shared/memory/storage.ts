@@ -9,11 +9,11 @@
  * compile time under strict mode + noUncheckedIndexedAccess (T-03-03 mitigation).
  *
  * Usage:
- *   import { storageGet, storageSet, storageRemove } from '../shared/storage';
+ *   import { storageGet, storageSet, storageRemove } from '../shared/memory/storage';
  *   const { flaggedAccounts } = await storageGet(['flaggedAccounts']);
  */
 
-import type { StorageSchema } from './types';
+import type { StorageSchema } from '../types';
 
 /**
  * Read one or more keys from chrome.storage.local.

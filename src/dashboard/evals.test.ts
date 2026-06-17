@@ -4,7 +4,7 @@
  * Tests call the extracted pure handler functions directly WITHOUT rendering the
  * Preact component, so no @testing-library/preact is needed.
  *
- * vi.mock('../shared/postStore') intercepts the static import in evalsLabeling.ts
+ * vi.mock('../shared/memory/postStore') intercepts the static import in evalsLabeling.ts
  * at module-graph time, before any test code runs.
  */
 
@@ -14,14 +14,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock postStore — must be declared before any import that resolves it
 // ---------------------------------------------------------------------------
 
-vi.mock('../shared/postStore', () => ({
+vi.mock('../shared/memory/postStore', () => ({
   setPostLabel: vi.fn().mockResolvedValue(undefined),
   bulkSeedLabels: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Import the helpers AFTER vi.mock so the mock is already in place
 import { labelPost, seedLabels, countLabeled } from './evalsLabeling';
-import { setPostLabel, bulkSeedLabels } from '../shared/postStore';
+import { setPostLabel, bulkSeedLabels } from '../shared/memory/postStore';
 import { assembleRun } from './evalsRunEngine';
 import type { ScoredEntry, PostDetail } from './evalsRunEngine';
 

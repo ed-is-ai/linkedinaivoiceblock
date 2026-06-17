@@ -27,7 +27,7 @@ import { deriveHeuristicCandidates } from './heuristic';
 import { validateCandidate } from './validator';
 import { buildDomSkeleton } from './sanitizer';
 import { LLMRederiver } from './rederiver';
-import { storageGet } from '../../../shared/storage';
+import { storageGet } from '../../../shared/memory/storage';
 
 /**
  * Core-4 guard #1: only the LinkedIn feed route is eligible for breakage detection.

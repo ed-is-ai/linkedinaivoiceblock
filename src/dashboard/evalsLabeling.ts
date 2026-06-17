@@ -10,7 +10,7 @@
  * These are the ONLY writers of post labels from the Evals page surface.
  */
 
-import { setPostLabel, bulkSeedLabels } from '../shared/postStore';
+import { setPostLabel, bulkSeedLabels } from '../shared/memory/postStore';
 
 /**
  * Write a ground-truth label for a single post (D-08).

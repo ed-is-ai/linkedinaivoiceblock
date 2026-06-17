@@ -21,7 +21,7 @@ import type {
   CandidateSource,
   TargetEntry,
 } from '../shared/types';
-import { storageGet, storageSet } from '../shared/storage';
+import { storageGet, storageSet } from '../shared/memory/storage';
 import {
   SELECTORS_VERSION,
   FEED_CONTAINER,
