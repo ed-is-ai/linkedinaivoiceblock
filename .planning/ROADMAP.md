@@ -171,7 +171,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 33-02-PLAN.md — Track 4: regroup src/shared/ into memory/ (storage cluster) + llm/ (pricing, signals); repoint all importers (MOD-04)
+- [x] 33-02-PLAN.md — Track 4: regroup src/shared/ into memory/ (storage cluster) + llm/ (pricing, signals); repoint all importers (MOD-04)
 
 **Wave 3** *(blocked on Wave 2)*
 
