@@ -117,7 +117,14 @@ function parseSkillMd(folderName: string, baseDir: string[] = ['src', 'skills', 
 // Emit helpers
 // ---------------------------------------------------------------------------
 
-function importVarName(folder: string, kind: 'signal' | 'exclusion' | 'detector' | 'tool'): string {
+/** Last path segment of a (possibly nested) skill-order entry, e.g.
+ *  'detect-aiwriting-heuristic/signals/detect-ai-vocab' → 'detect-ai-vocab'. */
+function leafName(folder: string): string {
+  return folder.split('/').pop() ?? folder;
+}
+
+function importVarName(folderPath: string, kind: 'signal' | 'exclusion' | 'detector' | 'tool'): string {
+  const folder = leafName(folderPath); // derive the var from the leaf folder, not the nested path
   if (kind === 'tool') {
     // Full folder name camelCased (no prefix strip) + Tool suffix (RESEARCH §ToolRegistry Design)
     // e.g. dom-selector-rederive → domSelectorRederiveTool
@@ -142,12 +149,14 @@ function importVarName(folder: string, kind: 'signal' | 'exclusion' | 'detector'
 }
 
 function importPath(folder: string, kind: 'signal' | 'exclusion' | 'detector' | 'tool'): string {
+  // Directory uses the full (possibly nested) entry; the file basename uses the leaf folder.
+  const leaf = leafName(folder);
   if (kind === 'tool') {
     // Relative from src/shared/ (generated-tool-registry.ts lives there); tools live under src/tools/library/
-    return `../tools/library/${folder}/${folder}.tool`;
+    return `../tools/library/${folder}/${leaf}.tool`;
   }
   // Relative from src/content/ (generated-skill-registry.ts lives there)
-  return `../skills/library/${folder}/${folder}.skill`;
+  return `../skills/library/${folder}/${leaf}.skill`;
 }
 
 // ---------------------------------------------------------------------------
@@ -231,7 +240,7 @@ function main(): void {
     lines.push('export const GENERATED_DETECTOR_SKILLS = {');
     for (const entry of detectorEntries) {
       const escapedDesc = entry.description.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-      lines.push(`  '${entry.folder}': { name: '${entry.name}', description: '${escapedDesc}', kind: '${entry.kind}' as const },`);
+      lines.push(`  '${leafName(entry.folder)}': { name: '${entry.name}', description: '${escapedDesc}', kind: '${entry.kind}' as const },`);
     }
     lines.push('} as const;');
     lines.push('');
@@ -245,7 +254,7 @@ function main(): void {
   lines.push('export const GENERATED_SKILL_METADATA = {');
   for (const entry of allEntries) {
     const escapedDesc = entry.description.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    lines.push(`  '${entry.folder}': { name: '${entry.name}', description: '${escapedDesc}', kind: '${entry.kind}' as const },`);
+    lines.push(`  '${leafName(entry.folder)}': { name: '${entry.name}', description: '${escapedDesc}', kind: '${entry.kind}' as const },`);
   }
   lines.push('} as const;');
   lines.push('');
@@ -304,7 +313,7 @@ function main(): void {
   toolLines.push('export const GENERATED_TOOL_METADATA = {');
   for (const entry of toolEntries) {
     const escapedDesc = entry.description.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    toolLines.push(`  '${entry.folder}': { name: '${entry.name}', description: '${escapedDesc}', kind: 'tool' as const },`);
+    toolLines.push(`  '${leafName(entry.folder)}': { name: '${entry.name}', description: '${escapedDesc}', kind: 'tool' as const },`);
   }
   toolLines.push('} as const;');
   toolLines.push('');

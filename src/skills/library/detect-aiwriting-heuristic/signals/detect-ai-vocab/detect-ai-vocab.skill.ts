@@ -4,7 +4,7 @@
  */
 
 import { checkAiVocab } from './ai-vocab';
-import type { CodeSkill } from '../../../shared/skills/types';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const aiVocabSkill: CodeSkill = {
   kind: 'signal',

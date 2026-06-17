@@ -4,7 +4,7 @@
  */
 
 import { checkBuzzwords } from './buzzwords';
-import type { CodeSkill } from '../../../shared/skills/types';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const buzzwordSkill: CodeSkill = {
   kind: 'signal',

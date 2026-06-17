@@ -4,7 +4,7 @@
  */
 
 import { checkEmDash } from './em-dash';
-import type { CodeSkill } from '../../../shared/skills/types';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const emDashSkill: CodeSkill = {
   kind: 'signal',

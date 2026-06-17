@@ -12,7 +12,7 @@
 
 import type { PostData, DetectionResult, Detector } from '../../../shared/types';
 import type { DetectorSkill, CodeSkill } from '../../../shared/skills/types';
-import { detectionConfig } from '../../../shared/detectionConfig';
+import { detectionConfig } from './detectionConfig';
 import { getSignalSkills } from '../../../content/skill-registry';
 import { runPatternSkill } from '../../../shared/skills/pattern-runner';
 

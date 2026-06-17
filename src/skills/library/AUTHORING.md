@@ -22,6 +22,32 @@ also used by `content/exclusions.ts`; `skill-registry.ts` — the registry itsel
 imported with the usual `../../../content/...` path and are deliberately NOT vendored into a
 skill folder.
 
+### Detectors own the signals they orchestrate
+
+Signal skills are **never invoked directly** — the `HeuristicDetector` runs them all via the
+registry (`getSignalSkills()`). To reflect that ownership, the 8 signal skills live **nested
+under their detector** at `src/skills/library/detect-aiwriting-heuristic/signals/<name>/`, not
+as top-level siblings. The detector folder also owns `detectionConfig.ts` (the heuristic
+weights/thresholds) at its root. Layout:
+
+```
+src/skills/library/
+  detect-aiwriting-heuristic/            # the heuristic AI-writing detector
+    detect-aiwriting-heuristic.skill.ts  # HeuristicDetector (orchestrator)
+    detectionConfig.ts                   # heuristic weights + thresholds
+    SKILL.md
+    signals/
+      detect-ai-vocab/  detect-buzzword/  detect-em-dash/  detect-hook-story/
+      detect-impersonal/  detect-motivational/  detect-listicle-cta/  detect-generic-comments/
+  detect-aiwriting-llm/                  # the LLM AI-writing detector (owns classifier.ts)
+  exclude-*/                             # exclusion skills (run by content/index.ts, top-level)
+```
+
+Exclusion skills stay top-level (`src/skills/library/exclude-*/`) because they are run by
+`content/index.ts`, not by a detector. `detectionConfig.ts` is consumed beyond the heuristic
+skills (`content/index.ts`, `shared/skills/pattern-runner.ts`, `scripts/eval.ts`); those import
+it from the detector folder by full path.
+
 The codegen script (`scripts/generate-skill-registry.ts`) reads every folder listed in
 `scripts/skill-order.json`, validates the SKILL.md frontmatter at build time (D-08), and
 emits the committed generated module `src/content/generated-skill-registry.ts` (D-05).
@@ -34,7 +60,7 @@ SKILL.md:
 
 | Prefix          | Kind                       | Examples                                     |
 |-----------------|----------------------------|----------------------------------------------|
-| `detect-`       | `signal` and `detector`    | `detect-ai-vocab`, `detect-heuristic`        |
+| `detect-`       | `signal` and `detector`    | `detect-ai-vocab`, `detect-aiwriting-heuristic`        |
 | `exclude-`      | `exclusion`                | `exclude-sponsored`, `exclude-company-page`  |
 | `dom-selector-` | `tool`                     | `dom-selector-rederive` (runtime tool), `dom-selector-registry` (reclassified to `tool` via CR-01) |
 
@@ -58,10 +84,13 @@ ordering.
 
 ### Step 1 — Create the skill folder
 
-Use the prefixed folder name throughout (e.g. a new buzzword-style signal `detect-foo`):
+Use the prefixed folder name throughout (e.g. a new buzzword-style signal `detect-foo`).
+A new **signal** skill lives nested under the heuristic detector that orchestrates it
+(`detect-aiwriting-heuristic/signals/`); a new top-level **exclusion** skill lives directly
+under `src/skills/library/`:
 
 ```
-src/skills/library/detect-foo/
+src/skills/library/detect-aiwriting-heuristic/signals/detect-foo/
   SKILL.md
   detect-foo.skill.ts    # wrapper
   foo.ts                 # the underlying pure function (lives HERE, not in src/content/)
@@ -104,34 +133,42 @@ export const fooSkill: CodeSkill = {   // export name is UNPREFIXED (no detect-)
 };
 ```
 
-Import depth from `src/skills/library/<name>/` to `src/` is **three levels** (`../../../`).
-Common paths:
+Import depth depends on where the skill lives. A **nested signal** at
+`src/skills/library/detect-aiwriting-heuristic/signals/<name>/` is **five levels** from `src/`
+(`../../../../../`); a **top-level exclusion** at `src/skills/library/<name>/` is **three
+levels** (`../../../`). Common paths for a nested signal:
 - Underlying function (co-located, self-contained): `'./<function-file>'`
+- Detection config (sibling at the detector folder root): `'../../detectionConfig'`
+- Shared types: `'../../../../../shared/skills/types'`
+
+For a top-level exclusion skill:
 - Shared types: `'../../../shared/skills/types'`
-- Detection config: `'../../../shared/detectionConfig'`
 - Shared infrastructure (registries/language used by more than this skill): `'../../../content/selector-registry'`, `'../../../content/detector/language'`
 
 Weights MUST NOT appear in SKILL.md or the skill object literal.  They live in the
-underlying function files or in `src/shared/detectionConfig.ts` (D-04).
+underlying function files or in `detectionConfig.ts` (D-04), which now lives at the heuristic
+detector folder root (`src/skills/library/detect-aiwriting-heuristic/detectionConfig.ts`).
 
 ### Step 2 — Add the skill name to `scripts/skill-order.json`
 
 **APPEND to the END of the `signals` array only.**  Never insert between existing entries.
 
-List the **prefixed folder name**.
+List the entry's **path under `src/skills/library/`** — for signals this is the nested path
+(`detect-aiwriting-heuristic/signals/<name>`); the codegen derives the import variable from the
+leaf folder name. Exclusions list their flat top-level folder name.
 
 ```json
 {
   "signals": [
-    "detect-listicle-cta",
-    "detect-buzzword",
-    "detect-em-dash",
-    "detect-ai-vocab",
-    "detect-hook-story",
-    "detect-motivational",
-    "detect-impersonal",
-    "detect-generic-comments",
-    "detect-foo"          // <-- append here, at the end
+    "detect-aiwriting-heuristic/signals/detect-listicle-cta",
+    "detect-aiwriting-heuristic/signals/detect-buzzword",
+    "detect-aiwriting-heuristic/signals/detect-em-dash",
+    "detect-aiwriting-heuristic/signals/detect-ai-vocab",
+    "detect-aiwriting-heuristic/signals/detect-hook-story",
+    "detect-aiwriting-heuristic/signals/detect-motivational",
+    "detect-aiwriting-heuristic/signals/detect-impersonal",
+    "detect-aiwriting-heuristic/signals/detect-generic-comments",
+    "detect-aiwriting-heuristic/signals/detect-foo"   // <-- append here, at the end
   ],
   "exclusions": [ ... ],
   "detectors":  [ ... ]
@@ -323,7 +360,7 @@ build time.  Do not add any `import '...SKILL.md'` statement anywhere in TypeScr
 
 ### Detectors are not in skill arrays
 
-`detect-heuristic` and `detect-aiwriting-llm` appear in `scripts/skill-order.json` `detectors` array
+`detect-aiwriting-heuristic` and `detect-aiwriting-llm` appear in `scripts/skill-order.json` `detectors` array
 for metadata completeness only.  Detectors are NOT added to `GENERATED_SIGNAL_SKILLS` or
 `GENERATED_EXCLUSION_SKILLS`.  They are instantiated directly in `src/content/index.ts`
 and `scripts/eval.ts` via the barrel re-exports at `src/content/detector/heuristic.ts`

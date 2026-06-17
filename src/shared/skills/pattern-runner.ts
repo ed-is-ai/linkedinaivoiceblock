@@ -17,7 +17,7 @@
  */
 
 import type { PatternSkill, SignalContext } from './types';
-import { detectionConfig } from '../detectionConfig';
+import { detectionConfig } from '../../skills/library/detect-aiwriting-heuristic/detectionConfig';
 
 // ---------------------------------------------------------------------------
 // Compiled RegExp cache — keyed by skill.id; built once, reused per post

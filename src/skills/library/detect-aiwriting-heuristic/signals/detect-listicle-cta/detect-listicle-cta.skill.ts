@@ -6,8 +6,8 @@
 
 import { checkListicle } from './listicle';
 import { checkCta } from './cta';
-import { detectionConfig } from '../../../shared/detectionConfig';
-import type { CodeSkill } from '../../../shared/skills/types';
+import { detectionConfig } from '../../detectionConfig';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const listicleCtaSkill: CodeSkill = {
   kind: 'signal',

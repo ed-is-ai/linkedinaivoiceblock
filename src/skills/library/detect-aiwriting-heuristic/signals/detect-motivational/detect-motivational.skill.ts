@@ -4,7 +4,7 @@
  */
 
 import { checkMotivational } from './motivational';
-import type { CodeSkill } from '../../../shared/skills/types';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const motivationalSkill: CodeSkill = {
   kind: 'signal',

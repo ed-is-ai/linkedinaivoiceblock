@@ -13,7 +13,7 @@ import { persistFlaggedAccount } from '../shared/queue';
 import { persistStoredPost, persistUnflaggedPost } from '../shared/postStore';
 import { AI_LANGUAGE_SIGNALS } from '../shared/signals';
 import type { Detector, PostData, ObservedPost, DailyStats } from '../shared/types';
-import { detectionConfig } from '../shared/detectionConfig';
+import { detectionConfig } from '../skills/library/detect-aiwriting-heuristic/detectionConfig';
 
 // ---------------------------------------------------------------------------
 // Debug flag — set to true locally to log per-post extraction details

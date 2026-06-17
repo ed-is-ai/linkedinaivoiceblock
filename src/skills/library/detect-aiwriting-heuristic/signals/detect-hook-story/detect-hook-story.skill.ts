@@ -4,7 +4,7 @@
  */
 
 import { checkHookStory } from './hook-story';
-import type { CodeSkill } from '../../../shared/skills/types';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const hookStorySkill: CodeSkill = {
   kind: 'signal',

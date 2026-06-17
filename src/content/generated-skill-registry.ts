@@ -8,14 +8,14 @@
 import type { SignalSkill, ExclusionSkill } from '../shared/skills/types';
 
 // Signal skill imports (pipeline step-order — DO NOT reorder, golden-score snapshot depends on it D-06)
-import { listicleCtaSkill } from '../skills/library/detect-listicle-cta/detect-listicle-cta.skill';
-import { buzzwordSkill } from '../skills/library/detect-buzzword/detect-buzzword.skill';
-import { emDashSkill } from '../skills/library/detect-em-dash/detect-em-dash.skill';
-import { aiVocabSkill } from '../skills/library/detect-ai-vocab/detect-ai-vocab.skill';
-import { hookStorySkill } from '../skills/library/detect-hook-story/detect-hook-story.skill';
-import { motivationalSkill } from '../skills/library/detect-motivational/detect-motivational.skill';
-import { impersonalSkill } from '../skills/library/detect-impersonal/detect-impersonal.skill';
-import { genericCommentsSkill } from '../skills/library/detect-generic-comments/detect-generic-comments.skill';
+import { listicleCtaSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-listicle-cta/detect-listicle-cta.skill';
+import { buzzwordSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-buzzword/detect-buzzword.skill';
+import { emDashSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-em-dash/detect-em-dash.skill';
+import { aiVocabSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-ai-vocab/detect-ai-vocab.skill';
+import { hookStorySkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-hook-story/detect-hook-story.skill';
+import { motivationalSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-motivational/detect-motivational.skill';
+import { impersonalSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-impersonal/detect-impersonal.skill';
+import { genericCommentsSkill } from '../skills/library/detect-aiwriting-heuristic/signals/detect-generic-comments/detect-generic-comments.skill';
 
 // Exclusion skill imports (priority order — DO NOT reorder, exclusion parity depends on it D-06)
 import { sponsoredExclusionSkill } from '../skills/library/exclude-sponsored/exclude-sponsored.skill';
@@ -46,7 +46,7 @@ export const GENERATED_EXCLUSION_SKILLS: readonly ExclusionSkill[] = [
 // Detector skill metadata (descriptive only — detectors are instantiated in index.ts/eval.ts,
 // NOT consumed via this registry. This export satisfies D-02 completeness only.)
 export const GENERATED_DETECTOR_SKILLS = {
-  'detect-heuristic': { name: 'detect-heuristic', description: 'Rule-based detector that scores posts using registered signal skills via the registry runner. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Two-pass runner: sync skills in pipeline step-order (Pass 1), then async gated skills (Pass 2, generic-comments only). Orchestration layer only — all scoring logic lives in the individual signal modules. DOM-free and unit-testable without a browser.', kind: 'detector' as const },
+  'detect-aiwriting-heuristic': { name: 'detect-aiwriting-heuristic', description: 'Rule-based detector that scores posts using registered signal skills via the registry runner. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Two-pass runner: sync skills in pipeline step-order (Pass 1), then async gated skills (Pass 2, generic-comments only). Orchestration layer only — all scoring logic lives in the individual signal modules. DOM-free and unit-testable without a browser.', kind: 'detector' as const },
   'detect-aiwriting-llm': { name: 'detect-aiwriting-llm', description: 'LLM-based AI-writing detector that asks the service worker to score posts via Claude Sonnet 4.6. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Owns the classifier logic (classifier.ts: SYSTEM_PROMPT + classifyPost). Content scripts cannot call the Anthropic API directly (CORS) — the actual fetch lives in background/index.ts; this class sends a SCORE_POST message and awaits the response. Falls back to a provided Detector on error.', kind: 'detector' as const },
 } as const;
 
@@ -66,6 +66,6 @@ export const GENERATED_SKILL_METADATA = {
   'exclude-company-page': { name: 'exclude-company-page', description: 'Excludes company/organization page posts before any detection runs. Checks whether the post author profile URL contains the COMPANY_PAGE_MARKER selector resolved via SelectorRegistry. Must run second (priority 2) in the exclusion pipeline, after sponsored and before non-english and open-to-work.', kind: 'exclusion' as const },
   'exclude-non-english': { name: 'exclude-non-english', description: 'Excludes non-English posts before any detection runs. Delegates to isNonEnglish() from src/content/detector/language.ts which checks DOM lang attribute and Unicode script analysis. Must run third (priority 3) in the exclusion pipeline, after sponsored and company-page and before open-to-work.', kind: 'exclusion' as const },
   'exclude-open-to-work': { name: 'exclude-open-to-work', description: 'Metadata passthrough skill that detects open-to-work frames on posts. CRITICAL: always returns excluded:false — this is NOT an exclusion. A detected open-to-work frame only raises the auto-hide threshold by +20 points (fail-safe toward showing content). Must run last (priority 4) in the exclusion pipeline, after sponsored, company-page, and non-english.', kind: 'exclusion' as const },
-  'detect-heuristic': { name: 'detect-heuristic', description: 'Rule-based detector that scores posts using registered signal skills via the registry runner. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Two-pass runner: sync skills in pipeline step-order (Pass 1), then async gated skills (Pass 2, generic-comments only). Orchestration layer only — all scoring logic lives in the individual signal modules. DOM-free and unit-testable without a browser.', kind: 'detector' as const },
+  'detect-aiwriting-heuristic': { name: 'detect-aiwriting-heuristic', description: 'Rule-based detector that scores posts using registered signal skills via the registry runner. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Two-pass runner: sync skills in pipeline step-order (Pass 1), then async gated skills (Pass 2, generic-comments only). Orchestration layer only — all scoring logic lives in the individual signal modules. DOM-free and unit-testable without a browser.', kind: 'detector' as const },
   'detect-aiwriting-llm': { name: 'detect-aiwriting-llm', description: 'LLM-based AI-writing detector that asks the service worker to score posts via Claude Sonnet 4.6. Implements the Detector interface (CONFIG-02) and DetectorSkill discriminant (kind: detector). Owns the classifier logic (classifier.ts: SYSTEM_PROMPT + classifyPost). Content scripts cannot call the Anthropic API directly (CORS) — the actual fetch lives in background/index.ts; this class sends a SCORE_POST message and awaits the response. Falls back to a provided Detector on error.', kind: 'detector' as const },
 } as const;

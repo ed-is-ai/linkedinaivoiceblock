@@ -6,7 +6,7 @@
  */
 
 import { checkGenericComments } from './comments';
-import type { CodeSkill } from '../../../shared/skills/types';
+import type { CodeSkill } from '../../../../../shared/skills/types';
 
 export const genericCommentsSkill: CodeSkill = {
   kind: 'signal',

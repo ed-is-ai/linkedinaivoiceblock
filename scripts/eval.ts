@@ -29,7 +29,7 @@ import {
 // The Phase 28 dashboard reuses this SAME import (it is DOM-free; no re-homing needed).
 import { HeuristicDetector } from '../src/content/detector/heuristic.js';
 import type { PostData } from '../src/shared/types.js';
-import { detectionConfig } from '../src/shared/detectionConfig.js';
+import { detectionConfig } from '../src/skills/library/detect-aiwriting-heuristic/detectionConfig.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
