@@ -1,25 +1,43 @@
 /**
- * Self-healing orchestrator (ADAPT-01 wiring target / ADAPT-02 / ADAPT-03 / ADAPT-06).
+ * Self-healing orchestrator — generalized to all live-stale DOM-healable targets
+ * (ADAPT-01, ADAPT-02, ADAPT-03, ADAPT-06, HEAL-03, HEAL-05).
  *
  * triggerHeal runs the full repair loop when the observer (observer.ts) detects total
- * scraping breakage on the post feed:
- *   1. Heuristic pass — deriveHeuristicCandidates walks the live container (no API call).
- *      Each candidate is gated through validateCandidate; the FIRST that passes is written
- *      via SelectorRegistry.insertCandidate and the loop returns (free repair, ADAPT-02).
- *   2. LLM fallback — only if NO heuristic candidate validated AND an API key is configured.
- *      Sends only a PII-stripped skeleton (buildDomSkeleton) to the service worker via
- *      LLMRederiver; each returned candidate is gated through the same validator; the first
- *      that passes is written with source 'llm' (ADAPT-03).
+ * scraping breakage on the post feed, or when the dashboard user triggers a manual heal:
  *
- * No selector is ever written until validateCandidate passes (the only write surface is
- * insertCandidate). Model-proposed strings are data only — they are never eval'd; the
- * validator only ever passes them to querySelectorAll (ADAPT-06).
+ *   1. Build heal set LIVE — iterate the DOM-healable target list, keep only those where
+ *      the current active selector returned by resolve(target) fails to match the live
+ *      container (container.querySelector / container.matches both return nothing).
+ *      This reuses the existing resolve() machinery and avoids any dependency on the dead
+ *      selectorSessionMisses / recordMiss signal (which has zero runtime call sites).
+ *      COMPANY_PAGE_MARKER (URL substring) and POST_URN_ATTR (attribute name) are excluded
+ *      from the DOM-healable set because they are not querySelector inputs (D-05).
+ *
+ *   2. Route each stale target by shape:
+ *      - Card-shaped (POST_CARD, POST_BODY_TEXT) → heuristic deriver (local, no API call,
+ *        ADAPT-02).  Validate each candidate; first passing one is written via insertCandidate
+ *        with source 'heuristic' (ADAPT-02, D-07).  If none validate → outcome 'failed'.
+ *      - Sub-element targets → LLM re-deriver (ADAPT-03).  Requires API key from storage.
+ *        If key absent → outcome 'unchanged' (degrade gracefully, D-04).  If present →
+ *        buildDomSkeleton → LLMRederiver.rederive → validate-then-insert with source 'llm'.
+ *        Per-target errors are caught; one target failure never aborts the others (D-06).
+ *
+ *   3. Return a per-target HealOutcome[] listing only the targets that were in the heal set
+ *      (i.e. were stale).  Non-stale targets are not represented.
+ *
+ * The validate-before-write gate (HEAL-05 / D-07) is preserved: insertCandidate is the ONLY
+ * write surface; no candidate is ever written without a prior validateCandidate(.pass) check.
+ * Model-proposed strings are data only — never eval'd; the validator passes them only to
+ * querySelectorAll (ADAPT-06).
+ *
+ * The single-flight/cool-off latch that wraps the entire promise lives in the content-side
+ * TRIGGER_HEAL message listener (Plan 03).  triggerHeal itself is stateless.
  *
  * This module also exposes the two stateless Core-4 guards (isFeedUrl, hasFeedContainer)
  * used by observer.ts to suppress false-positive breakage detection (the other two guards —
  * session-activity and the 30s zero-match window — own observer-side state).
  *
- * Requirements: ADAPT-01, ADAPT-02, ADAPT-03, ADAPT-06, ADAPT-09
+ * Requirements: ADAPT-01, ADAPT-02, ADAPT-03, ADAPT-06, ADAPT-09, HEAL-03, HEAL-05
  */
 
 import { resolve, insertCandidate } from '../../../content/selector-registry';
@@ -28,6 +46,36 @@ import { validateCandidate } from './validator';
 import { buildDomSkeleton } from './sanitizer';
 import { LLMRederiver } from './rederiver';
 import { storageGet } from '../../../shared/memory/storage';
+import type { HealOutcome } from '../../../shared/heal-messages';
+import type { SelectorTarget } from '../../../shared/types';
+
+// ---------------------------------------------------------------------------
+// Internal target sets
+// ---------------------------------------------------------------------------
+
+/** Card-shaped targets routed through the heuristic deriver. */
+const CARD_TARGETS: ReadonlyArray<'POST_CARD' | 'POST_BODY_TEXT'> = [
+  'POST_CARD',
+  'POST_BODY_TEXT',
+];
+
+/**
+ * Sub-element targets routed through the LLM re-deriver.
+ * POST_URN_ATTR (attribute name) and COMPANY_PAGE_MARKER (URL substring) are intentionally
+ * absent — they are not querySelector inputs and must never appear in the heal set (D-05).
+ */
+const SUB_ELEMENT_TARGETS: ReadonlyArray<SelectorTarget> = [
+  'SPONSORED_MARKER',
+  'AUTHOR_HEADLINE',
+  'CONNECTION_DEGREE',
+  'COMMENT_EXPAND_BUTTON',
+  'COMMENT_TEXT',
+  'OPEN_TO_WORK_MARKER',
+];
+
+// ---------------------------------------------------------------------------
+// Core-4 stateless guards
+// ---------------------------------------------------------------------------
 
 /**
  * Core-4 guard #1: only the LinkedIn feed route is eligible for breakage detection.
@@ -49,53 +97,125 @@ export function hasFeedContainer(): boolean {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Staleness probe
+// ---------------------------------------------------------------------------
+
 /**
- * Run the self-healing loop against a live feed container: heuristics first (validate +
- * insert the first that passes), then the LLM fallback (only when heuristics yield no
- * validated candidate and an API key is configured). Resolves whether or not a heal was
- * written — callers fire-and-forget and release their own heal lock in a finally.
- *
- * @param container - The live feed container element to re-derive a POST_CARD selector from.
+ * A target is stale when its current active selector — resolve(target) — fails to match
+ * the live container.  We check both querySelector (descendant match) and matches
+ * (the container element itself matches the selector) to cover narrow card selectors.
  */
-export async function triggerHeal(container: Element): Promise<void> {
-  // Step 1: heuristic pass — local, no API call (ADAPT-02)
-  const heuristics = deriveHeuristicCandidates('POST_CARD', container);
-  for (const h of heuristics) {
-    const valid = validateCandidate(h.selector, container);
-    if (valid.pass) {
-      await insertCandidate('POST_CARD', h.selector, 'heuristic');
-      console.info('[LLB] heal: heuristic candidate accepted:', h.selector);
-      return;
-    }
-    console.warn('[LLB] heal: heuristic candidate rejected:', h.selector, '-', valid.reason);
-  }
-
-  // Step 2: LLM fallback — only if no heuristic validated AND an API key is configured (ADAPT-03)
-  const apiKeyResult = await storageGet(['anthropicApiKey']);
-  if (!apiKeyResult.anthropicApiKey) {
-    console.warn('[LLB] heal: no API key - LLM fallback skipped');
-    return;
-  }
-
-  const skeleton = buildDomSkeleton(container);
-  const rederiver = new LLMRederiver();
-  let llmCandidates: Array<{ selector: string; rationale: string }>;
+function isStale(target: SelectorTarget, container: Element): boolean {
+  const selector = resolve(target);
   try {
-    llmCandidates = await rederiver.rederive('POST_CARD', skeleton);
-  } catch (err) {
-    console.warn('[LLB] heal: LLM fallback error:', err);
-    return;
+    return (
+      container.querySelector(selector) === null &&
+      !container.matches(selector)
+    );
+  } catch {
+    // Invalid selector in storage — treat as stale
+    return true;
   }
+}
 
-  for (const c of llmCandidates) {
-    const valid = validateCandidate(c.selector, container);
-    if (valid.pass) {
-      await insertCandidate('POST_CARD', c.selector, 'llm');
-      console.info('[LLB] heal: LLM candidate accepted:', c.selector, '-', c.rationale);
-      return;
+// ---------------------------------------------------------------------------
+// Generalized heal orchestrator
+// ---------------------------------------------------------------------------
+
+/**
+ * Run the generalized self-healing loop against a live feed container.
+ *
+ * Builds the heal set LIVE by probing each DOM-healable target with its current resolve()
+ * selector; stale targets are healed by shape-based routing (heuristic for card targets,
+ * LLM for sub-element targets when an API key is configured).
+ *
+ * Returns a HealOutcome[] listing every target that was stale (whether healed, failed,
+ * or skipped due to a missing API key).  Non-stale targets are not represented.
+ *
+ * @param container - The live feed container element.
+ */
+export async function triggerHeal(container: Element): Promise<HealOutcome[]> {
+  const outcomes: HealOutcome[] = [];
+
+  // ── Card-shaped targets: heuristic deriver ────────────────────────────────
+  for (const target of CARD_TARGETS) {
+    if (!isStale(target, container)) {
+      continue; // not stale — skip (not included in outcomes)
     }
-    console.warn('[LLB] heal: LLM candidate rejected:', c.selector, '-', valid.reason);
+
+    const heuristics = deriveHeuristicCandidates(target, container);
+    let healed = false;
+
+    for (const h of heuristics) {
+      const valid = validateCandidate(h.selector, container);
+      if (valid.pass) {
+        await insertCandidate(target, h.selector, 'heuristic');
+        console.info('[LLB] heal: heuristic candidate accepted for', target, ':', h.selector);
+        outcomes.push({ target, result: 'healed' });
+        healed = true;
+        break;
+      }
+      console.warn('[LLB] heal: heuristic candidate rejected for', target, ':', h.selector, '-', valid.reason);
+    }
+
+    if (!healed) {
+      outcomes.push({ target, result: 'failed' });
+    }
   }
 
-  console.warn('[LLB] heal: all candidates failed validation - selector unchanged');
+  // ── Sub-element targets: LLM re-deriver ───────────────────────────────────
+  // Fetch API key once — shared across all sub-element targets in this run.
+  const apiKeyResult = await storageGet(['anthropicApiKey']);
+  const apiKey = apiKeyResult.anthropicApiKey as string | undefined;
+
+  if (!apiKey) {
+    // No API key — all stale sub-element targets degrade gracefully to 'unchanged'
+    for (const target of SUB_ELEMENT_TARGETS) {
+      if (!isStale(target, container)) {
+        continue;
+      }
+      console.warn('[LLB] heal: no API key — skipping sub-element target', target);
+      outcomes.push({ target, result: 'unchanged' });
+    }
+    return outcomes;
+  }
+
+  // API key present — run LLM re-deriver per stale sub-element target
+  const skeleton = buildDomSkeleton(container);
+
+  for (const target of SUB_ELEMENT_TARGETS) {
+    if (!isStale(target, container)) {
+      continue;
+    }
+
+    try {
+      const rederiver = new LLMRederiver();
+      const llmCandidates = await rederiver.rederive(target, skeleton);
+      let healed = false;
+
+      for (const c of llmCandidates) {
+        const valid = validateCandidate(c.selector, container);
+        if (valid.pass) {
+          await insertCandidate(target, c.selector, 'llm');
+          console.info('[LLB] heal: LLM candidate accepted for', target, ':', c.selector);
+          outcomes.push({ target, result: 'healed' });
+          healed = true;
+          break;
+        }
+        console.warn('[LLB] heal: LLM candidate rejected for', target, ':', c.selector, '-', valid.reason);
+      }
+
+      if (!healed) {
+        console.warn('[LLB] heal: all LLM candidates failed for', target);
+        outcomes.push({ target, result: 'failed' });
+      }
+    } catch (err) {
+      // Per-target error — record 'failed' and continue (D-06 / T-34-05)
+      console.warn('[LLB] heal: error re-deriving', target, ':', err);
+      outcomes.push({ target, result: 'failed' });
+    }
+  }
+
+  return outcomes;
 }
