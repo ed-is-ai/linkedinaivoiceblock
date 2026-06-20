@@ -28,9 +28,7 @@ import {
   FEED_CONTAINER_FALLBACK,
   POST_CARD,
   POST_URN_ATTR,
-  POST_URN_ATTR_FALLBACK,
   POST_BODY_TEXT,
-  POST_AUTHOR_NAME,
   POST_AUTHOR_LINK,
   SPONSORED_MARKER,
   COMPANY_PAGE_MARKER,
@@ -63,9 +61,7 @@ const SEED_MAP: Record<SelectorTarget, string> = {
   FEED_CONTAINER_FALLBACK,
   POST_CARD,
   POST_URN_ATTR,
-  POST_URN_ATTR_FALLBACK,
   POST_BODY_TEXT,
-  POST_AUTHOR_NAME,
   POST_AUTHOR_LINK,
   SPONSORED_MARKER,
   COMPANY_PAGE_MARKER,
@@ -208,9 +204,9 @@ export async function load(): Promise<void> {
  * Returns the value of the first candidate (index 0) if cache is warm,
  * falls back to seed constant if cache is null (pre-load fallback).
  *
- * Note: POST_URN_ATTR, POST_URN_ATTR_FALLBACK, and COMPANY_PAGE_MARKER
- * are attribute-name and URL-pattern strings, not CSS selectors. The registry
- * returns them as-is; consumers are responsible for using them correctly.
+ * Note: POST_URN_ATTR and COMPANY_PAGE_MARKER are attribute-name and URL-pattern
+ * strings, not CSS selectors. The registry returns them as-is; consumers are
+ * responsible for using them correctly.
  */
 export function resolve(target: SelectorTarget): string {
   if (!_cache) {

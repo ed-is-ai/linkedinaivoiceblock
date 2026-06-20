@@ -334,8 +334,8 @@ export type ModelPricing = {
  * Enumeration of all selector targets that can be adapted and stored in the registry.
  * These correspond to the selector constants exported from src/content/selectors.ts.
  *
- * Note: Some targets (POST_URN_ATTR, POST_URN_ATTR_FALLBACK, COMPANY_PAGE_MARKER)
- * are used with getAttribute() or String.includes(), not querySelector().
+ * Note: Some targets (POST_URN_ATTR, COMPANY_PAGE_MARKER) are used with
+ * getAttribute() or String.includes(), not querySelector().
  * The registry returns these as attribute-name or URL-pattern strings (not DOM selectors).
  */
 export type SelectorTarget =
@@ -343,9 +343,7 @@ export type SelectorTarget =
   | 'FEED_CONTAINER_FALLBACK'
   | 'POST_CARD'
   | 'POST_URN_ATTR'
-  | 'POST_URN_ATTR_FALLBACK'
   | 'POST_BODY_TEXT'
-  | 'POST_AUTHOR_NAME'
   | 'POST_AUTHOR_LINK'
   | 'SPONSORED_MARKER'
   | 'COMPANY_PAGE_MARKER'

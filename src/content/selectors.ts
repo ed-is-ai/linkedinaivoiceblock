@@ -20,7 +20,7 @@
  */
 
 /** Version of the selector registry. Increment when a verified change is made. */
-export const SELECTORS_VERSION = '1.3.0';
+export const SELECTORS_VERSION = '1.4.0';
 
 // ---------------------------------------------------------------------------
 // Feed container
@@ -56,22 +56,6 @@ export const POST_CARD = 'div[componentkey]';
  */
 export const POST_URN_ATTR = 'componentkey';
 
-/**
- * Fallback post ID attribute — same as primary since componentkey is the only stable attr.
- */
-export const POST_URN_ATTR_FALLBACK = 'componentkey';
-
-// ---------------------------------------------------------------------------
-// Author
-// ---------------------------------------------------------------------------
-
-/**
- * Author display name element selector.
- * Verified 2026-05-29: Author name is in a strong inside the profile anchor. The :has(strong)
- * filter excludes avatar links (plain <a href="/in/..."> with no text children).
- */
-export const POST_AUTHOR_NAME = 'a[href*="/in/"]:has(strong) strong';
-
 // ---------------------------------------------------------------------------
 // Exclusion markers
 // ---------------------------------------------------------------------------
@@ -95,7 +79,7 @@ export const COMPANY_PAGE_MARKER = '/company/';
 
 // ---------------------------------------------------------------------------
 // Phase 2 additions
-// POST_BODY_TEXT, POST_AUTHOR_LINK, POST_AUTHOR_NAME: verified 2026-05-29 against live feed.
+// POST_BODY_TEXT, POST_AUTHOR_LINK: verified 2026-05-29 against live feed.
 // FEED_CONTAINER, POST_CARD, POST_URN_ATTR: verified 2026-05-29 — LinkedIn replaced data-* attrs
 // with componentkey attribute and data-component-type="LazyColumn" container.
 // RESHARE_INDICATOR, COMMENT_EXPAND_BUTTON, OPEN_TO_WORK_MARKER, COMMENT_TEXT: [ASSUMED] — still
