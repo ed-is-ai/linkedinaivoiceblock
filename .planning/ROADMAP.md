@@ -185,6 +185,24 @@ Plans:
 
 ---
 
+### Phase 34: Manual Self-Healing Trigger from Dashboard
+
+**Goal**: The user can trigger selector self-healing on demand from the dashboard's Selector Health section — the button heals all stale selectors against a live LinkedIn feed tab and reports a per-selector outcome — reusing the existing validate-before-write heal pipeline with no new selector-write surface
+**Depends on**: Phase 23 (self-healing adapter), Phase 33 (modules/ layout)
+**Requirements**: HEAL-01, HEAL-02, HEAL-03, HEAL-04, HEAL-05, HEAL-06
+**Success Criteria** (what must be TRUE):
+
+  1. The Selector Health section shows a "Heal selectors now" button; it is enabled only when a LinkedIn feed tab is open and otherwise disabled with a hint to open LinkedIn
+  2. Clicking the button (with a feed tab open) runs the heal pipeline against that tab's live DOM via a `TRIGGER_HEAL` message to the content script — healing is never attempted from the dashboard's own DOM
+  3. The heal attempt covers all currently-stale selectors (not only `POST_CARD`): card-shaped targets via the heuristic deriver, sub-element targets via the LLM fallback when an API key is configured; non-healable targets (e.g. `COMPANY_PAGE_MARKER` URL substring) are excluded
+  4. The dashboard shows a per-selector result (healed / unchanged / failed) and the Selector Health rows refresh to reflect any new active selector
+  5. No selector string is written except through `SelectorRegistry.insertCandidate` after `validateCandidate` passes (ADAPT-06 preserved); the manual trigger respects the existing single-flight / cool-off guard
+  6. The dead selectors `POST_AUTHOR_NAME` and `POST_URN_ATTR_FALLBACK` are removed from `selectors.ts`, `selector-registry.ts` (`SEED_MAP`/imports), and the `SelectorTarget` union in `types.ts`, so they no longer appear as rows in the Selector Health tab; tests and type-check pass green
+
+**UI hint**: yes
+
+---
+
 ### Phase 18: Popup Interaction Fixes
 
 **Goal**: Posts from accounts at or above the block threshold are hidden in the feed, and popup interaction behaves correctly — account names link to LinkedIn profiles, Block marks accounts locally without navigation, and already-blocked accounts are visually distinguished

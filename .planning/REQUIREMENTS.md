@@ -48,6 +48,19 @@ Deferred — tracked but not in this milestone's roadmap.
 - **CFG-04**: `scripts/derive-config.ts` reads the best eval run and rewrites the config module automatically (no hand-editing).
 - **DATA-01**: `engineUsed` (llm / heuristic) is recorded on every stored post so eval and analysis can distinguish primary results from fallback results.
 
+## Post-v10.0 Requirements
+
+Net-new scope captured after v10.0. Maps to Phase 34.
+
+### Manual Self-Healing Trigger
+
+- **HEAL-01**: The dashboard Selector Health section presents a "Heal selectors now" button, enabled only when a LinkedIn feed tab is open and otherwise disabled with a hint to open LinkedIn (the heal pipeline requires a live feed DOM, which the dashboard page does not have).
+- **HEAL-02**: Clicking the button runs the heal pipeline against the live feed tab's DOM via a `TRIGGER_HEAL` message handled by a content-script listener; healing is never attempted from the dashboard's own DOM.
+- **HEAL-03**: The heal attempt covers all currently-stale selectors, not only `POST_CARD` — `triggerHeal` is generalized to accept a target; card-shaped targets use the heuristic deriver and sub-element targets use the LLM fallback when an API key is configured; non-DOM targets (e.g. `COMPANY_PAGE_MARKER`) are excluded from the heal set.
+- **HEAL-04**: The dashboard reports a per-selector outcome (healed / unchanged / failed) and refreshes the Selector Health rows to reflect any newly-active selector.
+- **HEAL-05**: No selector string is written except through `SelectorRegistry.insertCandidate` after `validateCandidate` passes (ADAPT-06 preserved); the manual trigger respects the existing single-flight / cool-off guard so it cannot stampede the automatic trigger.
+- **HEAL-06**: Redundant Selector Health entries are removed — the dead selectors `POST_AUTHOR_NAME` and `POST_URN_ATTR_FALLBACK` (no `resolve()` consumers; their logic is covered by `POST_AUTHOR_LINK` and `POST_URN_ATTR` respectively) are deleted from `selectors.ts`, the `SEED_MAP`/imports in `selector-registry.ts`, and the `SelectorTarget` union in `types.ts`, so they no longer appear as rows in the Selector Health tab.
+
 ## Out of Scope
 
 Explicitly excluded for v10.0. Documented to prevent scope creep.
