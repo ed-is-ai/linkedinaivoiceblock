@@ -155,6 +155,128 @@ describe('triggerHeal — LLM fallback (ADAPT-03)', () => {
   });
 });
 
+// ── Generalized multi-target heal (HEAL-03 / D-03 / D-04 / D-05 / D-07) ─────
+
+describe('triggerHeal — generalized multi-target heal (HEAL-03)', () => {
+  it('returns HealOutcome[] (not void) — promise resolves to an array', async () => {
+    const container = mount('feed-broken-classrot');
+    const result = await triggerHeal(container);
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('excludes a target whose resolve() selector still matches the live container (not stale)', async () => {
+    const container = mount('feed-broken-classrot');
+    // resolve returns a selector that DOES match — container itself or child
+    // We configure POST_CARD to match (not stale) but POST_BODY_TEXT to not match
+    vi.mocked(resolve).mockImplementation((target: string) => {
+      if (target === 'FEED_CONTAINER') return '[data-component-type="LazyColumn"]';
+      if (target === 'FEED_CONTAINER_FALLBACK') return 'main';
+      if (target === 'POST_CARD') return 'div[componentkey]'; // matches the container children
+      return '__no_match__'; // everything else is stale
+    });
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({});
+
+    const outcomes = await triggerHeal(container);
+    // POST_CARD matches the fixture so it should NOT be in the outcomes
+    const targets = outcomes.map((o) => o.target);
+    expect(targets).not.toContain('POST_CARD');
+  });
+
+  it('never includes COMPANY_PAGE_MARKER or POST_URN_ATTR in outcomes (D-05)', async () => {
+    const container = mount('feed-broken-classrot');
+    // resolve returns no-match for all targets → everything is "stale" but excluded targets stay out
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({});
+
+    const outcomes = await triggerHeal(container);
+    const targets = outcomes.map((o) => o.target);
+    expect(targets).not.toContain('COMPANY_PAGE_MARKER');
+    expect(targets).not.toContain('POST_URN_ATTR');
+  });
+
+  it('yields "unchanged" for a stale sub-element target when no API key is configured', async () => {
+    const container = mount('feed-broken-classrot');
+    // Make resolve return no-match for everything so all targets are stale
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({}); // no API key
+
+    const outcomes = await triggerHeal(container);
+    // Sub-element targets that are stale should all be 'unchanged'
+    const subElementOutcomes = outcomes.filter((o) =>
+      ['SPONSORED_MARKER', 'AUTHOR_HEADLINE', 'CONNECTION_DEGREE',
+       'COMMENT_EXPAND_BUTTON', 'COMMENT_TEXT', 'OPEN_TO_WORK_MARKER'].includes(o.target),
+    );
+    expect(subElementOutcomes.length).toBeGreaterThan(0);
+    for (const o of subElementOutcomes) {
+      expect(o.result).toBe('unchanged');
+    }
+    // Must not throw
+    expect(insertCandidate).not.toHaveBeenCalled();
+  });
+
+  it('yields "healed" for a stale card target when a validated heuristic candidate is found, calls insertCandidate once', async () => {
+    const container = mount('feed-broken-classrot');
+    // Make POST_CARD stale, POST_BODY_TEXT stale too
+    vi.mocked(resolve).mockImplementation((target: string) => {
+      if (target === 'FEED_CONTAINER') return '[data-component-type="LazyColumn"]';
+      if (target === 'FEED_CONTAINER_FALLBACK') return 'main';
+      return '__no_match__'; // all stale
+    });
+    // Only respond to POST_CARD heuristic
+    vi.mocked(deriveHeuristicCandidates).mockImplementation((target) => {
+      if (target === 'POST_CARD') {
+        return [{ selector: 'div[data-urn]', confidence: 0.8, source: 'heuristic' }];
+      }
+      return [];
+    });
+    vi.mocked(storageGet).mockResolvedValue({});
+
+    const outcomes = await triggerHeal(container);
+    const postcardOutcome = outcomes.find((o) => o.target === 'POST_CARD');
+    expect(postcardOutcome).toBeDefined();
+    expect(postcardOutcome!.result).toBe('healed');
+    // insertCandidate called exactly once for POST_CARD
+    expect(insertCandidate).toHaveBeenCalledTimes(1);
+    expect(insertCandidate).toHaveBeenCalledWith('POST_CARD', 'div[data-urn]', 'heuristic');
+  });
+
+  it('yields "healed" for stale sub-element with API key when rederive returns a valid candidate', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__'); // all stale
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    // Return a selector that will pass validateCandidate in feed-broken-classrot
+    rederiveMock.mockResolvedValue([{ selector: 'div[data-urn]', rationale: 'data-urn' }]);
+
+    const outcomes = await triggerHeal(container);
+    const llmOutcomes = outcomes.filter((o) => o.result === 'healed');
+    // At least one sub-element target should be healed
+    expect(llmOutcomes.length).toBeGreaterThan(0);
+  });
+
+  it('yields "failed" for stale sub-element with API key when all rederive candidates fail validation', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__'); // all stale
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    // Return only invalid candidates
+    rederiveMock.mockResolvedValue([{ selector: '__bad_selector_xyz__', rationale: 'bad' }]);
+
+    const outcomes = await triggerHeal(container);
+    const subElementOutcomes = outcomes.filter((o) =>
+      ['SPONSORED_MARKER', 'AUTHOR_HEADLINE', 'CONNECTION_DEGREE',
+       'COMMENT_EXPAND_BUTTON', 'COMMENT_TEXT', 'OPEN_TO_WORK_MARKER'].includes(o.target),
+    );
+    expect(subElementOutcomes.length).toBeGreaterThan(0);
+    for (const o of subElementOutcomes) {
+      expect(o.result).toBe('failed');
+    }
+  });
+});
+
 // ── ADAPT-04/06: only a PII-stripped skeleton leaves the page ────────────────
 
 describe('triggerHeal — sanitized skeleton (D4 cross-check)', () => {
