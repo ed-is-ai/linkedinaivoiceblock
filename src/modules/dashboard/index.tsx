@@ -5,6 +5,8 @@ import { buildJsonExport, buildPostsCsvExport, buildTracesExport, deriveCleanseC
 import SelectorView from './SelectorView';
 import { buildSeedRegistry } from '../../content/selector-registry';
 import { storageSet } from '../../shared/memory/storage';
+import { TRIGGER_HEAL, HEAL_BUSY } from '../../shared/heal-messages';
+import type { HealOutcome, TriggerHealResponse } from '../../shared/heal-messages';
 
 
 function NetPostsChart({ stats, timeWindow }: { stats: DailyStats[], timeWindow: 7 | 30 }) {
@@ -83,6 +85,7 @@ function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectorRegistry, setSelectorRegistry] = useState<SelectorRegistrySchema | null>(null);
   const [sessionMisses, setSessionMisses] = useState<Set<SelectorTarget>>(new Set());
+  const [feedTabOpen, setFeedTabOpen] = useState(false);
 
   useEffect(() => {
     chrome.storage.local.get(['flaggedAccounts', 'dailyStats', 'storedPosts', 'unflaggedPosts', 'dismissedAccounts', 'selectorRegistry', 'selectorSessionMisses', 'llbTraces']).then((result: Record<string, any>) => {
@@ -115,6 +118,52 @@ function App() {
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => chrome.storage.onChanged.removeListener(handleStorageChange);
   }, []);
+
+  useEffect(() => {
+    function checkFeedTab() {
+      chrome.tabs.query({ url: 'https://www.linkedin.com/feed/*' }).then((tabs) => {
+        setFeedTabOpen(tabs.length > 0);
+      }).catch(() => {
+        setFeedTabOpen(false);
+      });
+    }
+    checkFeedTab();
+    document.addEventListener('visibilitychange', checkFeedTab);
+    window.addEventListener('focus', checkFeedTab);
+    return () => {
+      document.removeEventListener('visibilitychange', checkFeedTab);
+      window.removeEventListener('focus', checkFeedTab);
+    };
+  }, []);
+
+  async function handleHeal(): Promise<HealOutcome[]> {
+    const tabs = await chrome.tabs.query({ url: 'https://www.linkedin.com/feed/*' });
+    const tab = tabs[0];
+    if (!tab || tab.id == null) {
+      throw new Error('No LinkedIn feed tab found');
+    }
+    return new Promise<HealOutcome[]>((resolve, reject) => {
+      chrome.tabs.sendMessage(tab.id!, { type: TRIGGER_HEAL }, (response: TriggerHealResponse | undefined) => {
+        if (chrome.runtime.lastError) {
+          reject(chrome.runtime.lastError);
+          return;
+        }
+        if (!response) {
+          reject(new Error('No response from content script'));
+          return;
+        }
+        if ('error' in response) {
+          if (response.error === HEAL_BUSY) {
+            reject(new Error('Heal already running — try again in a moment'));
+          } else {
+            reject(new Error(response.error));
+          }
+          return;
+        }
+        resolve(response.result);
+      });
+    });
+  }
 
   function triggerDownload(content: string, filename: string, mimeType: string): void {
     const blob = new Blob([content], { type: mimeType });
@@ -250,6 +299,8 @@ function App() {
         registry={selectorRegistry}
         sessionMisses={sessionMisses}
         onReset={handleResetSelectors}
+        onHeal={handleHeal}
+        feedTabOpen={feedTabOpen}
         error={loadError}
       />
 
