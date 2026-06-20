@@ -1,11 +1,14 @@
 import { useState } from 'preact/hooks';
 import type { JSX } from 'preact';
 import type { SelectorRegistrySchema, SelectorTarget } from '../../shared/types';
+import type { HealOutcome } from '../../shared/heal-messages';
 
 interface SelectorViewProps {
   registry: SelectorRegistrySchema | null;
   sessionMisses: Set<SelectorTarget>;
   onReset: () => Promise<void>;
+  onHeal: () => Promise<HealOutcome[]>;
+  feedTabOpen: boolean;
   error: string | null;
 }
 
@@ -237,18 +240,102 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#dc2626',
     marginTop: 8,
   },
+  healBtn: {
+    padding: '6px 16px',
+    border: '1px solid #d1d5db',
+    borderRadius: 6,
+    background: '#fff',
+    cursor: 'pointer',
+    fontSize: 13,
+    marginTop: 8,
+  },
+  healBtnDisabled: {
+    padding: '6px 16px',
+    border: '1px solid #d1d5db',
+    borderRadius: 6,
+    background: '#fff',
+    cursor: 'not-allowed',
+    fontSize: 13,
+    marginTop: 8,
+    opacity: 0.7,
+  },
+  healHint: {
+    fontSize: 11,
+    color: '#9ca3af',
+    marginTop: 4,
+  },
+  healErrorMsg: {
+    fontSize: 12,
+    color: '#dc2626',
+    marginTop: 8,
+  },
+  healResultRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '4px 0',
+    borderBottom: '1px solid #f3f4f6',
+  },
+  healResultTarget: {
+    flex: '0 0 50%',
+    fontSize: 12,
+    color: '#374151',
+  },
+  healedBadge: {
+    fontSize: 10,
+    padding: '2px 6px',
+    borderRadius: 10,
+    color: '#10b981',
+    background: '#ecfdf5',
+  },
+  unchangedBadge: {
+    fontSize: 10,
+    padding: '2px 6px',
+    borderRadius: 10,
+    color: '#9ca3af',
+    background: '#f9fafb',
+  },
+  failedBadge: {
+    fontSize: 10,
+    padding: '2px 6px',
+    borderRadius: 10,
+    color: '#dc2626',
+    background: '#fef2f2',
+  },
+  healResultsContainer: {
+    marginTop: 8,
+  },
 };
 
 export default function SelectorView({
   registry,
   sessionMisses,
   onReset,
+  onHeal,
+  feedTabOpen,
   error,
 }: Readonly<SelectorViewProps>): JSX.Element {
   const [expanded, setExpanded] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [writing, setWriting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [healing, setHealing] = useState(false);
+  const [healError, setHealError] = useState<string | null>(null);
+  const [healResults, setHealResults] = useState<HealOutcome[] | null>(null);
+
+  async function handleHeal() {
+    setHealing(true);
+    setHealError(null);
+    setHealResults(null);
+    try {
+      const results = await onHeal();
+      setHealResults(results);
+    } catch (err) {
+      setHealError(err instanceof Error ? err.message : 'Heal failed. Try again.');
+    } finally {
+      setHealing(false);
+    }
+  }
 
   async function handleConfirmReset() {
     setWriting(true);
@@ -452,6 +539,40 @@ export default function SelectorView({
               </div>
               {resetError && <div style={s.resetErrorMsg}>{resetError}</div>}
             </>
+          )}
+
+          {/* Heal control */}
+          <button
+            style={(!feedTabOpen || healing) ? s.healBtnDisabled : s.healBtn}
+            disabled={!feedTabOpen || healing}
+            onClick={handleHeal}
+          >
+            {healing ? 'Healing…' : 'Heal selectors now'}
+          </button>
+          {!feedTabOpen && (
+            <div style={s.healHint}>Open LinkedIn to heal</div>
+          )}
+          {healError && <div style={s.healErrorMsg}>{healError}</div>}
+          {healResults !== null && healResults.length === 0 && (
+            <div style={s.healHint}>Nothing stale — all selectors are current.</div>
+          )}
+          {healResults !== null && healResults.length > 0 && (
+            <div style={s.healResultsContainer}>
+              {healResults.map((outcome) => {
+                const badgeStyle =
+                  outcome.result === 'healed'
+                    ? s.healedBadge
+                    : outcome.result === 'failed'
+                    ? s.failedBadge
+                    : s.unchangedBadge;
+                return (
+                  <div key={outcome.target} style={s.healResultRow}>
+                    <div style={s.healResultTarget}>{outcome.target}</div>
+                    <div style={badgeStyle}>{outcome.result}</div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </>
       )}
