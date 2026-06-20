@@ -141,7 +141,8 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 **v11.0 Modularity & Maintainability (Phase 33)**
 
-- [x] **Phase 33: Improve Modularity** — Finish the skill/tool migration the Phase 29–32 refactors started: pull skill/tool-owned logic out of `src/content/`, finish the `dom-selector-registry` tool migration, unify the registry codegen, reorganize `src/shared/` by concern, and split the UX surfaces into self-contained `src/modules/` modules; zero behavior change (completed 2026-06-17)
+- [x] **Phase 33: Improve Modularity** — Finish the skill/tool migration the Phase 29–32 refactors started: pull skill/tool-owned logic out of `src/content/`, finish the `dom-selector-registry` tool migration, unify the registry codegen, reorganize `src/shared/` by concern, and split the UX surfaces into self-contained `src/modules/` modules; zero behavior change
+ (completed 2026-06-17)
 
 ---
 
@@ -200,6 +201,18 @@ Plans:
   6. The dead selectors `POST_AUTHOR_NAME` and `POST_URN_ATTR_FALLBACK` are removed from `selectors.ts`, `selector-registry.ts` (`SEED_MAP`/imports), and the `SelectorTarget` union in `types.ts`, so they no longer appear as rows in the Selector Health tab; tests and type-check pass green
 
 **UI hint**: yes
+
+**Plans**: 4 plans
+
+**Wave 1**
+
+- [ ] 34-01-PLAN.md — HEAL-06: remove dead selectors POST_AUTHOR_NAME + POST_URN_ATTR_FALLBACK (three-site cleanup)
+- [ ] 34-02-PLAN.md — HEAL-03/HEAL-05: generalize triggerHeal to all stale targets + pin TRIGGER_HEAL message contract
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 34-03-PLAN.md — HEAL-02/HEAL-05: content-side TRIGGER_HEAL listener + shared single-flight guard
+- [ ] 34-04-PLAN.md — HEAL-01/HEAL-04: dashboard heal button + chrome.tabs enablement + per-target results
 
 ---
 
