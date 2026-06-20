@@ -14,6 +14,7 @@ import { SELECTORS_VERSION } from './selectors';
 import { resolve, updateCandidate } from './selector-registry';
 import { triggerHeal, isFeedUrl, hasFeedContainer } from '../tools/library/dom-selector-rederive/heal';
 import type { ObservedPost } from '../shared/types';
+import type { HealOutcome } from '../shared/heal-messages';
 
 // ---------------------------------------------------------------------------
 // Module-scope state
@@ -195,25 +196,40 @@ function onZeroPostsFound(container: Element): void {
     _zeroMatchWindowStart = null; // a guard failed — not a real breakage
     return;
   }
-  if (_healInProgress || Date.now() - _lastHealMs < HEAL_COOLOFF_MS) {
-    return; // a heal is in flight or the cool-off has not elapsed
-  }
-  _healInProgress = true;
-  _lastHealMs = Date.now();
   _zeroMatchWindowStart = null;
-  triggerHeal(container)
-    .catch(() => {})
-    .finally(() => {
-      _healInProgress = false;
-    });
+  // Delegate to the shared guarded entry — if it returns null the guard was busy (already
+  // accounted for by the single-flight latch inside requestGuardedHeal).
+  requestGuardedHeal(container).catch(() => {});
 }
 
 /** Resolve the live feed container fresh from the DOM (never a captured reference). */
-function liveFeedContainer(): Element | null {
+export function liveFeedContainer(): Element | null {
   return (
     document.querySelector(resolve('FEED_CONTAINER')) ??
     document.querySelector(resolve('FEED_CONTAINER_FALLBACK'))
   );
+}
+
+/**
+ * Single exported guarded heal entry — wraps the single-flight + cool-off latch so both
+ * the automatic trigger (onZeroPostsFound) and the manual TRIGGER_HEAL listener share
+ * exactly ONE latch in the content realm (D-08).
+ *
+ * Returns the per-target HealOutcome[] on success, or `null` when the guard declines
+ * entry (heal in flight or cool-off not yet elapsed) so the caller can map `null` to
+ * the { error: HEAL_BUSY } sentinel without running a concurrent heal.
+ */
+export async function requestGuardedHeal(container: Element): Promise<HealOutcome[] | null> {
+  if (_healInProgress || Date.now() - _lastHealMs < HEAL_COOLOFF_MS) {
+    return null; // guard busy — caller maps this to HEAL_BUSY sentinel
+  }
+  _healInProgress = true;
+  _lastHealMs = Date.now();
+  try {
+    return await triggerHeal(container);
+  } finally {
+    _healInProgress = false;
+  }
 }
 
 /** Evaluate the zero-match window after a mutation batch (or on the safety interval). */
