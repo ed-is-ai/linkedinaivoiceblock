@@ -153,7 +153,6 @@ export const domSelectorRederiveTool: Tool<
             },
           ],
           messages: [{ role: 'user', content: userContent }],
-          stop_sequences: ['\n\n\n'],
         }),
       });
 

@@ -150,6 +150,30 @@ describe('domSelectorRederiveTool.execute — happy path', () => {
     expect(body.model).toBe('claude-haiku-4-5-20251001');
     expect(body.max_tokens).toBe(256);
   });
+
+  it('does NOT send stop_sequences (removing invalid whitespace-only value prevents API 400)', async () => {
+    store['anthropicApiKey'] = 'sk-ant-test';
+    fetchMock.mockResolvedValue(
+      okResponse([{ selector: 'div[data-id]', rationale: 'x' }]),
+    );
+
+    await domSelectorRederiveTool.execute({
+      target: 'T',
+      domSkeleton: '<div></div>',
+    });
+
+    const [, init] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse((init as { body: string }).body) as Record<string, unknown>;
+    // No stop_sequences key, and specifically no whitespace-only values
+    if ('stop_sequences' in body) {
+      const seqs = body['stop_sequences'] as string[];
+      for (const seq of seqs) {
+        expect(seq.trim()).not.toBe(''); // no whitespace-only stop sequence
+      }
+    }
+    // Preferred: the key is absent entirely
+    expect('stop_sequences' in body).toBe(false);
+  });
 });
 
 // ── No API key ───────────────────────────────────────────────────────────────
