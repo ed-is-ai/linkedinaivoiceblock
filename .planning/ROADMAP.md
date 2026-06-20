@@ -212,7 +212,7 @@ Plans:
 **Wave 2** *(blocked on Wave 1)*
 
 - [x] 34-03-PLAN.md — HEAL-02/HEAL-05: content-side TRIGGER_HEAL listener + shared single-flight guard
-- [ ] 34-04-PLAN.md — HEAL-01/HEAL-04: dashboard heal button + chrome.tabs enablement + per-target results
+- [x] 34-04-PLAN.md — HEAL-01/HEAL-04: dashboard heal button + chrome.tabs enablement + per-target results
 
 ---
 
