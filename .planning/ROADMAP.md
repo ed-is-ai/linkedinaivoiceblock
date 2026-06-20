@@ -207,7 +207,7 @@ Plans:
 **Wave 1**
 
 - [x] 34-01-PLAN.md — HEAL-06: remove dead selectors POST_AUTHOR_NAME + POST_URN_ATTR_FALLBACK (three-site cleanup)
-- [ ] 34-02-PLAN.md — HEAL-03/HEAL-05: generalize triggerHeal to all stale targets + pin TRIGGER_HEAL message contract
+- [x] 34-02-PLAN.md — HEAL-03/HEAL-05: generalize triggerHeal to all stale targets + pin TRIGGER_HEAL message contract
 
 **Wave 2** *(blocked on Wave 1)*
 
