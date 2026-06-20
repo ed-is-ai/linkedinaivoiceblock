@@ -145,7 +145,17 @@ function App() {
     return new Promise<HealOutcome[]>((resolve, reject) => {
       chrome.tabs.sendMessage(tab.id!, { type: TRIGGER_HEAL }, (response: TriggerHealResponse | undefined) => {
         if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
+          const raw = chrome.runtime.lastError.message ?? 'Unknown error';
+          const isConnectionError =
+            raw.includes('Receiving end does not exist') ||
+            raw.includes('Could not establish connection');
+          reject(
+            new Error(
+              isConnectionError
+                ? "Couldn't reach the LinkedIn feed tab. Reload the feed tab, then try again."
+                : raw
+            )
+          );
           return;
         }
         if (!response) {
