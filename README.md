@@ -4,6 +4,8 @@ A Chrome (Manifest V3) extension that detects and hides AI-generated "AI voice" 
 LinkedIn before you see them — flags the accounts behind them for review, and tracks the
 health of your feed in a dedicated dashboard.
 
+Uses an experimental browser-sandboxed detection engine built on an agent-style architecture — composable skills and a tools registry — using Claude for classification and self-healing DOM selectors.
+
 It runs in 2 modes:
 > **fully local and free by default** (heuristic scoring, no network calls). 
 >Add an Anthropic API key and it upgrades to **Claude-powered detection** for higher accuracy using Sonnet.
