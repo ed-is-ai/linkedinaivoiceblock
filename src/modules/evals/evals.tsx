@@ -713,6 +713,71 @@ function ErrorCard({ post, type }: ErrorCardProps) {
 // Labeling section — 3-column board (AI / Unlabelled / Human)
 // ---------------------------------------------------------------------------
 
+type BoardPostRow = { urn: string; text: string; label?: string };
+
+/**
+ * Single post card in the labeling board.
+ * Declared at module scope (not inside LabelingSection) so each card's
+ * expand/clamp state survives parent re-renders instead of remounting on
+ * every label change (WR-02). Labeling is delegated via the onLabel prop.
+ */
+function PostCard({ post, onLabel }: {
+  readonly post: BoardPostRow;
+  readonly onLabel: (urn: string, label: 'ai' | 'human') => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [clampable, setClampable] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  // Detect whether the clamped text actually overflows (3+ lines) so the
+  // Show more/less control only appears on truncated posts. The 3-line clamp is
+  // width-dependent, so re-measure on column resize via ResizeObserver (WR-05).
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    const measure = () => {
+      if (!expanded) setClampable(el.scrollHeight > el.clientHeight + 1);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [post.text, expanded]);
+
+  return (
+    <div style={s.boardPost}>
+      {/* Post text — wraps and line-clamps; click toggles full expansion in place
+          (D-05 / T-36-01: JSX children only, no dangerouslySetInnerHTML) */}
+      <p
+        ref={textRef}
+        style={expanded ? s.boardPostTextExpanded : s.boardPostText}
+        onClick={() => setExpanded(e => !e)}
+      >
+        {post.text}
+      </p>
+      {(clampable || expanded) && (
+        <button style={s.expandToggle} onClick={() => setExpanded(e => !e)}>
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+      <div style={s.seg}>
+        <button
+          style={post.label === 'ai' ? s.segBtnAiSelected : s.segBtnAi}
+          onClick={() => onLabel(post.urn, 'ai')}
+        >
+          AI
+        </button>
+        <button
+          style={post.label === 'human' ? s.segBtnHumanSelected : s.segBtnHuman}
+          onClick={() => onLabel(post.urn, 'human')}
+        >
+          Human
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface LabelingSectionProps {
   readonly posts: StoredPost[];
   readonly unflagged: UnflaggedPost[];
@@ -721,7 +786,7 @@ interface LabelingSectionProps {
 }
 
 function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingSectionProps) {
-  type PostRow = { urn: string; text: string; label?: string };
+  type PostRow = BoardPostRow;
 
   const allPosts: PostRow[] = [
     ...posts.map(p => ({ urn: p.urn, text: p.text, label: p.label })),
@@ -749,54 +814,6 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
     setUnflagged((result['unflaggedPosts'] ?? []) as UnflaggedPost[]);
   }
 
-  function PostCard({ post }: { post: PostRow }) {
-    const [expanded, setExpanded] = useState(false);
-    const [clampable, setClampable] = useState(false);
-    const textRef = useRef<HTMLParagraphElement>(null);
-
-    // Detect whether the clamped text is actually overflowing (3+ lines), so the
-    // Show more/less control only appears on posts that are truncated.
-    useEffect(() => {
-      const el = textRef.current;
-      if (el && !expanded) {
-        setClampable(el.scrollHeight > el.clientHeight + 1);
-      }
-    }, [post.text, expanded]);
-
-    return (
-      <div style={s.boardPost}>
-        {/* Post text — wraps and line-clamps; click toggles full expansion in place
-            (D-05 / T-36-01: JSX children only, no dangerouslySetInnerHTML) */}
-        <p
-          ref={textRef}
-          style={expanded ? s.boardPostTextExpanded : s.boardPostText}
-          onClick={() => setExpanded(e => !e)}
-        >
-          {post.text}
-        </p>
-        {(clampable || expanded) && (
-          <button style={s.expandToggle} onClick={() => setExpanded(e => !e)}>
-            {expanded ? 'Show less' : 'Show more'}
-          </button>
-        )}
-        <div style={s.seg}>
-          <button
-            style={post.label === 'ai' ? s.segBtnAiSelected : s.segBtnAi}
-            onClick={() => handleLabelClick(post.urn, 'ai')}
-          >
-            AI
-          </button>
-          <button
-            style={post.label === 'human' ? s.segBtnHumanSelected : s.segBtnHuman}
-            onClick={() => handleLabelClick(post.urn, 'human')}
-          >
-            Human
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={s.card}>
       {/* Full-width labeled-count heading above the board */}
@@ -819,7 +836,7 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
                 <span style={s.boardColCount}>{aiPosts.length}</span>
               </div>
               {aiPosts.map(post => (
-                <PostCard key={post.urn} post={post} />
+                <PostCard key={post.urn} post={post} onLabel={handleLabelClick} />
               ))}
               {aiPosts.length === 0 && (
                 <div style={s.boardColEmpty}>No AI-labeled posts yet</div>
@@ -833,7 +850,7 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
                 <span style={s.boardColCount}>{unlabeledPosts.length}</span>
               </div>
               {unlabeledPosts.map(post => (
-                <PostCard key={post.urn} post={post} />
+                <PostCard key={post.urn} post={post} onLabel={handleLabelClick} />
               ))}
               {unlabeledPosts.length === 0 && (
                 <div style={s.boardColEmpty}>All posts are labeled</div>
@@ -847,7 +864,7 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
                 <span style={s.boardColCount}>{humanPosts.length}</span>
               </div>
               {humanPosts.map(post => (
-                <PostCard key={post.urn} post={post} />
+                <PostCard key={post.urn} post={post} onLabel={handleLabelClick} />
               ))}
               {humanPosts.length === 0 && (
                 <div style={s.boardColEmpty}>No Human-labeled posts yet</div>
