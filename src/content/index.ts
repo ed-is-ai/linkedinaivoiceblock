@@ -116,7 +116,6 @@ if (!document.getElementById('llb-styles')) {
     '  cursor: default;',
     '}',
     '.llb-tombstone__reveal {',
-    '  margin-top: 6px;',
     '  padding: 2px 8px;',
     '  font: inherit;',
     '  font-size: 11px;',

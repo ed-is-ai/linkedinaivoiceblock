@@ -178,26 +178,27 @@ export function injectBlockedTombstone(
   title.textContent = `Made to walk the plank: ${authorName}`;
   line1.appendChild(title);
 
-  const line2 = document.createElement('div');
-  line2.style.cssText = 'font-size:11px;margin-top:2px;opacity:0.8';
-  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — ${pickPirateLine()}`;
-
   // Reveal control: blocked posts stay hidden by default, but the user can opt
-  // to peek. Clicking reveals the post and removes our tombstone.
-  // postNode.classList.remove() touches only the class (CLAUDE.md #2); the
-  // tombstone is our own node, so removing it is safe.
+  // to peek. Sits top-right on the name row. Clicking reveals the post and
+  // removes our tombstone. postNode.classList.remove() touches only the class
+  // (CLAUDE.md #2); the tombstone is our own node, so removing it is safe.
   const reveal = document.createElement('button');
   reveal.type = 'button';
   reveal.className = 'llb-tombstone__reveal';
+  reveal.style.marginLeft = 'auto';
   reveal.setAttribute('aria-label', `Reveal blocked post by ${authorName}`);
   reveal.textContent = '🔭 Take a peek anyway';
   reveal.addEventListener('click', () => {
     postNode.classList.remove('llb-hidden');
     tombstone.remove();
   });
+  line1.appendChild(reveal);
+
+  const line2 = document.createElement('div');
+  line2.style.cssText = 'font-size:11px;margin-top:2px;opacity:0.8';
+  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — ${pickPirateLine()}`;
 
   tombstone.appendChild(line1);
   tombstone.appendChild(line2);
-  tombstone.appendChild(reveal);
   postNode.parentNode?.insertBefore(tombstone, postNode);
 }
