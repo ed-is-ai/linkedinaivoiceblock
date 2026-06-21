@@ -93,7 +93,7 @@ export function injectBlockedTombstone(
 
   const line2 = document.createElement('div');
   line2.style.cssText = 'font-size:11px;margin-top:2px;opacity:0.8';
-  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — plundered by the crew`;
+  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — no buried treasure here`;
 
   // Reveal control: blocked posts stay hidden by default, but the user can opt
   // to peek. Clicking reveals the post and removes our tombstone.
