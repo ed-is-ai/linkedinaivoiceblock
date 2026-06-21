@@ -61,6 +61,24 @@ Net-new scope captured after v10.0. Maps to Phase 34.
 - **HEAL-05**: No selector string is written except through `SelectorRegistry.insertCandidate` after `validateCandidate` passes (ADAPT-06 preserved); the manual trigger respects the existing single-flight / cool-off guard so it cannot stampede the automatic trigger.
 - **HEAL-06**: Redundant Selector Health entries are removed — the dead selectors `POST_AUTHOR_NAME` and `POST_URN_ATTR_FALLBACK` (no `resolve()` consumers; their logic is covered by `POST_AUTHOR_LINK` and `POST_URN_ATTR` respectively) are deleted from `selectors.ts`, the `SEED_MAP`/imports in `selector-registry.ts`, and the `SelectorTarget` union in `types.ts`, so they no longer appear as rows in the Selector Health tab.
 
+## v11.2 Requirements — Dashboard Polish & Feed Health
+
+Net-new scope for milestone v11.2. Pure dashboard/observability polish — no detection-logic or new-scraping changes. Each maps to exactly one roadmap phase.
+
+### Selector Health Accuracy
+
+- [ ] **SHA-01**: Contextual selectors record a real `lastMatchedAt` when they match a live element during normal browsing — `SPONSORED_MARKER` and `COMPANY_PAGE_MARKER` from their exclusion-check match sites, and `CONNECTION_DEGREE`, `AUTHOR_HEADLINE`, `OPEN_TO_WORK_MARKER`, `COMMENT_TEXT`, `COMMENT_EXPAND_BUTTON` from their signal match sites — via the existing fire-and-forget `SelectorRegistry.updateCandidate()` pattern (off the critical path; only `SelectorRegistry` writes selectors, CLAUDE.md #1). The Selector Health "Last matched" column then shows an actual date for these targets instead of a permanent "—".
+- [ ] **SHA-02**: The Selector Health table rows are visually aligned across all columns, including the long `COMMENT_EXPAND_BUTTON` target name which currently nudges its row out of alignment.
+
+### Data Management Labels
+
+- [ ] **EXPORT-01**: The data-management "Export JSON" button is labeled "Export matching behaviour" (label-only change — export contents and behavior unchanged).
+- [ ] **EXPORT-02**: The "Export Posts CSV" button is labeled "Export Posts seen (N)", where N is the live count of stored posts; clicking still downloads the same stored-posts CSV.
+
+### Header Branding
+
+- [ ] **BRAND-01**: The dashboard header shows the title "LinkedIn AIVoice blocker - Feed Health" and the subtitle "because your brain deserves better".
+
 ## Out of Scope
 
 Explicitly excluded for v10.0. Documented to prevent scope creep.
