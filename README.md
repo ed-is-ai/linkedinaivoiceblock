@@ -11,6 +11,7 @@ It runs in 2 modes:
 >Add an Anthropic API key and it upgrades to **Claude-powered detection** for higher accuracy using Sonnet.
 
 If you want to share some love back then 
+
 <a href="https://www.buymeacoffee.com/ed.is.ai" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 ---
 
