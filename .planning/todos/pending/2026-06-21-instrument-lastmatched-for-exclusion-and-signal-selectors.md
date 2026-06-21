@@ -2,6 +2,7 @@
 created: 2026-06-21T00:30:20.189Z
 title: Instrument lastMatched for exclusion and signal selectors
 area: ui
+resolves_phase: 35
 files:
   - src/content/observer.ts:60-158
   - src/content/exclusions.ts
