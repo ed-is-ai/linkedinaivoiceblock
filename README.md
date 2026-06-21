@@ -27,6 +27,7 @@ It runs in 2 modes:
 - **Account review queue** — suspicious authors are surfaced in the toolbar popup with their
   signal breakdown and score, so you stay in control. Blocking uses LinkedIn's own
   **report/block deep link** — the extension never simulates clicks (ToS-safe).
+  **LLM cost management** — minmise your LLM API costs by caching prompts using cache_control:empheral, capping output tokes at 400, using cheaper models where possible, capturing a full audit trail of LLM calls & costs .
 - **Feed Health dashboard** — a full-page view of net AI-voice posts over time, all-time
   hidden count, flag/bot rates, and a **Selector Health** panel that tracks whether each
   DOM selector is still matching the live LinkedIn markup.
