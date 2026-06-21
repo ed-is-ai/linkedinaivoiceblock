@@ -68,16 +68,16 @@ Net-new scope for milestone v11.2. Pure dashboard/observability polish — no de
 ### Selector Health Accuracy
 
 - [x] **SHA-01**: Contextual selectors record a real `lastMatchedAt` when they match a live element during normal browsing — `SPONSORED_MARKER` and `COMPANY_PAGE_MARKER` from their exclusion-check match sites, and `CONNECTION_DEGREE`, `AUTHOR_HEADLINE`, `OPEN_TO_WORK_MARKER`, `COMMENT_TEXT`, `COMMENT_EXPAND_BUTTON` from their signal match sites — via the existing fire-and-forget `SelectorRegistry.updateCandidate()` pattern (off the critical path; only `SelectorRegistry` writes selectors, CLAUDE.md #1). The Selector Health "Last matched" column then shows an actual date for these targets instead of a permanent "—".
-- [ ] **SHA-02**: The Selector Health table rows are visually aligned across all columns, including the long `COMMENT_EXPAND_BUTTON` target name which currently nudges its row out of alignment.
+- [x] **SHA-02**: The Selector Health table rows are visually aligned across all columns, including the long `COMMENT_EXPAND_BUTTON` target name which currently nudges its row out of alignment.
 
 ### Data Management Labels
 
-- [ ] **EXPORT-01**: The data-management "Export JSON" button is labeled "Export matching behaviour" (label-only change — export contents and behavior unchanged).
-- [ ] **EXPORT-02**: The "Export Posts CSV" button is labeled "Export Posts seen (N)", where N is the live count of stored posts; clicking still downloads the same stored-posts CSV.
+- [x] **EXPORT-01**: The data-management "Export JSON" button is labeled "Export matching behaviour" (label-only change — export contents and behavior unchanged).
+- [x] **EXPORT-02**: The "Export Posts CSV" button is labeled "Export Posts seen (N)", where N is the live count of stored posts; clicking still downloads the same stored-posts CSV.
 
 ### Header Branding
 
-- [ ] **BRAND-01**: The dashboard header shows the title "LinkedIn AIVoice blocker - Feed Health" and the subtitle "because your brain deserves better".
+- [x] **BRAND-01**: The dashboard header shows the title "LinkedIn AIVoice blocker - Feed Health" and the subtitle "because your brain deserves better".
 
 ## Out of Scope
 
@@ -107,10 +107,10 @@ Which phases cover which requirements. Populated during roadmap creation.
 | TOOL-01 | Phase 32 | Complete |
 | TOOL-02 | Phase 32 | Complete |
 | SHA-01 | Phase 35 | Complete |
-| SHA-02 | Phase 35 | Pending |
-| EXPORT-01 | Phase 35 | Pending |
-| EXPORT-02 | Phase 35 | Pending |
-| BRAND-01 | Phase 35 | Pending |
+| SHA-02 | Phase 35 | Complete |
+| EXPORT-01 | Phase 35 | Complete |
+| EXPORT-02 | Phase 35 | Complete |
+| BRAND-01 | Phase 35 | Complete |
 
 **Coverage:**
 - v10.0 requirements: 8 total — mapped to phases: 8 (roadmap complete), unmapped: 0 ✓
