@@ -1205,16 +1205,17 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     WebkitBoxOrient: 'vertical' as const,
     WebkitLineClamp: 3,
     overflow: 'hidden',
-    whiteSpace: 'normal' as const,
+    whiteSpace: 'pre-wrap' as const,
     overflowWrap: 'break-word' as const,
     cursor: 'pointer' as const,
   },
-  // Expanded post card text — full text, no clamp (click toggles back)
+  // Expanded post card text — full text, no clamp (click toggles back).
+  // pre-wrap preserves the post's original line breaks.
   boardPostTextExpanded: {
     fontSize: 12,
     color: '#374151',
     margin: '0 0 8px',
-    whiteSpace: 'normal' as const,
+    whiteSpace: 'pre-wrap' as const,
     overflowWrap: 'break-word' as const,
     cursor: 'pointer' as const,
   },
