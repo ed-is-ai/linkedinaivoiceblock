@@ -115,6 +115,18 @@ if (!document.getElementById('llb-styles')) {
     '  color: #b91c1c;',
     '  cursor: default;',
     '}',
+    '.llb-tombstone__reveal {',
+    '  margin-top: 6px;',
+    '  padding: 2px 8px;',
+    '  font: inherit;',
+    '  font-size: 11px;',
+    '  background: transparent;',
+    '  border: 1px solid #fca5a5;',
+    '  border-radius: 4px;',
+    '  color: #b91c1c;',
+    '  cursor: pointer;',
+    '}',
+    '.llb-tombstone__reveal:hover { background: #fee2e2; }',
   ].join('\n');
   document.head.appendChild(style);
 }

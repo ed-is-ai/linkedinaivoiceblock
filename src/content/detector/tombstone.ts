@@ -66,8 +66,11 @@ export function injectTombstone(
 
 /**
  * Injects a "blocked account" tombstone as a sibling before postNode.
- * Unlike the regular tombstone, this one has no click-to-reveal — the account
- * was explicitly blocked by the user.
+ *
+ * Pirate-themed and humorous: the blocked post is "made to walk the plank".
+ * The account was explicitly blocked by the user, so the post stays hidden by
+ * default — but a "Take a peek" reveal button lets the user open it on demand
+ * (removes the hidden class and the tombstone, same as the regular tombstone).
  *
  * @param postScore - Peak composite score that triggered the block (0–100).
  * @param profileScore - Sum of profile signal scores (headline-formula + degree-3).
@@ -82,14 +85,32 @@ export function injectBlockedTombstone(
   tombstone.className = 'llb-tombstone llb-tombstone--blocked';
   tombstone.setAttribute('role', 'status');
 
+  // Pirate logo + humorous copy. textContent only — never the inner-HTML
+  // property (D-09 / T-02-09 XSS mitigation; authorName is untrusted DOM text).
   const line1 = document.createElement('div');
-  line1.textContent = `🚫 Blocked: ${authorName}`;
+  line1.style.cssText = 'font-weight:600';
+  line1.textContent = `🏴‍☠️ Made to walk the plank: ${authorName}`;
 
   const line2 = document.createElement('div');
   line2.style.cssText = 'font-size:11px;margin-top:2px;opacity:0.8';
-  line2.textContent = `Post score: ${postScore} | Profile score: ${profileScore}`;
+  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — plundered by the crew`;
+
+  // Reveal control: blocked posts stay hidden by default, but the user can opt
+  // to peek. Clicking reveals the post and removes our tombstone.
+  // postNode.classList.remove() touches only the class (CLAUDE.md #2); the
+  // tombstone is our own node, so removing it is safe.
+  const reveal = document.createElement('button');
+  reveal.type = 'button';
+  reveal.className = 'llb-tombstone__reveal';
+  reveal.setAttribute('aria-label', `Reveal blocked post by ${authorName}`);
+  reveal.textContent = '🔭 Take a peek anyway';
+  reveal.addEventListener('click', () => {
+    postNode.classList.remove('llb-hidden');
+    tombstone.remove();
+  });
 
   tombstone.appendChild(line1);
   tombstone.appendChild(line2);
+  tombstone.appendChild(reveal);
   postNode.parentNode?.insertBefore(tombstone, postNode);
 }
