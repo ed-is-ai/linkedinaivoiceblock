@@ -35,21 +35,20 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 - **Extension popup** shows the queue of suspicious accounts with post counts and signals detected
 - **User review** — from the popup, user can: confirm block (trigger LinkedIn block), dismiss (mark as false positive), or ignore for now
 
-## Current Milestone: v10.0 Skill-Based Detection & Tool Abstraction
+## Current Milestone: v11.2 Dashboard Polish & Feed Health
 
-**Goal:** Reorganize detection into a two-level skill registry (detectors / signals / exclusions) that is ready to hydrate declarative, LLM-authorable skills from storage; align it to the Anthropic Agent Skills folder convention (`skills/library/<name>/` with SKILL.md manifests); and introduce a first-class `Tool` abstraction distinct from the host-agnostic detection skills — establishing a clean, LLM-authorable skill/tool architecture with zero behavior change. (Eval-driven tuning — precision-constrained thresholds, a regression gate, FP reduction — was scoped out of v10.0 and deferred.)
+**Goal:** Polish the dashboard — make Selector Health accurate and aligned, clarify the data-management labels, and rebrand the header. Pure dashboard/observability polish with no detection-logic or new-scraping changes.
 
 **Target features:**
-- Skill registry architecture — detectors, scoring signals, and hard exclusions become self-describing registered skills; a `SkillRegistry` seeds built-ins in code and can hydrate declarative skills from `chrome.storage.local` (SelectorRegistry pattern), with zero behavior change to existing detection
-- Cost guardrail — per-session rate limit / cap so per-post LLM stays affordable (leans on existing prompt caching)
-- Eval-derived config — use labeled data to pick the optimal decision threshold (+ heuristic-fallback weights); bake the winning config in, replacing hand-tuned values
-- Regression gate — `npm` / CI check that fails if F1 or precision drops below the last accepted baseline
-- False-positive reduction — driven by eval FP analysis; refine the LLM prompt + threshold to cut FPs (no new profile/engagement scraping)
+- Selector Health accuracy — wire the contextual selectors (the rows stuck at `—` in Last matched: AUTHOR_HEADLINE, COMMENT_EXPAND_BUTTON, COMMENT_TEXT, COMPANY_PAGE_MARKER, CONNECTION_DEGREE, OPEN_TO_WORK_MARKER, SPONSORED_MARKER) into the observer/exclusion/signal match paths so `lastMatched` records real matches via the existing `SelectorRegistry.updateCandidate()` fire-and-forget pattern
+- Selector Health layout fix — correct the COMMENT_EXPAND_BUTTON row alignment in the table
+- Data-management relabels — "Export JSON" → "Export matching behaviour"; "Export Posts CSV" → "Export Posts seen (N)" with a live stored-post count (same CSV contents)
+- Header rebrand — dashboard title "LinkedIn AIVoice blocker - Feed Health", subtitle "because your brain deserves better"
 
 **Key context:**
-- Builds directly on the v9.0 eval harness + shared `src/shared/classifier.ts` / `src/shared/eval/` core
-- Main risk is LLM cost; mitigated by prompt caching (v4.0) + the new per-session guardrail
-- No new DOM scraping surface — profile/engagement signals stay deferred
+- Pure UI/observability polish; only `SelectorRegistry` writes selectors (CLAUDE.md #1). The lastMatched wiring reuses the observer hot-path `updateCandidate()` pattern at the exclusion/signal match sites
+- Closes the pending todo `instrument-lastmatched-for-exclusion-and-signal-selectors`. Deferred todos (production DEBUG flag, manual-heal coverage for RESHARE_INDICATOR/POST_AUTHOR_LINK) are out of scope for v11.2
+- Follows v11.1 (Manual Self-Healing Trigger), which added the dashboard "Heal selectors now" button + inline per-target Heal column
 
 ## Key Decisions
 
@@ -175,6 +174,9 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | v7.0 | Adaptive DOM Scraper — storage-backed candidate registry + self-healing selector adapter | Complete 2026-06-14 |
 | v8.0 | Observability — per-call LLM traces, dashboard export, README cost table | Complete 2026-06-14 |
 | v9.0 | Eval Harness — labeled-dataset eval runner, precision/recall/F1/cost metrics, in-extension Evals dashboard | Complete 2026-06-15 |
+| v10.0 | Skill-Based Detection & Tool Abstraction — two-level skill registry, Agent Skills folder convention, first-class Tool abstraction (Phases 29–32) | Complete 2026-06-16 |
+| v11.0 | Modularity & Maintainability — self-contained skill folders, codegen-sourced registry (Phase 33) | Complete 2026-06-17 |
+| v11.1 | Manual Self-Healing Trigger — dashboard "Heal selectors now" button, TRIGGER_HEAL transport, inline per-target Heal column (Phase 34) | Complete 2026-06-21 |
 
 ---
 
@@ -196,6 +198,8 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
+*Milestone v11.2 started 2026-06-21 — Dashboard Polish & Feed Health. Scope: wire contextual selectors into the observer/exclusion/signal match paths so Selector Health "Last matched" reflects reality (closes the lastMatched instrumentation gap); fix COMMENT_EXPAND_BUTTON row alignment; relabel data-management buttons (Export JSON → "Export matching behaviour", Export Posts CSV → "Export Posts seen (N)" with live count); rebrand the dashboard header (title "LinkedIn AIVoice blocker - Feed Health", subtitle "because your brain deserves better"). Pure dashboard/observability polish — no detection-logic or new-scraping changes. Follows v11.1 (Manual Self-Healing Trigger, Phase 34).*
+
 *Last updated: 2026-06-16 after Phase 31 (Skill Library Alignment) — previously updated 2026-06-15 after v9.0 milestone — Eval Harness shipped (Phases 25.1, 25.2, 26, 27, 28): opt-in negatives capture, symmetric labeled export, `npm run eval` (heuristic/LLM) with precision/recall/F1/cost, FP/FN error analysis, labeling/compare CLIs, and an in-extension Evals dashboard reusing the shared `src/shared/eval/` core. Audit passed 12/12. This close also retroactively validated v7.0 (Adaptive DOM Scraper) and v8.0 (Observability), which had shipped but not been recorded.*
 
 *Milestone v10.0 started 2026-06-15 — Skill-Based Detection & Eval-Driven Tuning. Phase 29 (Config Foundation) shipped 2026-06-15. Re-scoped 2026-06-16: Phase 30 changed from "LLM-Primary Promotion" to "Skill Registry Architecture" — reorganize detectors/signals/exclusions into a two-level skill registry ready to hydrate declarative, LLM-authorable skills from storage (zero behavior change). LLM-primary promotion (old LLM-01/02/03) dropped; the LLM remains one DetectorSkill. No new profile/engagement scraping.*
