@@ -600,8 +600,9 @@ export default function SelectorView({
           )}
           {healResults !== null && healResults.length > 0 && (
             <div style={s.healHint}>
-              Healed {healResults.length} target{healResults.length === 1 ? '' : 's'} — see the Heal
-              column above for each outcome.
+              {healResults.filter((o) => o.result === 'healed').length} of {healResults.length} stale
+              target{healResults.length === 1 ? '' : 's'} healed — see the Heal column above for each
+              outcome.
             </div>
           )}
         </>

@@ -36,7 +36,9 @@ export class LLMRederiver {
         { type: 'REDERIVE_SELECTOR', target, domSkeleton, manual },
         (response) => {
           if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
+            // Wrap in a real Error — chrome.runtime.lastError is a plain { message } object,
+            // so a bare reject() surfaces as "[object Object]" in HealOutcome.reason (WR-02).
+            reject(new Error(chrome.runtime.lastError.message ?? 'service worker unreachable'));
             return;
           }
           if (!response) {

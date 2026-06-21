@@ -73,6 +73,17 @@ const SUB_ELEMENT_TARGETS: ReadonlyArray<SelectorTarget> = [
   'OPEN_TO_WORK_MARKER',
 ];
 
+/**
+ * Deliberately NOT in either heal set (WR-03 scope note):
+ *   - FEED_CONTAINER / FEED_CONTAINER_FALLBACK — if the container itself is broken there is no
+ *     container to heal against; these are observer-instrumented and handled by the automatic
+ *     zero-posts breakage path, not the manual trigger.
+ *   - RESHARE_INDICATOR / POST_AUTHOR_LINK — structural post selectors that ARE observer-
+ *     instrumented and auto-heal-eligible, but are not yet wired into the manual heal set. If
+ *     either breaks, a manual heal reports "Nothing stale" rather than attempting them. Tracked
+ *     as a follow-up (see .planning/todos) to decide whether manual heal should cover them.
+ */
+
 // ---------------------------------------------------------------------------
 // Core-4 stateless guards
 // ---------------------------------------------------------------------------
