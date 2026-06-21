@@ -65,6 +65,38 @@ export function injectTombstone(
 }
 
 /**
+ * Pirate quips for the blocked tombstone score line. One is chosen at random
+ * per blocked post (see {@link pickPirateLine}). Exported for tests.
+ */
+export const PIRATE_LINES: readonly string[] = [
+  'no buried treasure here',
+  'walked straight off the gangplank',
+  "tossed to Davy Jones' locker",
+  'all chum, no catch',
+  'dead men tell no humblebrags',
+  'scuttled before it could set sail',
+  'marooned on Engagement Island',
+  'yo ho ho and a bottle of nope',
+  'shiver me feed, not today',
+  'straight to the brig with ye',
+  'no wind in these sails',
+  'abandon thread!',
+  'plank-walked for crimes against the timeline',
+  'fed to the kraken',
+  'all hashtags, no doubloons',
+  'that be a keelhaulin\', matey',
+  'swabbed from the deck of yer feed',
+  'X marks the block',
+  'this booty be cursed',
+  'nothin\' but barnacles and buzzwords',
+];
+
+/** Pick a random pirate line. */
+export function pickPirateLine(): string {
+  return PIRATE_LINES[Math.floor(Math.random() * PIRATE_LINES.length)]!;
+}
+
+/**
  * Injects a "blocked account" tombstone as a sibling before postNode.
  *
  * Pirate-themed and humorous: the blocked post is "made to walk the plank".
@@ -93,7 +125,7 @@ export function injectBlockedTombstone(
 
   const line2 = document.createElement('div');
   line2.style.cssText = 'font-size:11px;margin-top:2px;opacity:0.8';
-  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — no buried treasure here`;
+  line2.textContent = `Post score: ${postScore} · Profile score: ${profileScore} — ${pickPirateLine()}`;
 
   // Reveal control: blocked posts stay hidden by default, but the user can opt
   // to peek. Clicking reveals the post and removes our tombstone.

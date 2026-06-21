@@ -3,7 +3,7 @@
  * Uses jsdom (configured in vitest.config.ts) for DOM operations.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { injectTombstone, injectBlockedTombstone } from './tombstone';
+import { injectTombstone, injectBlockedTombstone, PIRATE_LINES } from './tombstone';
 
 describe('injectTombstone', () => {
   let parent: HTMLDivElement;
@@ -86,6 +86,13 @@ describe('injectBlockedTombstone', () => {
     expect(tombstone.textContent).toContain('Filipa Lobão');
     expect(tombstone.textContent).toContain('Post score: 62');
     expect(tombstone.textContent).toContain('Profile score: 0');
+  });
+
+  it('appends one of the known random pirate lines to the score line', () => {
+    injectBlockedTombstone(postNode, 'Filipa Lobão', 62, 0);
+    const tombstone = parent.children[0] as HTMLElement;
+    const text = tombstone.textContent ?? '';
+    expect(PIRATE_LINES.some(line => text.includes(line))).toBe(true);
   });
 
   it('renders a reveal button (XSS-safe: author via textContent, no markup injected)', () => {
