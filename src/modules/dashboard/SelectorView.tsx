@@ -82,10 +82,10 @@ const s: Record<string, JSX.CSSProperties> = {
     marginBottom: 4,
   },
   columnHeaderTarget: {
-    flex: '0 0 27%',
+    flex: '0 0 30%',
   },
   columnHeaderSelector: {
-    flex: '0 0 32%',
+    flex: '0 0 29%',
   },
   columnHeaderSource: {
     flex: '0 0 13%',
@@ -114,12 +114,13 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#dc2626',
   },
   target: {
-    flex: '0 0 27%',
+    flex: '0 0 30%',
     fontSize: 13,
     fontWeight: 400,
+    whiteSpace: 'nowrap' as const,
   },
   selector: {
-    flex: '0 0 32%',
+    flex: '0 0 29%',
     fontSize: 12,
     fontWeight: 400,
     overflow: 'hidden',
@@ -128,7 +129,7 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#374151',
   },
   selectorStale: {
-    flex: '0 0 32%',
+    flex: '0 0 29%',
     fontSize: 12,
     fontWeight: 400,
     overflow: 'hidden',
