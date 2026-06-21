@@ -22,7 +22,7 @@
  *   with a fresh 10-expansion budget rather than carrying over state from the previous page.
  */
 
-import { COMMENT_EXPAND_BUTTON, COMMENT_TEXT } from '../selectors';
+import { resolve, updateCandidate } from '../selector-registry';
 
 /** Maximum number of comment-section expansions allowed per page load. */
 const MAX_EXPANSIONS_PER_PAGE = 10;
@@ -60,10 +60,12 @@ export async function expandComments(postNode: Element): Promise<string[]> {
     }
 
     // Locate the expand button — silently degrade if absent (Pitfall 2)
-    const button = postNode.querySelector(COMMENT_EXPAND_BUTTON) as HTMLElement | null;
+    const buttonSel = resolve('COMMENT_EXPAND_BUTTON');
+    const button = postNode.querySelector(buttonSel) as HTMLElement | null;
     if (button === null) {
       return [];
     }
+    updateCandidate('COMMENT_EXPAND_BUTTON', buttonSel).catch(() => {});
 
     // Click the button and increment the budget counter atomically
     button.click();
@@ -74,7 +76,10 @@ export async function expandComments(postNode: Element): Promise<string[]> {
 
     // Collect comment text using innerText (preserves user-facing text; excludes hidden
     // screen-reader content and script text that .textContent would include)
-    const comments = Array.from(postNode.querySelectorAll(COMMENT_TEXT))
+    const commentSel = resolve('COMMENT_TEXT');
+    const commentEls = Array.from(postNode.querySelectorAll(commentSel));
+    if (commentEls.length > 0) updateCandidate('COMMENT_TEXT', commentSel).catch(() => {});
+    const comments = commentEls
       .map(el => (el as HTMLElement).innerText.trim())
       .filter(Boolean)
       .slice(0, 20); // cap at 20 entries to bound O(n²) Levenshtein comparisons

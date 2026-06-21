@@ -1,81 +1,123 @@
-# Requirements — Milestone v7.0: Adaptive DOM Scraper
+# Requirements: LinkedIn Blocker — v10.0 Skill-Based Detection & Eval-Driven Tuning
 
-**Status:** Active
-**Milestone:** v7.0
-**Last updated:** 2026-06-06
+**Defined:** 2026-06-15
+**Core Value:** AI-bot posts are hidden automatically before the user sees them, with a reviewable list of flagged accounts in the extension popup.
 
-> Prior milestone requirements (v6.1 POPUP-04/05 and earlier) are validated and recorded in `PROJECT.md` → Requirements. This file scopes v7.0 only.
+## v10.0 Requirements
 
----
+Requirements for this milestone. Each maps to exactly one roadmap phase.
 
-## Selector Registry (Wave 1 — externalize to storage)
+### Skill Registry Architecture
 
-- [ ] **SELECTOR-01**: All selector-registry entries are stored in `chrome.storage.local` as rank-ordered candidate lists with metadata (`value`, `source`, `lastMatchedAt`, `lastVerifiedAt`, `matchCount`), seeded from `selectors.ts` defaults.
-- [ ] **SELECTOR-02**: At runtime the content script resolves every selector through the candidate registry in priority order; `selectors.ts` is reduced to the seed/defaults source (no direct selector imports remain in `observer.ts` / `exclusions.ts`).
-- [ ] **SELECTOR-03**: The registry is versioned; it seeds from defaults only when absent or on a version bump, and never overwrites adapted candidates on a normal page load.
-- [ ] **SELECTOR-04**: A successful match rotates the winning candidate to the front of its list and persists the change.
-- [ ] **SELECTOR-05**: Adapted candidates carry a timestamp and are demoted/expired after 30 days; each candidate list is capped (≤10 entries) and always retains the default seed.
-- [ ] **SELECTOR-06**: The user can reset selectors to bundled defaults from the popup/dashboard (escape hatch from a bad adaptation).
-- [ ] **SELECTOR-07**: A read-only view shows each target's active selector, its source (default/adapted/llm), and last-matched info, and warns when a critical selector has not matched recently on a feed page.
-- [ ] **SELECTOR-08**: The in-memory selector cache refreshes via `chrome.storage.onChanged` so healed selectors take effect within the session and stay consistent across tabs.
-- [ ] **SELECTOR-09**: After migration the extension behaves identically to v6.1 (regression-safe), verified by fixture-DOM tests covering seeding, runtime resolution, versioned migration, and reset-to-defaults.
-- [ ] **SELECTOR-10**: Project documentation (CLAUDE.md constraint #1) is updated to describe the seed-vs-runtime selector model (`selectors.ts` = defaults; `SelectorRegistry` = runtime source; only the registry writes selectors to storage).
+- [x] **SKILL-01**: Detection logic is organized as a two-level skill registry — DetectorSkill (heuristic, llm), SignalSkill (the scoring signals), and ExclusionSkill (sponsored / company / non-English) — replacing the hand-wired signal pipeline in `heuristic.ts` and the inline exclusion checks in the content script.
+- [x] **SKILL-02**: A `SkillRegistry` seeds built-in skills in code and hydrates additional declarative (data-only, LLM-authorable) skills from `chrome.storage.local` with a code-seed fallback (mirroring `SelectorRegistry`); seeded with zero declarative skills so behavior is unchanged, and only `SkillRegistry` writes skill definitions to storage.
+- [x] **SKILL-03**: Hard-exclusion ordering is preserved — ExclusionSkills run and can short-circuit before any DetectorSkill/SignalSkill (upholds the hard-exclusions-before-detection constraint).
+- [x] **SKILL-04**: Zero behavior change — same posts excluded and flagged, same scores and breakdown; the Phase 29 golden-score snapshot stays byte-identical and exclusion parity is verified on a representative fixture set.
 
-## Adaptive Self-Healing (Wave 2 — recover broken selectors)
+### Skill Library Alignment
 
-- [ ] **ADAPT-01**: The system detects total scraping breakage — zero post-card matches over an active-feed window — guarded against false positives (feed-URL gate, feed-container present, minimum session activity, no-posts placeholder, auth check, rolling debounce) so skeleton/logged-out/non-feed/empty states do not trigger healing.
-- [ ] **ADAPT-02**: On breakage, structural heuristics re-derive candidate selectors locally (no API call) from stable DOM anchors (role/aria/semantic/href/structure).
-- [ ] **ADAPT-03**: No re-derived candidate is trusted or written until it passes a validation gate (minimum match count, author-link ratio, post-text presence, sponsored-contamination rejection, feed-context containment).
-- [ ] **ADAPT-04**: When heuristics produce no valid candidate and an API key is configured, an LLM (Claude) fallback proposes ranked candidates from a sanitized **structural** DOM skeleton (all text/href/src/aria-label stripped — no post content or PII leaves the browser), validated through the same gate.
-- [ ] **ADAPT-05**: LLM fallback is rate-bounded — single-flight latch, ≥5-minute cool-off persisted across service-worker restarts, and a per-day hard cap — and is only reached after heuristics fail.
-- [ ] **ADAPT-06**: LLM responses are strictly validated before use (reject overly-broad selectors such as `body`/`html`/`*`; bounded match count; selector treated as a plain string, never evaluated) to prevent prompt-injection via page content.
-- [ ] **ADAPT-07**: A recovered winning candidate is prepended and persisted, with the previously-active candidate retained so detection auto-recovers if LinkedIn reverts.
-- [ ] **ADAPT-08**: Candidates within a target are ordered by a confidence signal (match count × recency × source weight), not pure insertion order.
-- [ ] **ADAPT-09**: Fixture-DOM tests cover partial breakage, logged-out, skeleton-loader, heal-to-wrong-element rejection, and the reset round-trip; the LLM live-key path is verified by a manual (non-CI) test.
-- [ ] **ADAPT-10**: If the LLM fallback ships, `PRIVACY.md` discloses that a sanitized structural description of the feed layout (no text/PII) may be sent to the Anthropic API to repair broken selectors.
+- [x] **SKILL-05**: The detector, exclusion, and selector skills are each defined as a self-contained folder under `skills/library/<name>/` following the Anthropic Agent Skills convention — a `SKILL.md` manifest (name/description/metadata frontmatter) alongside the bundled TypeScript implementation — and `SkillRegistry` hydrates skill metadata from the bundled manifests at build time (static imports only; no runtime filesystem load, MV3-CSP-safe), with zero behavior change. Delivered tracer-bullet style: spike one skill kind (exclusion) end-to-end, then build out the rest.
 
----
+### Tool Abstraction Layer
 
-## Future Requirements (deferred)
+- [x] **TOOL-01**: A first-class `Tool` abstraction exists, distinct from the host-agnostic detection skills (`SignalSkill`/`ExclusionSkill`/`DetectorSkill`). A `Tool<I, O>` contract (`name`, `description`, `execute(input): Promise<O>`) is defined in the shared skill types with host I/O (network, `chrome.storage`) explicitly permitted, and a `skills/library/` tools folder convention is established (`SKILL.md` with `metadata.kind: tool`).
+- [x] **TOOL-02**: `rederiveSelector` (+ helpers `REDERIVE_SYSTEM_PROMPT`, `RederiveCandidate`, `isRederiveModelOutput`) is migrated from `background/index.ts` into the library as the first tool (`dom-selector-rederive`), the `dom-selector-registry` `metadata.kind` mislabel is corrected, and existing skills are audited against a documented skill-vs-tool decision rule and reclassified where they are really imperative/I/O tools — with zero behavior change.
 
-- Manual selector editing / override UI (a power-user could paste a corrected selector; deferred to keep v7.0 read-only and avoid class-name input risk).
-- Breakage event log surfaced in the health view ("recovered via heuristic 2 days ago").
-- Auto-promotion of a non-active candidate after N consecutive matches.
-- Full candidate-list management UI (reorder/delete individual candidates).
-- Partial-breakage as an explicit healing *trigger* (v7.0 triggers on total breakage only; heuristics degrade gracefully on partial).
-- Blocked-accounts manager page (carried over from v6.0 deferral: BLOCK-01/02/03).
+### Eval-Derived Config
+
+- [x] **CFG-01**: One committed detection-config module (decision threshold + heuristic-fallback signal weights) is the single source of truth, imported by both the runtime (content script / service worker) and the eval CLI.
+
+## Future Requirements
+
+Deferred — tracked but not in this milestone's roadmap.
+
+### Quality Gating
+
+- **GATE-01**: Automated regression gate (`npm run eval:gate`) fails if F1 or precision drops more than epsilon below `eval/baseline.json`; runs the deterministic heuristic engine; human-initiated `bless` updates the baseline.
+
+### False-Positive Reduction (prompt)
+
+- **FP-01**: Observed false positives from eval FP analysis are fed back into `SYSTEM_PROMPT` as few-shot hard-negative examples (zero added cost via prompt cache).
+- **FP-02**: Every prompt change is re-evaluated against a hard recall floor so cutting false positives does not silently collapse recall.
+
+### Cost & Observability Polish
+
+- **COST-02**: The per-session cap value is user-configurable in popup Settings.
+- **COST-03**: A live "N posts scored this session" indicator is surfaced in the popup / dashboard.
+- **COST-04**: A second daily ceiling (e.g. 500/day) sits on top of the per-session cap.
+- **CFG-04**: `scripts/derive-config.ts` reads the best eval run and rewrites the config module automatically (no hand-editing).
+- **DATA-01**: `engineUsed` (llm / heuristic) is recorded on every stored post so eval and analysis can distinguish primary results from fallback results.
+
+## Post-v10.0 Requirements
+
+Net-new scope captured after v10.0. Maps to Phase 34.
+
+### Manual Self-Healing Trigger
+
+- **HEAL-01**: The dashboard Selector Health section presents a "Heal selectors now" button, enabled only when a LinkedIn feed tab is open and otherwise disabled with a hint to open LinkedIn (the heal pipeline requires a live feed DOM, which the dashboard page does not have).
+- **HEAL-02**: Clicking the button runs the heal pipeline against the live feed tab's DOM via a `TRIGGER_HEAL` message handled by a content-script listener; healing is never attempted from the dashboard's own DOM.
+- **HEAL-03**: The heal attempt covers all currently-stale selectors, not only `POST_CARD` — `triggerHeal` is generalized to accept a target; card-shaped targets use the heuristic deriver and sub-element targets use the LLM fallback when an API key is configured; non-DOM targets (e.g. `COMPANY_PAGE_MARKER`) are excluded from the heal set.
+- **HEAL-04**: The dashboard reports a per-selector outcome (healed / unchanged / failed) and refreshes the Selector Health rows to reflect any newly-active selector.
+- **HEAL-05**: No selector string is written except through `SelectorRegistry.insertCandidate` after `validateCandidate` passes (ADAPT-06 preserved); the manual trigger respects the existing single-flight / cool-off guard so it cannot stampede the automatic trigger.
+- **HEAL-06**: Redundant Selector Health entries are removed — the dead selectors `POST_AUTHOR_NAME` and `POST_URN_ATTR_FALLBACK` (no `resolve()` consumers; their logic is covered by `POST_AUTHOR_LINK` and `POST_URN_ATTR` respectively) are deleted from `selectors.ts`, the `SEED_MAP`/imports in `selector-registry.ts`, and the `SelectorTarget` union in `types.ts`, so they no longer appear as rows in the Selector Health tab.
+
+## v11.2 Requirements — Dashboard Polish & Feed Health
+
+Net-new scope for milestone v11.2. Pure dashboard/observability polish — no detection-logic or new-scraping changes. Each maps to exactly one roadmap phase.
+
+### Selector Health Accuracy
+
+- [x] **SHA-01**: Contextual selectors record a real `lastMatchedAt` when they match a live element during normal browsing — `SPONSORED_MARKER` and `COMPANY_PAGE_MARKER` from their exclusion-check match sites, and `CONNECTION_DEGREE`, `AUTHOR_HEADLINE`, `OPEN_TO_WORK_MARKER`, `COMMENT_TEXT`, `COMMENT_EXPAND_BUTTON` from their signal match sites — via the existing fire-and-forget `SelectorRegistry.updateCandidate()` pattern (off the critical path; only `SelectorRegistry` writes selectors, CLAUDE.md #1). The Selector Health "Last matched" column then shows an actual date for these targets instead of a permanent "—".
+- [x] **SHA-02**: The Selector Health table rows are visually aligned across all columns, including the long `COMMENT_EXPAND_BUTTON` target name which currently nudges its row out of alignment.
+
+### Data Management Labels
+
+- [x] **EXPORT-01**: The data-management "Export JSON" button is labeled "Export matching behaviour" (label-only change — export contents and behavior unchanged).
+- [x] **EXPORT-02**: The "Export Posts CSV" button is labeled "Export Posts seen (N)", where N is the live count of stored posts; clicking still downloads the same stored-posts CSV.
+
+### Header Branding
+
+- [x] **BRAND-01**: The dashboard header shows the title "LinkedIn AIVoice blocker - Feed Health" and the subtitle "because your brain deserves better".
 
 ## Out of Scope
 
-- Sending post content / personal data to the LLM (structural skeleton only — hard rule).
-- A per-selector manual "repair" button (not in scope; total-breakage auto-detection + reset cover v7.0).
-- Bundling an Anthropic API key (LLM fallback uses the user's configured key only).
-- Cross-device sync of the selector registry (`chrome.storage.sync`) — candidates are local-feed-derived.
-- Any change to detection scoring, block/dismiss, dashboard stats, or export behavior.
+Explicitly excluded for v10.0. Documented to prevent scope creep.
 
----
+| Feature | Reason |
+|---------|--------|
+| New profile signals (AI headshot, thin connections, generic bio) | Requires scraping the profile page / hovercard — no new DOM surface this milestone |
+| New engagement signals (near-identical comments, reaction ratios) | Requires comment-thread DOM + cross-post aggregation — deferred |
+| Message Batches API for live scoring | Async (up to 24h) — incompatible with real-time feed hiding |
+| Structured output / tool-use for classification | Adds ~497 tokens per request and invalidates the prompt cache — net more expensive than the existing JSON-in-system-prompt pattern |
+| Haiku-tier model as the classifier | Haiku's 4,096-token cache minimum exceeds the ~1,300-token system prompt, so caching never activates — more expensive per post than cached Sonnet |
+| Posting-frequency signals | Scheduling tools cause too many false positives (carried over from prior milestones) |
 
 ## Traceability
 
-| REQ-ID | Phase | Status |
-|--------|-------|--------|
-| SELECTOR-01 | Phase 22 | Pending |
-| SELECTOR-02 | Phase 22 | Pending |
-| SELECTOR-03 | Phase 22 | Pending |
-| SELECTOR-04 | Phase 22 | Pending |
-| SELECTOR-05 | Phase 22 | Pending |
-| SELECTOR-06 | Phase 22 | Pending |
-| SELECTOR-07 | Phase 22 | Pending |
-| SELECTOR-08 | Phase 22 | Pending |
-| SELECTOR-09 | Phase 22 | Pending |
-| SELECTOR-10 | Phase 22 | Pending |
-| ADAPT-01 | Phase 23 | Pending |
-| ADAPT-02 | Phase 23 | Pending |
-| ADAPT-03 | Phase 23 | Pending |
-| ADAPT-04 | Phase 23 | Pending |
-| ADAPT-05 | Phase 23 | Pending |
-| ADAPT-06 | Phase 23 | Pending |
-| ADAPT-07 | Phase 23 | Pending |
-| ADAPT-08 | Phase 23 | Pending |
-| ADAPT-09 | Phase 23 | Pending |
-| ADAPT-10 | Phase 23 | Pending |
+Which phases cover which requirements. Populated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| SKILL-01 | Phase 30 | Complete |
+| SKILL-02 | Phase 30 | Complete |
+| SKILL-03 | Phase 30 | Complete |
+| SKILL-04 | Phase 30 | Complete |
+| SKILL-05 | Phase 31 | Complete |
+| CFG-01 | Phase 29 | Complete |
+| TOOL-01 | Phase 32 | Complete |
+| TOOL-02 | Phase 32 | Complete |
+| SHA-01 | Phase 35 | Complete |
+| SHA-02 | Phase 35 | Complete |
+| EXPORT-01 | Phase 35 | Complete |
+| EXPORT-02 | Phase 35 | Complete |
+| BRAND-01 | Phase 35 | Complete |
+
+**Coverage:**
+- v10.0 requirements: 8 total — mapped to phases: 8 (roadmap complete), unmapped: 0 ✓
+- v11.2 requirements: 5 total (SHA-01, SHA-02, EXPORT-01, EXPORT-02, BRAND-01) — all mapped to Phase 35, unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-06-15*
+*Last updated: 2026-06-16 — Phase 30 re-scoped from LLM-Primary Promotion to Skill Registry Architecture; LLM-01/02/03 dropped, SKILL-01..04 added; milestone retitled Skill-Based Detection*
+*Last updated: 2026-06-16 — Phase 31 re-scoped from Cost Guardrail to Skill Library Alignment; COST-01 dropped, SKILL-05 added; Phase 32 dependency moved from Phase 31 → Phase 29 (eval tuning is independent of the skill-library work). Note: future COST-02/03/04 now presuppose a revived COST-01.*
+*Last updated: 2026-06-16 — Eval-tuning phases dropped: removed Phase 32 (Eval Tuning Machinery) and Phase 33 (Detection Tuning Run) and their requirements CFG-02, CFG-03, TUNE-01. Tool Abstraction Layer (TOOL-01/02) renumbered 34 → 32. Milestone v10.0 now scopes Skill-Based Detection + the Tool abstraction; eval-driven tuning deferred.*

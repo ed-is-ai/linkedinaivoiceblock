@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evals dashboard — mockup options</title>
+<style>
+  body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a1a1a}
+  .page{max-width:760px;margin:48px auto;padding:0 24px}
+  h1{font-size:24px;font-weight:700;margin:0 0 6px}
+  .crumb{font-size:14px;color:#6b7280;margin-bottom:28px}
+  .opt{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:20px 24px;margin-bottom:16px;transition:border-color .15s}
+  .opt:hover{border-color:#0a66c2}
+  .opt h2{font-size:16px;margin:0 0 4px;color:#0a66c2}
+  .opt p{font-size:13px;color:#374151;margin:0 0 8px;line-height:1.5}
+  .tags{font-size:11px;color:#9ca3af}
+  .tags b{color:#374151}
+  .note{font-size:12px;color:#9ca3af;background:#fff8e1;border:1px solid #f4d35e;border-radius:8px;padding:12px 14px;margin-bottom:24px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Evals dashboard — mockup options</h1>
+  <div class="crumb">Three design directions for a future in-extension "Evals" page.</div>
+  <div class="note"><b>Decision:</b> ship <b>Option A</b> (single-page console) as the Phase 28 layout. The data model is built to support <b>Option C</b>'s run-history + compare view from day one (see <a href="./DATA-MODEL.md">DATA-MODEL.md</a>), so C can be added later as pure UI — no data migration. Phase 27 ships the <b>CLI-first</b> eval (npm run eval / eval-label / eval-compare) and emits a run record that the dashboard reuses directly.</div>
+
+  <a class="opt" style="border-color:#0a66c2;border-width:2px" href="./evals-option-a-console.html">
+    <h2>✅ Option A — Single-page console (SELECTED) →</h2>
+    <p>Everything in one scrollable column: run controls, metrics, threshold sweep, error analysis, labeling, compare. Mirrors the existing Feed Health dashboard 1:1. Its "Compare to previous run" card is powered by the same run-history store Option C would use.</p>
+    <div class="tags"><b>Best for:</b> lowest build cost, familiarity · <b>Trade-off:</b> long page as features grow</div>
+  </a>
+
+  <a class="opt" href="./evals-option-b-tabs.html">
+    <h2>Option B — Tabbed workspace (reference) →</h2>
+    <p>One tab per deliverable: Run · Label · Results · Compare. Each view is focused; labeling becomes a dedicated click-to-label queue with a progress bar.</p>
+    <div class="tags"><b>Best for:</b> clean separation, scales well · <b>Trade-off:</b> more navigation, hides cross-view context</div>
+  </a>
+
+  <a class="opt" href="./evals-option-c-runhistory.html">
+    <h2>Option C — Run history / compare-first (data ready, UI deferred) →</h2>
+    <p>Master–detail: left sidebar lists every stored run; right pane shows the selected run with a live Δ column against a pinned comparison run. The data structures behind this (<code>EvalRunStore</code>, <code>EvalRunSummary</code>, <code>compareRuns</code>) are defined in <a href="./DATA-MODEL.md">DATA-MODEL.md</a> and land in Phase 27, so this view is a later UI-only addition over Option A.</p>
+    <div class="tags"><b>Best for:</b> the diff-over-time use case (D-07) · <b>Trade-off:</b> widest layout, heaviest to build</div>
+  </a>
+</div>
+</body>
+</html>

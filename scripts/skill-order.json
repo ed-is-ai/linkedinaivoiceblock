@@ -1,0 +1,25 @@
+{
+  "signals": [
+    "detect-aiwriting-heuristic/signals/detect-listicle-cta",
+    "detect-aiwriting-heuristic/signals/detect-buzzword",
+    "detect-aiwriting-heuristic/signals/detect-em-dash",
+    "detect-aiwriting-heuristic/signals/detect-ai-vocab",
+    "detect-aiwriting-heuristic/signals/detect-hook-story",
+    "detect-aiwriting-heuristic/signals/detect-motivational",
+    "detect-aiwriting-heuristic/signals/detect-impersonal",
+    "detect-aiwriting-heuristic/signals/detect-generic-comments"
+  ],
+  "exclusions": [
+    "exclude-sponsored",
+    "exclude-company-page",
+    "exclude-non-english",
+    "exclude-open-to-work"
+  ],
+  "detectors": [
+    "detect-aiwriting-heuristic",
+    "detect-aiwriting-llm"
+  ],
+  "tools": [
+    "dom-selector-rederive"
+  ]
+}

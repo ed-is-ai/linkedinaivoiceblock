@@ -13,7 +13,7 @@
  * fully testable in Node. DOM access is isolated to extractProfileSignals().
  */
 
-import { AUTHOR_HEADLINE, CONNECTION_DEGREE } from '../../selectors';
+import { resolve, updateCandidate } from '../../selector-registry';
 
 // ---------------------------------------------------------------------------
 // Headline formula signal
@@ -136,12 +136,16 @@ export function checkConnectionDegree(degreeText: string): number {
 export function extractProfileSignals(postNode: Element): Record<string, number> {
   const signals: Record<string, number> = {};
 
-  const headlineEl = postNode.querySelector(AUTHOR_HEADLINE);
+  const headlineSel = resolve('AUTHOR_HEADLINE');
+  const headlineEl = postNode.querySelector(headlineSel);
+  if (headlineEl) updateCandidate('AUTHOR_HEADLINE', headlineSel).catch(() => {});
   const headlineText = (headlineEl as HTMLElement | null)?.innerText?.trim() ?? '';
   const headlineScore = checkHeadlineFormula(headlineText);
   if (headlineScore > 0) signals['headline-formula'] = headlineScore;
 
-  const degreeEl = postNode.querySelector(CONNECTION_DEGREE);
+  const degreeSel = resolve('CONNECTION_DEGREE');
+  const degreeEl = postNode.querySelector(degreeSel);
+  if (degreeEl) updateCandidate('CONNECTION_DEGREE', degreeSel).catch(() => {});
   const degreeText =
     (degreeEl as HTMLElement | null)?.innerText?.trim() ??
     (degreeEl?.getAttribute('aria-label') ?? '');

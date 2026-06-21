@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evals — Option C: Run history / compare-first</title>
+<style>
+  :root{
+    --blue:#0a66c2; --ink:#1a1a1a; --label:#6b7280; --sub:#9ca3af;
+    --border:#e5e7eb; --track:#f3f4f6; --amber:#f59e0b; --red:#dc2626; --green:#059669;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+  .page{max-width:1000px;margin:40px auto;padding:0 24px}
+  .mockup-note{font-size:11px;color:var(--sub);background:#fff8e1;border:1px solid #f4d35e;border-radius:6px;padding:8px 12px;margin-bottom:20px}
+  h1{font-size:22px;font-weight:700;margin:0 0 6px}
+  .crumb{font-size:13px;color:var(--label);margin-bottom:24px}
+  .layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
+  .card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:16px}
+  .sidebar .card{padding:16px}
+  .card-heading{font-size:13px;font-weight:600;color:#374151;margin-bottom:12px}
+  .label{font-size:13px;color:var(--label);margin-bottom:6px}
+  .sub{font-size:12px;color:var(--sub);margin-top:4px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .toggle{padding:5px 12px;border:1px solid #d1d5db;border-radius:20px;background:#fff;cursor:pointer;font-size:12px}
+  .toggle.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:600}
+  .btn{padding:6px 14px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px}
+  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600;width:100%}
+  select{padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#fff}
+  .run{padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid transparent}
+  .run:hover{background:var(--track)}
+  .run.sel{background:#eff6ff;border-color:#bfdbfe}
+  .run.cmp{background:#fff7ed;border-color:#fed7aa}
+  .run .d{font-size:13px;font-weight:600}
+  .run .m{font-size:11px;color:var(--label);margin-top:2px}
+  .run .badge{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--track);color:#374151;margin-left:6px}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .metric{background:var(--track);border-radius:8px;padding:14px}
+  .metric .v{font-size:26px;font-weight:700;color:var(--blue);line-height:1.1}
+  .metric .d{font-size:11px;margin-top:2px}
+  .metric .k{font-size:11px;color:var(--label);margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+  .up{color:var(--green)} .down{color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--track)}
+  th{color:var(--label);font-weight:600}
+  tr.best td{background:#eff6ff;font-weight:600}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;margin:0 4px 4px 0;background:var(--track);color:#374151}
+  .pill.hot{background:#fee2e2;color:#991b1b}
+  .err{border-left:3px solid var(--red);padding:8px 12px;margin-bottom:8px;border:1px solid var(--border);border-left-width:3px;border-radius:0 6px 6px 0}
+  .err.fn{border-left-color:var(--amber)}
+  .err .top{display:flex;justify-content:space-between;font-size:11px;color:var(--label)}
+  .err .txt{font-size:12px;margin:5px 0}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mockup-note">THROWAWAY MOCKUP · Option C — Run history / compare-first · future "Evals" dashboard page (deferred from Phase 27, CLI-first ships first)</div>
+  <h1>LinkedIn Blocker — Evals</h1>
+  <div class="crumb">Master–detail. Left: every run, kept over time. Right: the selected run, with a Δ column when a comparison run is pinned. Optimised for tracking quality as prompts/models change.</div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-heading">New run</div>
+        <div class="row" style="margin-bottom:10px"><button class="toggle active">Heuristic</button><button class="toggle">LLM</button></div>
+        <select style="width:100%;margin-bottom:10px"><option>storage (130 labeled)</option><option>Import file…</option></select>
+        <button class="btn primary">▶ Run eval</button>
+      </div>
+      <div class="card">
+        <div class="card-heading">Run history</div>
+        <div class="run sel"><div class="d">2026-06-14 <span class="badge">heuristic</span></div><div class="m">F1 0.86 · selected</div></div>
+        <div class="run cmp"><div class="d">2026-06-10 <span class="badge">llm</span></div><div class="m">F1 0.81 · comparing ▲</div></div>
+        <div class="run"><div class="d">2026-06-08 <span class="badge">llm</span></div><div class="m">F1 0.79</div></div>
+        <div class="run"><div class="d">2026-06-02 <span class="badge">heuristic</span></div><div class="m">F1 0.74</div></div>
+        <div class="sub" style="margin-top:8px">Runs stored in chrome.storage.local · click to compare</div>
+      </div>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="detail">
+      <div class="card">
+        <div class="card-heading">2026-06-14 · heuristic · best-F1 threshold 60 &nbsp; <span class="sub" style="font-weight:400">vs 2026-06-10 (llm)</span></div>
+        <div class="metrics">
+          <div class="metric"><div class="v">0.86</div><div class="d up">▲ +0.05</div><div class="k">F1</div></div>
+          <div class="metric"><div class="v">0.89</div><div class="d up">▲ +0.04</div><div class="k">Precision</div></div>
+          <div class="metric"><div class="v">0.83</div><div class="d up">▲ +0.05</div><div class="k">Recall</div></div>
+          <div class="metric"><div class="v">free</div><div class="d up">▼ −$0.31</div><div class="k">Cost</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">Threshold sweep <span class="sub" style="font-weight:400">(Δ vs 06-10)</span></div>
+        <table>
+          <tr><th>Threshold</th><th>Precision</th><th>Recall</th><th>F1</th><th>Δ F1</th></tr>
+          <tr><td>50</td><td>0.82</td><td>0.89</td><td>0.85</td><td class="up">+0.06</td></tr>
+          <tr class="best"><td>60 ◀ best</td><td>0.89</td><td>0.83</td><td>0.86</td><td class="up">+0.05</td></tr>
+          <tr><td>70</td><td>0.93</td><td>0.72</td><td>0.81</td><td class="up">+0.03</td></tr>
+          <tr><td>80</td><td>0.96</td><td>0.58</td><td>0.72</td><td class="down">−0.02</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-heading">Error analysis @ 60 · 12 FP / 12 FN</div>
+        <div class="err">
+          <div class="top"><span>FALSE POSITIVE · score 64 · true human</span><span>@jane-recruiter</span></div>
+          <div class="txt">"Thrilled to share that our team just hit a major milestone — couldn't have done it without these incredible humans 🙌"</div>
+          <div><span class="pill hot">buzzwords +28</span><span class="pill hot">cta +18</span><span class="pill">em-dash +12</span></div>
+        </div>
+        <div class="err fn">
+          <div class="top"><span>FALSE NEGATIVE · score 52 · true ai</span><span>@growth-guru</span></div>
+          <div class="txt">"Success isn't about luck. It's about showing up every single day and doing the work."</div>
+          <div><span class="pill">motivational +22</span><span class="pill">impersonal +18</span></div>
+        </div>
+        <div class="sub">Top 2 shown · drill into all 24 misclassifications →</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

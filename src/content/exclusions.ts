@@ -17,36 +17,15 @@
  * per INFRA-04 and CLAUDE.md critical constraint #1.
  */
 
-import {
-  SPONSORED_MARKER,
-  COMPANY_PAGE_MARKER,
-  OPEN_TO_WORK_MARKER,
-} from './selectors';
+import { resolve } from './selector-registry';
 import { isNonEnglish } from './detector/language';
-import type { PostData } from '../shared/types';
+import type { PostData, ExclusionResult } from '../shared/types';
 
-/**
- * Result returned by checkExclusions.
- * When excluded=true, detection must be skipped.
- * When excluded=false, openToWork signals to the caller to raise the threshold.
- */
-export interface ExclusionResult {
-  /** True if this post must be skipped entirely (no detection). */
-  excluded: boolean;
-  /**
-   * Reason for exclusion — only set when excluded=true.
-   *   'sponsored'    — DETECT-02
-   *   'company-page' — DETECT-03
-   *   'non-english'  — DETECT-04
-   */
-  reason?: 'sponsored' | 'company-page' | 'non-english';
-  /**
-   * True when the author has Open to Work enabled (D-12.4).
-   * Only meaningful when excluded=false. The +20 threshold adjustment is applied
-   * by the caller — checkExclusions merely exposes the metadata.
-   */
-  openToWork?: boolean;
-}
+// ExclusionResult re-homed to src/shared/types.ts (Phase 30, Plan 01) so that
+// the host-agnostic skill types module can import it without a content→shared inversion.
+// Re-exported here so all existing importers of './exclusions' continue to resolve
+// ExclusionResult without any call-site changes.
+export type { ExclusionResult } from '../shared/types';
 
 /**
  * Checks whether a post should be excluded from heuristic detection.
@@ -65,13 +44,13 @@ export function checkExclusions(postData: PostData, postNode: Element): Exclusio
   // Priority 1: Sponsored / Promoted post (DETECT-02)
   // Uses querySelector on the post node — the SPONSORED_MARKER selector targets
   // aria-label attributes that survive LinkedIn class renames.
-  if (postNode.querySelector(SPONSORED_MARKER)) {
+  if (postNode.querySelector(resolve('SPONSORED_MARKER'))) {
     return { excluded: true, reason: 'sponsored' };
   }
 
   // Priority 2: Company page author (DETECT-03)
   // Company pages have /company/ in the profile URL; individual profiles use /in/.
-  if (postData.authorProfileUrl.includes(COMPANY_PAGE_MARKER)) {
+  if (postData.authorProfileUrl.includes(resolve('COMPANY_PAGE_MARKER'))) {
     return { excluded: true, reason: 'company-page' };
   }
 
@@ -83,6 +62,6 @@ export function checkExclusions(postData: PostData, postNode: Element): Exclusio
 
   // Priority 4: Open to Work passthrough (D-12.4)
   // Not an exclusion — the +20 threshold adjustment is applied by the caller in Plan 04.
-  const openToWork = !!postNode.querySelector(OPEN_TO_WORK_MARKER);
+  const openToWork = !!postNode.querySelector(resolve('OPEN_TO_WORK_MARKER'));
   return { excluded: false, openToWork };
 }

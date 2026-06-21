@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evals — Option A: Single-page console</title>
+<style>
+  :root{
+    --blue:#0a66c2; --ink:#1a1a1a; --label:#6b7280; --sub:#9ca3af;
+    --border:#e5e7eb; --track:#f3f4f6; --amber:#f59e0b; --red:#dc2626; --green:#059669;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fafafa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+  .page{max-width:760px;margin:40px auto;padding:0 24px}
+  .mockup-note{font-size:11px;color:var(--sub);background:#fff8e1;border:1px solid #f4d35e;border-radius:6px;padding:8px 12px;margin-bottom:20px}
+  h1{font-size:22px;font-weight:700;margin:0 0 6px}
+  .crumb{font-size:13px;color:var(--label);margin-bottom:24px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:16px}
+  .card-heading{font-size:13px;font-weight:600;color:#374151;margin-bottom:12px}
+  .label{font-size:13px;color:var(--label);margin-bottom:6px}
+  .sub{font-size:12px;color:var(--sub);margin-top:4px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .toggle{padding:6px 16px;border:1px solid #d1d5db;border-radius:20px;background:#fff;cursor:pointer;font-size:13px}
+  .toggle.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:600}
+  select,input[type=text]{padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;background:#fff}
+  .btn{padding:6px 16px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px}
+  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .metric{background:var(--track);border-radius:8px;padding:14px}
+  .metric .v{font-size:28px;font-weight:700;color:var(--blue);line-height:1.1}
+  .metric .k{font-size:11px;color:var(--label);margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--track)}
+  th{color:var(--label);font-weight:600}
+  tr.best td{background:#eff6ff;font-weight:600}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;margin:0 4px 4px 0;background:var(--track);color:#374151}
+  .pill.hot{background:#fee2e2;color:#991b1b}
+  .err{border-left:3px solid var(--red);padding:10px 12px;margin-bottom:8px;background:#fff;border-radius:0 6px 6px 0;border:1px solid var(--border);border-left-width:3px}
+  .err.fn{border-left-color:var(--amber)}
+  .err .top{display:flex;justify-content:space-between;font-size:12px;color:var(--label)}
+  .err .txt{font-size:13px;margin:6px 0}
+  .err .reason{font-size:12px;color:var(--label);font-style:italic}
+  .tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+  .tag.fp{background:#fee2e2;color:#991b1b}
+  .tag.fn{background:#fef3c7;color:#92400e}
+  hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+  .lbl-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--track)}
+  .lbl-row .pt{flex:1;font-size:12px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .seg{display:inline-flex;border:1px solid #d1d5db;border-radius:6px;overflow:hidden}
+  .seg button{border:none;background:#fff;padding:4px 10px;font-size:11px;cursor:pointer}
+  .seg button.ai{color:var(--red)} .seg button.human{color:var(--green)}
+  .seg button.sel-ai{background:var(--red);color:#fff} .seg button.sel-human{background:var(--green);color:#fff}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mockup-note">THROWAWAY MOCKUP · Option A — Single-page console · future "Evals" dashboard page (deferred from Phase 27, CLI-first ships first)</div>
+  <h1>LinkedIn Blocker — Evals</h1>
+  <div class="crumb">One scrollable console. Everything visible at once — mirrors the existing Feed Health dashboard layout.</div>
+
+  <!-- RUN CONTROLS -->
+  <div class="card">
+    <div class="card-heading">Run an eval</div>
+    <div class="label">Dataset</div>
+    <div class="row" style="margin-bottom:14px">
+      <select><option>chrome.storage.local (142 labeled / 18 unlabeled)</option><option>Import file…</option></select>
+    </div>
+    <div class="label">Engine</div>
+    <div class="row" style="margin-bottom:14px">
+      <button class="toggle active">Heuristic (free)</button>
+      <button class="toggle">LLM (Claude · ~$0.07)</button>
+    </div>
+    <div class="row">
+      <button class="btn primary">▶ Run eval</button>
+      <span class="sub">Last run: 2026-06-14 · heuristic · F1 0.86</span>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="card">
+    <div class="card-heading">Results — heuristic engine · best-F1 threshold 60</div>
+    <div class="metrics">
+      <div class="metric"><div class="v">0.86</div><div class="k">F1</div></div>
+      <div class="metric"><div class="v">0.89</div><div class="k">Precision</div></div>
+      <div class="metric"><div class="v">0.83</div><div class="k">Recall</div></div>
+      <div class="metric"><div class="v">142</div><div class="k">Posts</div></div>
+    </div>
+    <div class="sub">Cost: free (heuristic) · 71 AI / 71 human · 12 FP · 12 FN</div>
+  </div>
+
+  <!-- THRESHOLD SWEEP -->
+  <div class="card">
+    <div class="card-heading">Threshold sweep</div>
+    <table>
+      <tr><th>Threshold</th><th>Precision</th><th>Recall</th><th>F1</th><th>FP</th><th>FN</th></tr>
+      <tr><td>40</td><td>0.74</td><td>0.94</td><td>0.83</td><td>23</td><td>4</td></tr>
+      <tr><td>50</td><td>0.82</td><td>0.89</td><td>0.85</td><td>16</td><td>8</td></tr>
+      <tr class="best"><td>60 ◀ best</td><td>0.89</td><td>0.83</td><td>0.86</td><td>12</td><td>12</td></tr>
+      <tr><td>70</td><td>0.93</td><td>0.72</td><td>0.81</td><td>6</td><td>20</td></tr>
+      <tr><td>80</td><td>0.96</td><td>0.58</td><td>0.72</td><td>3</td><td>30</td></tr>
+    </table>
+  </div>
+
+  <!-- ERROR ANALYSIS -->
+  <div class="card">
+    <div class="card-heading">Error analysis @ threshold 60</div>
+    <div class="err">
+      <div class="top"><span><span class="tag fp">FALSE POSITIVE</span> &nbsp;score 64 · true: human</span><span>@jane-recruiter</span></div>
+      <div class="txt">"Thrilled to share that our team just hit a major milestone — couldn't have done it without these incredible humans 🙌"</div>
+      <div><span class="pill hot">buzzwords +28</span><span class="pill hot">cta +18</span><span class="pill">em-dash +12</span><span class="pill">motivational +6</span></div>
+    </div>
+    <div class="err">
+      <div class="top"><span><span class="tag fp">FALSE POSITIVE</span> &nbsp;score 61 · true: human</span><span>@dev-marcus</span></div>
+      <div class="txt">"Here are 5 things I learned shipping my first product: 1. Talk to users…"</div>
+      <div><span class="pill hot">listicle +30</span><span class="pill">hook-story +14</span><span class="pill">impersonal +9</span></div>
+    </div>
+    <div class="err fn">
+      <div class="top"><span><span class="tag fn">FALSE NEGATIVE</span> &nbsp;score 52 · true: ai</span><span>@growth-guru</span></div>
+      <div class="txt">"Success isn't about luck. It's about showing up every single day and doing the work."</div>
+      <div><span class="pill">motivational +22</span><span class="pill">impersonal +18</span><span class="sub">below threshold — short post, few signals fired</span></div>
+    </div>
+    <div class="sub">Showing top 3 of 12 FP and 12 FN · full lists in exported JSON</div>
+  </div>
+
+  <!-- LABELING -->
+  <div class="card">
+    <div class="card-heading">Label unlabeled posts (18 remaining)</div>
+    <div class="lbl-row"><span class="pt">"Excited to announce I'm joining @company as Head of Growth! 🚀 Grateful for…"</span>
+      <span class="seg"><button class="ai">AI</button><button class="human sel-human">Human</button></span></div>
+    <div class="lbl-row"><span class="pt">"Unpopular opinion: most productivity advice is noise. Here's what actually moved the needle for me…"</span>
+      <span class="seg"><button class="ai sel-ai">AI</button><button class="human">Human</button></span></div>
+    <div class="lbl-row"><span class="pt">"Just wrapped a 3-hour deep-dive on retrieval pipelines. Notes in comments."</span>
+      <span class="seg"><button class="ai">AI</button><button class="human">Human</button></span></div>
+    <hr>
+    <div class="row"><button class="btn">Bulk: flagged→AI, unflagged→Human</button><span class="sub">Writes <code>label</code> back to storage</span></div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="card">
+    <div class="card-heading">Compare to previous run</div>
+    <div class="row" style="margin-bottom:10px"><select><option>2026-06-10 · llm · F1 0.81</option></select><span class="sub">vs current (2026-06-14 · heuristic)</span></div>
+    <table>
+      <tr><th>Metric</th><th>2026-06-10 (llm)</th><th>2026-06-14 (heuristic)</th><th>Δ</th></tr>
+      <tr><td>F1</td><td>0.81</td><td>0.86</td><td style="color:var(--green)">+0.05</td></tr>
+      <tr><td>Precision</td><td>0.85</td><td>0.89</td><td style="color:var(--green)">+0.04</td></tr>
+      <tr><td>Recall</td><td>0.78</td><td>0.83</td><td style="color:var(--green)">+0.05</td></tr>
+      <tr><td>Cost</td><td>$0.31</td><td>free</td><td style="color:var(--green)">−$0.31</td></tr>
+    </table>
+  </div>
+</div>
+</body>
+</html>

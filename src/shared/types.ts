@@ -9,6 +9,18 @@
  */
 
 /**
+ * Anthropic Messages API token-usage block (subset used for trace cost accounting).
+ * Lives here (neutral shared types) so the service worker, the LLM classifier, and the
+ * dom-selector-rederive tool can all reference it without coupling to a detection skill.
+ */
+export interface AnthropicUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+}
+
+/**
  * Represents a single LinkedIn post as extracted from the DOM by the content script.
  * Passed from the content script to detectors (Phase 2+).
  *
@@ -51,6 +63,11 @@ export interface DetectionResult {
   confidence: 'high' | 'medium' | 'low';
   /** Which detection engine produced this result */
   engineUsed: 'heuristic' | 'llm';
+  /**
+   * One-sentence rationale from the LLM detector (optional). Captured for eval/debugging
+   * visibility; the heuristic engine does not populate it.
+   */
+  reasoning?: string;
 }
 
 /**
@@ -138,6 +155,13 @@ export interface ObservedPost {
 export interface Settings {
   /** Score threshold (35–90) above which posts are auto-hidden. Default: 60. */
   autoHideThreshold: number;
+  /**
+   * Opt-in (default OFF) to capture below-threshold posts as eval negatives.
+   * Distinct, deliberately-enabled eval-prep feature; stores text the user never flagged —
+   * a broader privacy surface than flagged-post storage.
+   * When undefined, treat as false.
+   */
+  captureUnflaggedPosts?: boolean;
 }
 
 /** One calendar day of detection stats (UTC date). Rolling 30-day log. */
@@ -176,6 +200,248 @@ export interface StoredPost {
   text: string;
   /** Unix timestamp (ms) when this post was hidden */
   hiddenAt: number;
+  /**
+   * User-supplied ground-truth label for eval purposes (Phase 28, D-08).
+   * Written ONLY by the Evals page via setPostLabel() — the content script NEVER writes this field.
+   * This is a deliberate shift from the prior "never written by the extension" rule; the label
+   * is user-initiated via a click action on the Evals page, not automatic detection logic.
+   */
+  label?: string;
+}
+
+/**
+ * A below-FLAG_THRESHOLD post captured as an eval negative (Phase 25.1).
+ * Stored in StorageSchema.unflaggedPosts as a newest-first array, capped at 200 entries.
+ *
+ * Opt-in: only captured when Settings.captureUnflaggedPosts is explicitly true.
+ * Stored UNLABELED — the extension never writes the `label` field. Ground-truth
+ * labels are added by the user after exporting the JSON for eval purposes (D-06).
+ */
+export interface UnflaggedPost {
+  /** LinkedIn post URN — dedup key */
+  urn: string;
+  /** Author profile slug */
+  authorId: string;
+  /** Author display name at time of capture */
+  authorName: string;
+  /** Composite detection score at time of capture (0–100) */
+  score: number;
+  /** Post text truncated at 1000 chars */
+  text: string;
+  /** Unix timestamp (ms) when the post was seen (NOT hiddenAt — these posts are never hidden) */
+  seenAt: number;
+  /** Which detection engine computed the score (D-04) */
+  engineUsed: 'heuristic' | 'llm';
+  /**
+   * User-supplied ground-truth label for eval purposes.
+   * Never written by the extension — added by the user after editing the exported JSON.
+   */
+  label?: string;
+}
+
+/**
+ * Export-only post-centric positives shape for the Phase 25.2 symmetric export.
+ * Sourced from hidden `storedPosts`; never written to storage — it is an export projection.
+ *
+ * Mirrors `UnflaggedPost` for symmetry, with two differences:
+ * - `hiddenAt` (not `seenAt`) — these posts were hidden, not merely seen.
+ * - No `engineUsed` — it was never recorded at hide time for `storedPosts`.
+ *
+ * Stored UNLABELED by default. The extension NEVER writes `label` — ground-truth labels
+ * are added by the user after exporting the JSON for eval purposes (25.1 D-06).
+ */
+export interface FlaggedPost {
+  /** LinkedIn post URN — dedup key */
+  urn: string;
+  /** Author profile slug */
+  authorId: string;
+  /** Author display name at time of hiding */
+  authorName: string;
+  /** Composite detection score at time of hiding (0–100) */
+  score: number;
+  /** Post text truncated at 1000 chars */
+  text: string;
+  /** Unix timestamp (ms) when this post was hidden (NOT seenAt — these posts were hidden) */
+  hiddenAt: number;
+  /**
+   * User-supplied ground-truth label for eval purposes.
+   * Never written by the extension — added by the user after editing the exported JSON.
+   */
+  label?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 24: Trace Capture & Storage
+// ---------------------------------------------------------------------------
+
+/**
+ * A single LLM call trace entry stored in chrome.storage.local.
+ * Written by the service worker on every LLM call (detector and rederiver), including
+ * failed attempts (D-03). Stored newest-first under llbTraces, capped at 500 entries (TRACE-03).
+ *
+ * Security note (T-24-01): This interface has NO apiKey/anthropicApiKey/x-api-key field —
+ * the API key is structurally un-storable in a trace.
+ *
+ * Note (T-24-02): userPrompt is bounded to 500 chars by the Plan 02 caller before
+ * appendTrace() is invoked. The full system prompt is stored without truncation (TRACE-01).
+ */
+export interface TraceEntry {
+  /** The Anthropic model ID used for this call (e.g. 'claude-sonnet-4-6') */
+  model: string;
+  /** Full system prompt text — no truncation (TRACE-01, D-04) */
+  systemPrompt: string;
+  /**
+   * User prompt text, truncated to 500 chars by the caller (Plan 02) before appendTrace().
+   * For detector calls: post text. For rederiver calls: the sanitized DOM skeleton.
+   */
+  userPrompt: string;
+  /** Non-cached input token count from the Anthropic usage object */
+  inputTokens: number;
+  /** Output token count from the Anthropic usage object */
+  outputTokens: number;
+  /**
+   * Cache-creation token count from cache_creation_input_tokens in the Anthropic usage object.
+   * Stored so costUsd can be recomputed against updated prices (D-07).
+   */
+  cacheCreationTokens: number;
+  /**
+   * Cache-read token count from cache_read_input_tokens in the Anthropic usage object.
+   * Stored so costUsd can be recomputed against updated prices (D-07).
+   */
+  cacheReadTokens: number;
+  /** Cache-aware USD cost computed at capture time (D-05). 0 on failed calls (D-03) or unknown model (D-08). */
+  costUsd: number;
+  /** ISO 8601 timestamp of the call (e.g. new Date().toISOString()) */
+  timestamp: string;
+  /** Which LLM pipeline produced this trace entry */
+  source: 'detector' | 'rederiver';
+  /** Error message if the call failed (HTTP 4xx/5xx, parse error, no API key). Absent on success. (D-03) */
+  error?: string;
+  /** True when the model is not in MODEL_PRICING — signals that costUsd is 0 due to unknown pricing (D-08). */
+  unpriced?: boolean;
+}
+
+/**
+ * Cache-aware model pricing table.
+ * Index signature maps model IDs to their per-million-token rates.
+ * undefined for models not in the pricing table (triggers D-08 unknown-model path).
+ */
+export type ModelPricing = {
+  [model: string]: { inputPerMTok: number; outputPerMTok: number } | undefined;
+};
+
+/**
+ * Enumeration of all selector targets that can be adapted and stored in the registry.
+ * These correspond to the selector constants exported from src/content/selectors.ts.
+ *
+ * Note: Some targets (POST_URN_ATTR, COMPANY_PAGE_MARKER) are used with
+ * getAttribute() or String.includes(), not querySelector().
+ * The registry returns these as attribute-name or URL-pattern strings (not DOM selectors).
+ */
+export type SelectorTarget =
+  | 'FEED_CONTAINER'
+  | 'FEED_CONTAINER_FALLBACK'
+  | 'POST_CARD'
+  | 'POST_URN_ATTR'
+  | 'POST_BODY_TEXT'
+  | 'POST_AUTHOR_LINK'
+  | 'SPONSORED_MARKER'
+  | 'COMPANY_PAGE_MARKER'
+  | 'RESHARE_INDICATOR'
+  | 'COMMENT_EXPAND_BUTTON'
+  | 'OPEN_TO_WORK_MARKER'
+  | 'COMMENT_TEXT'
+  | 'AUTHOR_HEADLINE'
+  | 'CONNECTION_DEGREE';
+
+/**
+ * Origin of a selector candidate in the registry.
+ * Tracks whether a selector was seeded from src/content/selectors.ts (seed),
+ * derived heuristically (heuristic), produced by an LLM (llm), or manually set by user (user).
+ */
+export type CandidateSource = 'seed' | 'heuristic' | 'llm' | 'user';
+
+/**
+ * A single selector candidate for a given target, with metadata for winner rotation and TTL eviction.
+ *
+ * The registry maintains a rank-ordered list of candidates per target.
+ * Index 0 is the active selector — used for all querySelector() / getAttribute() calls.
+ * Higher indices are fallbacks, rotated to the front on successful match (winner rotation).
+ */
+export interface SelectorCandidate {
+  /** Selector string, attribute name, or URL pattern — returned as-is by resolve() */
+  value: string;
+  /** Origin of this candidate (seed from src/content/selectors.ts, or adapted) */
+  source: CandidateSource;
+  /** ISO 8601 timestamp of the last successful DOM match, or null if never matched */
+  lastMatchedAt: string | null;
+  /** ISO 8601 timestamp of last verification (matches SELECTOR-01 metadata field) */
+  lastVerifiedAt: string | null;
+  /** ISO 8601 timestamp when this candidate was added to the registry */
+  addedAt: string;
+  /** Consecutive failed query attempts (incremented on querySelectorAll(value) returning empty; reset to 0 on match) */
+  failCount: number;
+  /** Cumulative number of successful DOM matches for this candidate (incremented on match) */
+  matchCount: number;
+}
+
+/**
+ * A ranked list of selector candidates for a single target.
+ * Index 0 is the active selector; subsequent indices are fallbacks.
+ * The list is capped at 10 entries (SELECTOR-05).
+ */
+export interface TargetEntry {
+  /** Rank-ordered selector candidates; index 0 = active */
+  candidates: SelectorCandidate[];
+}
+
+/**
+ * Complete selector registry schema stored in chrome.storage.local under the 'selectorRegistry' key.
+ *
+ * The registry is seeded from src/content/selectors.ts constants on first load or version bump,
+ * and subsequently adapted through winner rotation (Phase 23+) and TTL-based candidate eviction.
+ *
+ * Versioning: When src/content/selectors.ts SELECTORS_VERSION changes, the registry is migrated
+ * additively — new targets are added from the seed, existing adapted candidates are preserved,
+ * and the seed value is appended as a last-resort fallback.
+ */
+export interface SelectorRegistrySchema {
+  /** Version string matching src/content/selectors.ts SELECTORS_VERSION. Used to trigger migrations. */
+  version: string;
+  /** Map of all selector targets to their candidate lists. Every SelectorTarget must have an entry. */
+  targets: Record<SelectorTarget, TargetEntry>;
+  /** ISO 8601 timestamp of the last adaptation event (winner rotation or eviction), or null if seed-only */
+  lastAdaptedAt: string | null;
+}
+
+import type { EvalRun } from './eval/runs';
+import type { SkillRegistrySchema } from './skills/types';
+
+/**
+ * Result returned by checkExclusions.
+ * When excluded=true, detection must be skipped.
+ * When excluded=false, openToWork signals to the caller to raise the threshold.
+ *
+ * Re-homed from src/content/exclusions.ts to shared/types.ts so that
+ * src/shared/skills/types.ts can reference it host-agnostically (Phase 30, Plan 01).
+ * src/content/exclusions.ts re-exports it from here for backward compat.
+ */
+export interface ExclusionResult {
+  /** True if this post must be skipped entirely (no detection). */
+  excluded: boolean;
+  /**
+   * Reason for exclusion — only set when excluded=true.
+   *   'sponsored'    — DETECT-02
+   *   'company-page' — DETECT-03
+   *   'non-english'  — DETECT-04
+   */
+  reason?: 'sponsored' | 'company-page' | 'non-english';
+  /**
+   * True when the author has Open to Work enabled (D-12.4).
+   * Only meaningful when excluded=false. The +20 threshold adjustment is applied
+   * by the caller — checkExclusions merely exposes the metadata.
+   */
+  openToWork?: boolean;
 }
 
 /**
@@ -200,10 +466,45 @@ export interface StorageSchema {
   dismissedAccounts?: string[];
   /** Anthropic API key — set once via DevTools: chrome.storage.local.set({anthropicApiKey:'sk-ant-...'}) */
   anthropicApiKey?: string;
-  /** User settings — threshold configurable in popup Settings section. */
+  /** User settings — threshold configurable in popup Settings section (includes captureUnflaggedPosts opt-in). */
   settings?: Settings;
   /** Rolling 30-day stats log. Content script writes; dashboard reads. */
   dailyStats?: DailyStats[];
   /** Newest-first array of hidden posts saved for review. Capped at 200 entries; content script writes, popup Phase 8 reads. */
   storedPosts?: StoredPost[];
+  /**
+   * Newest-first array of below-FLAG_THRESHOLD posts captured as eval negatives. Stored UNLABELED.
+   * Capped at 200 with oldest-evicted; content script writes (gated by Settings.captureUnflaggedPosts, off by default);
+   * dashboard reads for export.
+   */
+  unflaggedPosts?: UnflaggedPost[];
+  /** Selector registry: versioned, rank-ordered candidate lists per target. Seeded from src/content/selectors.ts on first load or version bump. */
+  selectorRegistry?: SelectorRegistrySchema;
+  /** Set of selector targets that produced zero DOM matches in the current content-script session. Written by content script; read by dashboard health view. */
+  selectorSessionMisses?: SelectorTarget[];
+  /** ADAPT-05: epoch ms of most recent LLM rederive call, used for the ≥5-min cool-off check. */
+  llbRederiveLastCallMs?: number;
+  /** ADAPT-05: count of LLM rederive calls since UTC midnight, for the daily cap enforcement. */
+  llbRederiveCallsToday?: number;
+  /** ADAPT-05: 'YYYY-MM-DD' UTC string for date-rollover reset of llbRederiveCallsToday. */
+  llbRederiveDateKey?: string;
+  /** ADAPT-05: single-flight latch — true while an LLM rederive fetch is in-flight. */
+  llbRederiveInFlight?: boolean;
+  /** Newest-first array of LLM call traces. Capped at 500 entries (TRACE-03). SW writes; Phase 25 dashboard reads. */
+  llbTraces?: TraceEntry[];
+  /** Cache-aware model pricing table. SW overwrites from MODEL_PRICING constant on every load (D-06). */
+  llbModelPricing?: ModelPricing;
+  /**
+   * Newest-first array of eval run records persisted by the Phase 28 Evals dashboard (D-03).
+   * Capped at 50 entries (MAX_EVAL_RUNS). Dashboard writes via EvalRunStore; dashboard reads.
+   * CLI eval runs are written to eval/results-YYYY-MM-DD.json, NOT to this key.
+   */
+  evalRuns?: EvalRun[];
+  /**
+   * Versioned skill registry storing LLM-authored declarative skills (PatternSkill[]).
+   * Seeded with empty arrays on first load; code-defined skills are statically imported
+   * and merged at runtime — they are never written to storage (Phase 30, D-06).
+   * Only src/content/skill-registry.ts writes this key (CLAUDE.md constraint #1).
+   */
+  skillRegistry?: SkillRegistrySchema;
 }

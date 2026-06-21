@@ -181,6 +181,50 @@ Living post-mortem. Each milestone section is appended after close. Cross-milest
 
 ---
 
+## Milestone: v9.0 — Eval Harness
+
+**Shipped:** 2026-06-15
+**Phases:** 5 (25.1, 25.2, 26, 27, 28) | **Plans:** 16
+
+> Note: v6.0, v6.1, v7.0, and v8.0 shipped without retrospective entries (the living doc lapsed after v5.0). v9.0 resumes it; the milestone-close also retroactively recorded v7.0/v8.0 in ROADMAP/PROJECT.
+
+### What Was Built
+
+- Opt-in capture of below-threshold human-negatives to a capped `unflaggedPosts` store (25.1)
+- Symmetric Export JSON — `flaggedAccounts` (`blocked` boolean), `flaggedPosts[]`, `unflaggedPosts[]` (25.2)
+- `npm run eval` with shared `classifyPost`, threshold sweep, precision/recall/F1/cost → `eval/results-*.json` (26)
+- `--engine heuristic|llm`, best-F1 FP/FN error analysis, `eval-label` + `eval-compare`, pure `src/shared/eval/` core (27)
+- In-extension Evals dashboard reusing that core: click-to-label, cost-confirm modal, FP/FN cards, run diffs via `EvalRunStore` (28)
+
+### What Worked
+
+- Extracting the eval core to `src/shared/eval/` (pure, no fs/process/chrome/DOM) meant the CLI and the Phase 28 dashboard share ONE implementation — the integration audit confirmed zero forked logic (THRESHOLDS, computeMetrics, compareRuns all single-source).
+- Sequencing engine alignment (27) before the dashboard (28) meant the data model (`EvalRun`) was settled before the UI consumed it — Phase 28 was a pure UI addition with no migration.
+- Additive, transform-only export redesign (25.2) gave the eval a richer dataset without any storage-schema change.
+
+### What Was Inefficient
+
+- Phase 25.1 needed two gap-closure plans (25.1-05/06) after initial verification found the Export JSON button gated on `accounts.length > 0` only, and a requirements-ID mismatch (EXPORT-01 vs EXPORT-04). Checking the export-button reachability and REQ-ID uniqueness at plan time would have avoided the round-trip.
+- SUMMARY `requirements-completed` frontmatter went largely unpopulated across the milestone, weakening the 3-source audit cross-reference (evidence had to come from VERIFICATION.md tables instead).
+
+### Patterns Established
+
+- **Shared pure core for cross-host reuse:** host-agnostic logic in `src/shared/` (no fs/process/chrome/DOM imports) consumed by CLI, service worker, and extension pages alike.
+- **FIFO capped store idiom:** `EvalRunStore` mirrors `llbTraces`/`unflaggedPosts` — newest-first, fixed cap, write-chain eviction.
+- **Cost guardrail before LLM batch:** pre-run estimate + confirm modal + in-run Cancel that persists a partial run flagged `incomplete`.
+
+### Key Lessons
+
+- A newest-first store plus `.at(-1)` is a latent "last item" bug — the milestone integration audit caught exactly this in the Evals "Last run" footer (fixed fc92b40). When ordering is documented as newest-first, "most recent" is index 0.
+- Run a milestone integration audit even when every phase passed in isolation — the only defect found was at a cross-phase/display seam, not inside any single phase.
+
+### Cost Observations
+
+- Two-day execution (2026-06-14 → 2026-06-15), 16 plans across 5 phases.
+- Heuristic eval engine added in 27 makes the most common eval path free (no API spend) — only LLM-engine runs cost money.
+
+---
+
 ## Cross-Milestone Trends
 
 | Milestone | Phases | Plans | Days | Notes |
@@ -192,7 +236,10 @@ Living post-mortem. Each milestone section is appended after close. Cross-milest
 | v3.0 | 1 | 1 | 1 | Maintenance/rename |
 | v4.0 | 1 | 1 | 1 | Performance optimization |
 | v5.0 | 1 | 4 | 1 | Detection capability expansion |
+| v9.0 | 5 | 16 | 2 | Eval harness + in-extension Evals dashboard (largest since v1.0; v6.0–v8.0 retros not recorded) |
 
-**Recurring pattern:** Each milestone after v1.0 has been a focused single-day effort on one concern. The v1.0 foundation investment paid off — every subsequent milestone has been additive with minimal rework.
+**Recurring pattern:** Each milestone after v1.0 has been a focused single-day effort on one concern. The v1.0 foundation investment paid off — every subsequent milestone has been additive with minimal rework. v9.0 was the first multi-day milestone since v1.0, reflecting a larger 5-phase scope (eval runner → improvements → dashboard).
 
 **Recurring lesson:** Test content quality matters as much as implementation quality for regex-based detectors. Write both positive and negative examples before finalising patterns.
+
+**Emerging lesson (v9.0):** Cross-phase/display seams are where defects hide when each phase passes in isolation — run a milestone integration audit before close. Extracting shared logic into a pure host-agnostic core (`src/shared/eval/`) prevents the forked-implementation drift that otherwise accumulates when CLI and UI grow the same feature.

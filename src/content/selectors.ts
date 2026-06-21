@@ -1,12 +1,15 @@
 /**
- * LinkedIn Blocker — Selector Registry
+ * LinkedIn Blocker — Selector Seed Values
  *
- * !! THIS IS THE ONLY FILE IN THE PROJECT THAT MAY CONTAIN LINKEDIN DOM SELECTORS !!
+ * !! ALL HARD-CODED LINKEDIN SELECTOR STRINGS LIVE IN THIS FILE AND ONLY HERE !!
  *
- * Per INFRA-04 and CLAUDE.md critical constraint #1:
- *   - All LinkedIn DOM selectors are defined here and ONLY here.
- *   - Changing one constant in this file is sufficient to fix any selector breakage site-wide.
- *   - No other file in the project may contain a LinkedIn selector string.
+ * Seed-vs-Runtime Model (Phase 22):
+ *   - This file defines the DEFAULT/seed selector values for all LinkedIn DOM targets.
+ *   - At runtime, the content script reads selectors EXCLUSIVELY through SelectorRegistry,
+ *     which hydrates from chrome.storage.local and falls back to these seed values.
+ *   - Only SelectorRegistry may write selector strings to storage (for runtime adaptation).
+ *   - Changing one constant in this file sets the default for any selector breakage recovery.
+ *   - No other file in the project may directly import or contain a LinkedIn selector string.
  *
  * Inspection date: 2026-05-25 (see .planning/phases/01-foundation/DOM-INSPECTION.md)
  *
@@ -17,7 +20,7 @@
  */
 
 /** Version of the selector registry. Increment when a verified change is made. */
-export const SELECTORS_VERSION = '1.3.0';
+export const SELECTORS_VERSION = '1.4.0';
 
 // ---------------------------------------------------------------------------
 // Feed container
@@ -53,22 +56,6 @@ export const POST_CARD = 'div[componentkey]';
  */
 export const POST_URN_ATTR = 'componentkey';
 
-/**
- * Fallback post ID attribute — same as primary since componentkey is the only stable attr.
- */
-export const POST_URN_ATTR_FALLBACK = 'componentkey';
-
-// ---------------------------------------------------------------------------
-// Author
-// ---------------------------------------------------------------------------
-
-/**
- * Author display name element selector.
- * Verified 2026-05-29: Author name is in a strong inside the profile anchor. The :has(strong)
- * filter excludes avatar links (plain <a href="/in/..."> with no text children).
- */
-export const POST_AUTHOR_NAME = 'a[href*="/in/"]:has(strong) strong';
-
 // ---------------------------------------------------------------------------
 // Exclusion markers
 // ---------------------------------------------------------------------------
@@ -92,7 +79,7 @@ export const COMPANY_PAGE_MARKER = '/company/';
 
 // ---------------------------------------------------------------------------
 // Phase 2 additions
-// POST_BODY_TEXT, POST_AUTHOR_LINK, POST_AUTHOR_NAME: verified 2026-05-29 against live feed.
+// POST_BODY_TEXT, POST_AUTHOR_LINK: verified 2026-05-29 against live feed.
 // FEED_CONTAINER, POST_CARD, POST_URN_ATTR: verified 2026-05-29 — LinkedIn replaced data-* attrs
 // with componentkey attribute and data-component-type="LazyColumn" container.
 // RESHARE_INDICATOR, COMMENT_EXPAND_BUTTON, OPEN_TO_WORK_MARKER, COMMENT_TEXT: [ASSUMED] — still

@@ -6,19 +6,34 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate-skill-registry": "tsx scripts/generate-skill-registry.ts",
+    "prebuild": "npm run generate-skill-registry",
+    "check-skill-registry": "npm run generate-skill-registry && git diff --exit-code src/content/generated-skill-registry.ts",
+    "check-tool-registry": "npm run generate-skill-registry && git diff --exit-code src/shared/generated-tool-registry.ts",
     "build": "vite build",
     "dev": "vite build --watch",
     "type-check": "tsc --noEmit",
     "lint": "eslint src",
     "generate-icons": "node scripts/generate-icons.js",
-    "package": "npm run build && node scripts/package-zip.js"
+    "trace-summary": "tsx scripts/trace-summary.ts",
+    "eval": "tsx scripts/eval.ts",
+    "eval-label": "tsx scripts/eval-label.ts",
+    "eval-compare": "tsx scripts/eval-compare.ts",
+    "package": "npm run build && node scripts/package-zip.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "fast-levenshtein": "^3.0.0",
-    "preact": "^10.0.0"
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.2.0",
+    "preact": "^10.0.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.0",
+    "@types/js-yaml": "^4.0.9",
     "archiver": "^7.0.0",
     "@types/archiver": "^6.0.0",
     "sharp": "^0.33.0",
@@ -29,6 +44,7 @@
     "eslint": "^9.0.0",
     "jsdom": "^29.1.1",
     "prettier": "^3.0.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0",
     "vite-plugin-web-extension": "^4.5.1",

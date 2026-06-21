@@ -35,6 +35,21 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 - **Extension popup** shows the queue of suspicious accounts with post counts and signals detected
 - **User review** — from the popup, user can: confirm block (trigger LinkedIn block), dismiss (mark as false positive), or ignore for now
 
+## Current Milestone: v11.2 Dashboard Polish & Feed Health
+
+**Goal:** Polish the dashboard — make Selector Health accurate and aligned, clarify the data-management labels, and rebrand the header. Pure dashboard/observability polish with no detection-logic or new-scraping changes.
+
+**Target features:**
+- Selector Health accuracy — wire the contextual selectors (the rows stuck at `—` in Last matched: AUTHOR_HEADLINE, COMMENT_EXPAND_BUTTON, COMMENT_TEXT, COMPANY_PAGE_MARKER, CONNECTION_DEGREE, OPEN_TO_WORK_MARKER, SPONSORED_MARKER) into the observer/exclusion/signal match paths so `lastMatched` records real matches via the existing `SelectorRegistry.updateCandidate()` fire-and-forget pattern
+- Selector Health layout fix — correct the COMMENT_EXPAND_BUTTON row alignment in the table
+- Data-management relabels — "Export JSON" → "Export matching behaviour"; "Export Posts CSV" → "Export Posts seen (N)" with a live stored-post count (same CSV contents)
+- Header rebrand — dashboard title "LinkedIn AIVoice blocker - Feed Health", subtitle "because your brain deserves better"
+
+**Key context:**
+- Pure UI/observability polish; only `SelectorRegistry` writes selectors (CLAUDE.md #1). The lastMatched wiring reuses the observer hot-path `updateCandidate()` pattern at the exclusion/signal match sites
+- Closes the pending todo `instrument-lastmatched-for-exclusion-and-signal-selectors`. Deferred todos (production DEBUG flag, manual-heal coverage for RESHARE_INDICATOR/POST_AUTHOR_LINK) are out of scope for v11.2
+- Follows v11.1 (Manual Self-Healing Trigger), which added the dashboard "Heal selectors now" button + inline per-target Heal column
+
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
@@ -45,6 +60,11 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | Local-only storage | No backend, no account, no privacy risk | chrome.storage.local |
 | Block action | ToS risk with programmatic clicks | Deep-link to /overlay/report-or-block/ only |
 | Icons in src/public/icons/ | Vite publicDir with root: 'src' — copied verbatim to dist/ | Required for vite-plugin-web-extension |
+| Selector seed-vs-runtime split (v7.0) | `selectors.ts` = defaults seed; `SelectorRegistry` = runtime source-of-truth; only the registry writes selectors | ✓ Good — reconciles CLAUDE.md constraint #1 |
+| LLM fetch in service worker (v7.0) | CORS blocks content-script fetch from linkedin.com; LLMRederiver follows the SCORE_POST relay pattern | ✓ Good |
+| Shared classifier + eval core (v9.0) | Extract `classifyPost` to `src/shared/classifier.ts` and pure eval core to `src/shared/eval/` so service worker, CLI, and Evals dashboard share one implementation | ✓ Good — no forked logic across hosts |
+| Symmetric export shape (v9.0) | Three top-level arrays (`flaggedAccounts` w/ `blocked` boolean, `flaggedPosts`, `unflaggedPosts`); additive, transform-only over stored data | ✓ Good — feeds eval without storage migration |
+| Eval runs stored, not downloaded (v9.0) | `EvalRunStore` FIFO in `chrome.storage.local` (cap 50); pre-run cost-estimate + confirm modal, in-run Cancel persists partial run | ✓ Good |
 
 ## Requirements
 
@@ -104,20 +124,28 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 - "📊 View Dashboard" button surfaced at the top of the popup, visible without opening Settings ✓
 - Settings disclosure retains only threshold + API key/mode + export/cleanse controls (dashboard link moved, not duplicated) ✓
 
-### Current Milestone: v7.0 Adaptive DOM Scraper
+### Validated (v7.0 complete)
 
-**Goal:** Make LinkedIn scraping resilient to LinkedIn's frequent DOM/class churn — store selectors as a dynamic, ranked candidate registry, and add a module that detects when scraping breaks and re-derives working selectors automatically.
+- Selector-registry entries stored in `chrome.storage.local` as ranked candidate lists (source, last-verified, last-matched), seeded from `selectors.ts` ✓
+- Runtime resolution via `SelectorRegistry` (priority order); read-only health view of active selectors + source; reset-to-defaults escape hatch ✓
+- Self-healing adapter: total-breakage detection with 6 false-positive guards → heuristic re-derivation → LLM fallback on sanitized structural DOM (no PII), strictly validated before any write ✓
+- Fixture-DOM tests covering seeding, runtime resolution, versioned migration, reset, and heuristic/LLM recovery; CLAUDE.md constraint #1 updated to the seed-vs-runtime model ✓
 
-**Target features:**
-- Externalize all selector-registry entries into `chrome.storage.local` as ranked candidate lists with metadata (source, last-verified, last-matched), seeded from the current `selectors.ts` defaults
-- Scraper reads candidates from storage at runtime (priority order); read-only view of active selectors + source
-- Self-healing adapter: detect total breakage (zero post-card matches over an active-feed window), re-derive selectors via structural heuristics, fall back to LLM (Claude) only when heuristics fail; prepend winning candidate
-- Fixture-DOM automated tests proving read-from-storage, breakage detection, and heuristic recovery
+### Validated (v8.0 complete)
 
-**Key context:**
-- `selectors.ts` is reframed from runtime source-of-truth to the **seed/defaults** source; storage becomes the runtime source-of-truth (reconciles CLAUDE.md constraint #1).
-- Manual selector editing is deferred to a Future Requirement (read-only this milestone).
-- LLM fallback reuses the existing Anthropic API-key/mode + prompt-caching infra (v4.0); DOM samples sanitized before any API call.
+- Trace capture for `LLMDetector` + `LLMRederiver` (shared schema, `source` distinguishes them) ✓
+- `chrome.storage.local` FIFO trace store (500-entry cap) ✓
+- "Export Traces" button on dashboard → JSON download ✓
+- `npm run trace-summary <file>` → cost breakdown table + idempotent `## LLM Cost Reference` section written into README.md ✓
+
+### Validated (v9.0 complete)
+
+- Below-threshold posts captured UNLABELED to a capped `unflaggedPosts` store behind an OFF-by-default opt-in ✓
+- Symmetric Export JSON: `flaggedAccounts` (`status`→`blocked` boolean), post-centric `flaggedPosts[]`, and `unflaggedPosts[]` ✓
+- Shared transport-agnostic `classifyPost` (`src/shared/classifier.ts`) used by both service worker and CLI ✓
+- `npm run eval <labeled-posts.json>` → selectable `--engine heuristic|llm`, threshold sweep, precision/recall/F1/accuracy/cost, results to `eval/results-YYYY-MM-DD.json` ✓
+- Best-F1 FP/FN error analysis; `npm run eval-label` + `npm run eval-compare`; pure host-agnostic eval core in `src/shared/eval/` ✓
+- In-extension Evals dashboard (`evals.html`) reusing the eval core: click-to-label, cost-estimate confirm modal, FP/FN cards, run-over-run diffs persisted via `EvalRunStore` ✓
 
 ---
 
@@ -143,7 +171,39 @@ Detection starts as rule-based heuristics. The architecture allows plugging in a
 | v5.0 | Voice pattern detection — hook-story, motivational, impersonal framing signals | Complete 2026-05-31 |
 | v6.0 | UX Polish + Block Management — popup interaction fixes, batch block, threshold-hiding bug | Complete 2026-06-06 |
 | v6.1 | Popup UX Tidy-up — surface the View Dashboard button at the top of the popup | Complete 2026-06-06 |
-| v7.0 | Adaptive DOM Scraper — storage-backed candidate registry + self-healing selector adapter | In progress |
+| v7.0 | Adaptive DOM Scraper — storage-backed candidate registry + self-healing selector adapter | Complete 2026-06-14 |
+| v8.0 | Observability — per-call LLM traces, dashboard export, README cost table | Complete 2026-06-14 |
+| v9.0 | Eval Harness — labeled-dataset eval runner, precision/recall/F1/cost metrics, in-extension Evals dashboard | Complete 2026-06-15 |
+| v10.0 | Skill-Based Detection & Tool Abstraction — two-level skill registry, Agent Skills folder convention, first-class Tool abstraction (Phases 29–32) | Complete 2026-06-16 |
+| v11.0 | Modularity & Maintainability — self-contained skill folders, codegen-sourced registry (Phase 33) | Complete 2026-06-17 |
+| v11.1 | Manual Self-Healing Trigger — dashboard "Heal selectors now" button, TRIGGER_HEAL transport, inline per-target Heal column (Phase 34) | Complete 2026-06-21 |
 
 ---
-*Last updated: 2026-06-06 — v7.0 started*
+
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
+---
+*Milestone v11.2 started 2026-06-21 — Dashboard Polish & Feed Health. Scope: wire contextual selectors into the observer/exclusion/signal match paths so Selector Health "Last matched" reflects reality (closes the lastMatched instrumentation gap); fix COMMENT_EXPAND_BUTTON row alignment; relabel data-management buttons (Export JSON → "Export matching behaviour", Export Posts CSV → "Export Posts seen (N)" with live count); rebrand the dashboard header (title "LinkedIn AIVoice blocker - Feed Health", subtitle "because your brain deserves better"). Pure dashboard/observability polish — no detection-logic or new-scraping changes. Follows v11.1 (Manual Self-Healing Trigger, Phase 34).*
+
+*Last updated: 2026-06-16 after Phase 31 (Skill Library Alignment) — previously updated 2026-06-15 after v9.0 milestone — Eval Harness shipped (Phases 25.1, 25.2, 26, 27, 28): opt-in negatives capture, symmetric labeled export, `npm run eval` (heuristic/LLM) with precision/recall/F1/cost, FP/FN error analysis, labeling/compare CLIs, and an in-extension Evals dashboard reusing the shared `src/shared/eval/` core. Audit passed 12/12. This close also retroactively validated v7.0 (Adaptive DOM Scraper) and v8.0 (Observability), which had shipped but not been recorded.*
+
+*Milestone v10.0 started 2026-06-15 — Skill-Based Detection & Eval-Driven Tuning. Phase 29 (Config Foundation) shipped 2026-06-15. Re-scoped 2026-06-16: Phase 30 changed from "LLM-Primary Promotion" to "Skill Registry Architecture" — reorganize detectors/signals/exclusions into a two-level skill registry ready to hydrate declarative, LLM-authorable skills from storage (zero behavior change). LLM-primary promotion (old LLM-01/02/03) dropped; the LLM remains one DetectorSkill. No new profile/engagement scraping.*
+
+*Milestone v10.0 re-scoped 2026-06-16 (post Phase 31) — retitled "Skill-Based Detection & Eval-Driven Tuning" → "Skill-Based Detection & Tool Abstraction". The eval-driven-tuning track (precision-constrained threshold selector, held-out split, eval-derived config bake, F1/precision regression gate, FP reduction — old Phases 32 Eval Tuning Machinery + 33 Detection Tuning Run, reqs CFG-02/CFG-03/TUNE-01) was scoped out and deferred. Phase 31 added the Anthropic Agent Skills folder convention (`skills/library/`, type-prefixed); new Phase 32 (Tool Abstraction Layer, TOOL-01/02) introduces a `Tool` contract distinct from the host-agnostic detection skills and migrates `rederiveSelector` as the first tool.*
+
+*Phase 31 (Skill Library Alignment) complete 2026-06-16 — all detector/exclusion/signal/selector skills restructured into self-contained `src/skills/library/<name>/` folders with SKILL.md manifests (Anthropic Agent Skills convention); SkillRegistry sources its ordered arrays from a committed codegen module (`generate-skill-registry`); invariants locked by order-pinning + kind-drift tests, a CI stale-check, and AUTHORING.md. Zero behavior change (verified 5/5, 422 tests pass). Validates SKILL-05.*
