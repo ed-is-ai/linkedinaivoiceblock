@@ -218,15 +218,23 @@ export function liveFeedContainer(): Element | null {
  * Returns the per-target HealOutcome[] on success, or `null` when the guard declines
  * entry (heal in flight or cool-off not yet elapsed) so the caller can map `null` to
  * the { error: HEAL_BUSY } sentinel without running a concurrent heal.
+ *
+ * @param container - The live feed container element.
+ * @param manual    - When true (dashboard-initiated), the 5-minute content-side cool-off
+ *                    is skipped so one click can attempt ALL stale targets.  The single-flight
+ *                    latch (_healInProgress) still applies to prevent concurrent heals.
+ *                    Defaults to false (automatic observer-triggered heals keep the cool-off).
  */
-export async function requestGuardedHeal(container: Element): Promise<HealOutcome[] | null> {
-  if (_healInProgress || Date.now() - _lastHealMs < HEAL_COOLOFF_MS) {
+export async function requestGuardedHeal(container: Element, manual = false): Promise<HealOutcome[] | null> {
+  // Single-flight latch always applies (manual or auto).
+  // Cool-off only applies to automatic heals — manual heals bypass it.
+  if (_healInProgress || (!manual && Date.now() - _lastHealMs < HEAL_COOLOFF_MS)) {
     return null; // guard busy — caller maps this to HEAL_BUSY sentinel
   }
   _healInProgress = true;
   _lastHealMs = Date.now();
   try {
-    return await triggerHeal(container);
+    return await triggerHeal(container, manual);
   } finally {
     _healInProgress = false;
   }

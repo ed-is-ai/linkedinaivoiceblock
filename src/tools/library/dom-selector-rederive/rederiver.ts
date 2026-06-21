@@ -22,11 +22,18 @@ export class LLMRederiver {
    * Send a REDERIVE_SELECTOR message and resolve the candidate array.
    * Rejects on chrome.runtime.lastError or a `{ error }` response (rate-limit,
    * missing API key, schema failure) — the caller releases its heal lock on reject.
+   *
+   * @param target      - The SelectorTarget key to rederive.
+   * @param domSkeleton - PII-stripped DOM skeleton string.
+   * @param manual      - When true, signals the background that this call originates from
+   *                      a manual dashboard trigger; the background will skip the 5-minute
+   *                      cool-off (but still enforce the daily cap and single-flight latch).
+   *                      Defaults to false (automatic observer-triggered heals keep the cool-off).
    */
-  rederive(target: string, domSkeleton: string): Promise<RederiveCandidate[]> {
+  rederive(target: string, domSkeleton: string, manual = false): Promise<RederiveCandidate[]> {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
-        { type: 'REDERIVE_SELECTOR', target, domSkeleton },
+        { type: 'REDERIVE_SELECTOR', target, domSkeleton, manual },
         (response) => {
           if (chrome.runtime.lastError) {
             reject(chrome.runtime.lastError);

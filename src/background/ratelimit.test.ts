@@ -82,10 +82,10 @@ function makeChrome() {
 }
 
 /** Invoke the captured REDERIVE_SELECTOR handler and return its sendResponse spy. */
-function sendRederive(): { sendResponse: ReturnType<typeof vi.fn>; ret: unknown } {
+function sendRederive(opts: { manual?: boolean } = {}): { sendResponse: ReturnType<typeof vi.fn>; ret: unknown } {
   const sendResponse = vi.fn();
   const ret = messageListener!(
-    { type: 'REDERIVE_SELECTOR', target: 'POST_CARD', domSkeleton: '<div data-urn></div>' },
+    { type: 'REDERIVE_SELECTOR', target: 'POST_CARD', domSkeleton: '<div data-urn></div>', manual: opts.manual ?? false },
     {},
     sendResponse,
   );
@@ -168,6 +168,70 @@ describe('REDERIVE_SELECTOR — 5-minute cool-off (ADAPT-05)', () => {
     store.llbRederiveCallsToday = 1;
 
     const { sendResponse } = sendRederive();
+    await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    const arg = sendResponse.mock.calls[0]![0] as { error: string };
+    expect(arg.error).toMatch(/^rate-limited: cooloff:/);
+  });
+});
+
+// ── Manual cool-off exemption ────────────────────────────────────────────────
+
+describe('REDERIVE_SELECTOR — manual=true skips cool-off (fix_2)', () => {
+  it('allows a manual call within the cool-off window (bypasses 5-min cool-off)', async () => {
+    store.anthropicApiKey = 'sk-ant-test';
+    store.llbRederiveLastCallMs = Date.now(); // just called — inside cool-off
+    store.llbRederiveDateKey = TODAY;
+    store.llbRederiveCallsToday = 1; // under daily cap
+    fetchMock.mockResolvedValue(
+      okResponse([{ selector: 'div[data-urn]', rationale: 'x' }]),
+    );
+
+    const { sendResponse } = sendRederive({ manual: true });
+    await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+
+    // Manual heal bypasses cool-off — fetch should have been called
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(sendResponse).toHaveBeenCalledWith({
+      result: [{ selector: 'div[data-urn]', rationale: 'x' }],
+    });
+  });
+
+  it('still enforces the daily cap even for manual=true calls', async () => {
+    store.anthropicApiKey = 'sk-ant-test';
+    store.llbRederiveLastCallMs = Date.now(); // inside cool-off
+    store.llbRederiveDateKey = TODAY;
+    store.llbRederiveCallsToday = 5; // AT daily cap
+
+    const { sendResponse } = sendRederive({ manual: true });
+    await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+
+    // Daily cap blocks even manual calls
+    expect(fetchMock).not.toHaveBeenCalled();
+    const arg = sendResponse.mock.calls[0]![0] as { error: string };
+    expect(arg.error).toMatch(/daily cap reached: 5\/5/);
+  });
+
+  it('still enforces the single-flight latch even for manual=true calls', async () => {
+    store.anthropicApiKey = 'sk-ant-test';
+    store.llbRederiveInFlight = true; // latch held
+
+    const { sendResponse } = sendRederive({ manual: true });
+    await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
+
+    // Single-flight latch blocks even manual calls
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(sendResponse).toHaveBeenCalledWith({ error: 'rate-limited: single-flight latch held' });
+  });
+
+  it('non-manual (automatic) call within cool-off is still refused', async () => {
+    store.anthropicApiKey = 'sk-ant-test';
+    store.llbRederiveLastCallMs = Date.now(); // inside cool-off
+    store.llbRederiveDateKey = TODAY;
+    store.llbRederiveCallsToday = 1;
+
+    const { sendResponse } = sendRederive({ manual: false });
     await vi.waitFor(() => expect(sendResponse).toHaveBeenCalled());
 
     expect(fetchMock).not.toHaveBeenCalled();

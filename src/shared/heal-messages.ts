@@ -32,12 +32,23 @@ export const TRIGGER_HEAL = 'TRIGGER_HEAL' as const;
 export const HEAL_BUSY = 'busy' as const;
 
 /** Per-target outcome of a single triggerHeal run. */
-export type HealResult = 'healed' | 'unchanged' | 'failed';
+export type HealResult = 'healed' | 'unchanged' | 'failed' | 'rate-limited';
 
-/** Outcome for one target within a triggerHeal invocation. */
+/**
+ * Outcome for one target within a triggerHeal invocation.
+ *
+ * - `healed`       — selector was stale and successfully replaced.
+ * - `unchanged`    — selector was stale but no API key configured (graceful degrade).
+ * - `failed`       — selector was stale but all candidates failed validation, or a
+ *                    non-rate-limit error occurred.  `reason` carries a short description.
+ * - `rate-limited` — the background rate-limiter refused the rederive call (daily cap or
+ *                    single-flight latch).  `reason` carries the rejection message.
+ */
 export interface HealOutcome {
   target: SelectorTarget;
   result: HealResult;
+  /** Short human-readable explanation populated on 'failed' and 'rate-limited' results. */
+  reason?: string;
 }
 
 /** Request envelope sent from the dashboard to the content script. */

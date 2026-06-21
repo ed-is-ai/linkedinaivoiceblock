@@ -209,10 +209,12 @@ chrome.runtime.onMessage.addListener(
       return true;
     }
 
-    requestGuardedHeal(container)
+    // manual = true: dashboard-initiated heal bypasses the 5-min content-side cool-off
+    // so one click can attempt ALL stale targets (single-flight latch still applies).
+    requestGuardedHeal(container, true)
       .then((outcomes) => {
         if (outcomes === null) {
-          // Guard busy or cool-off not elapsed — respond with the pinned sentinel (D-08)
+          // Guard busy (single-flight latch held) — respond with the pinned sentinel (D-08)
           sendResponse({ error: HEAL_BUSY });
         } else {
           sendResponse({ result: outcomes });

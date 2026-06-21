@@ -134,8 +134,12 @@ function isStale(target: SelectorTarget, container: Element): boolean {
  * or skipped due to a missing API key).  Non-stale targets are not represented.
  *
  * @param container - The live feed container element.
+ * @param manual    - When true, the call originates from the dashboard manual heal button.
+ *                    Passed through to LLMRederiver so the background can skip the 5-minute
+ *                    cool-off for this run (daily cap and single-flight latch still apply).
+ *                    Defaults to false (automatic observer-triggered heals keep the cool-off).
  */
-export async function triggerHeal(container: Element): Promise<HealOutcome[]> {
+export async function triggerHeal(container: Element, manual = false): Promise<HealOutcome[]> {
   const outcomes: HealOutcome[] = [];
 
   // ── Card-shaped targets: heuristic deriver ────────────────────────────────
@@ -191,7 +195,7 @@ export async function triggerHeal(container: Element): Promise<HealOutcome[]> {
 
     try {
       const rederiver = new LLMRederiver();
-      const llmCandidates = await rederiver.rederive(target, skeleton);
+      const llmCandidates = await rederiver.rederive(target, skeleton, manual);
       let healed = false;
 
       for (const c of llmCandidates) {
@@ -208,12 +212,17 @@ export async function triggerHeal(container: Element): Promise<HealOutcome[]> {
 
       if (!healed) {
         console.warn('[LLB] heal: all LLM candidates failed for', target);
-        outcomes.push({ target, result: 'failed' });
+        outcomes.push({ target, result: 'failed', reason: 'no valid candidate' });
       }
     } catch (err) {
-      // Per-target error — record 'failed' and continue (D-06 / T-34-05)
-      console.warn('[LLB] heal: error re-deriving', target, ':', err);
-      outcomes.push({ target, result: 'failed' });
+      // Per-target error — distinguish rate-limited from genuine failure (D-06 / T-34-05)
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn('[LLB] heal: error re-deriving', target, ':', msg);
+      if (msg.startsWith('rate-limited:')) {
+        outcomes.push({ target, result: 'rate-limited', reason: msg });
+      } else {
+        outcomes.push({ target, result: 'failed', reason: msg });
+      }
     }
   }
 

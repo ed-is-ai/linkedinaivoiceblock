@@ -285,6 +285,101 @@ describe('triggerHeal — generalized multi-target heal (HEAL-03)', () => {
     expect(subElementOutcomes.length).toBeGreaterThan(0);
     for (const o of subElementOutcomes) {
       expect(o.result).toBe('failed');
+      expect(o.reason).toBe('no valid candidate');
+    }
+  });
+});
+
+// ── Manual flag threading and per-target reason population ───────────────────
+
+describe('triggerHeal — manual flag + per-target reasons (fix_2 / fix_3)', () => {
+  it('passes manual=true to rederive when called with manual=true', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    rederiveMock.mockResolvedValue([]);
+
+    await triggerHeal(container, true);
+
+    // Every rederive call should have received true as the third argument
+    expect(rederiveMock).toHaveBeenCalled();
+    for (const call of rederiveMock.mock.calls) {
+      expect(call[2]).toBe(true);
+    }
+  });
+
+  it('passes manual=false (default) to rederive when called without the flag', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    rederiveMock.mockResolvedValue([]);
+
+    await triggerHeal(container);
+
+    expect(rederiveMock).toHaveBeenCalled();
+    for (const call of rederiveMock.mock.calls) {
+      // Default param is false
+      expect(call[2] ?? false).toBe(false);
+    }
+  });
+
+  it('yields result "rate-limited" with reason for sub-element targets when rederive rejects with a rate-limited: message', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    rederiveMock.mockRejectedValue(new Error('rate-limited: daily cap reached: 5/5'));
+
+    const outcomes = await triggerHeal(container);
+
+    // Sub-element targets should be 'rate-limited'; card targets (POST_CARD, POST_BODY_TEXT)
+    // that failed heuristically will appear as 'failed' — filter to only sub-element outcomes
+    const SUB_ELEMENT = new Set(['SPONSORED_MARKER', 'AUTHOR_HEADLINE', 'CONNECTION_DEGREE',
+      'COMMENT_EXPAND_BUTTON', 'COMMENT_TEXT', 'OPEN_TO_WORK_MARKER']);
+    const subOutcomes = outcomes.filter((o) => SUB_ELEMENT.has(o.target));
+    expect(subOutcomes.length).toBeGreaterThan(0);
+    for (const o of subOutcomes) {
+      expect(o.result).toBe('rate-limited');
+      expect(o.reason).toMatch(/^rate-limited:/);
+    }
+  });
+
+  it('yields result "failed" with reason for sub-element targets when rederive rejects with a non-rate-limited error', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    rederiveMock.mockRejectedValue(new Error('API 500: internal server error'));
+
+    const outcomes = await triggerHeal(container);
+
+    const SUB_ELEMENT = new Set(['SPONSORED_MARKER', 'AUTHOR_HEADLINE', 'CONNECTION_DEGREE',
+      'COMMENT_EXPAND_BUTTON', 'COMMENT_TEXT', 'OPEN_TO_WORK_MARKER']);
+    const subFailed = outcomes.filter((o) => SUB_ELEMENT.has(o.target) && o.result === 'failed');
+    expect(subFailed.length).toBeGreaterThan(0);
+    for (const o of subFailed) {
+      expect(o.reason).toBe('API 500: internal server error');
+    }
+  });
+
+  it('populates reason="no valid candidate" for sub-element targets when all rederive candidates fail validation', async () => {
+    const container = mount('feed-broken-classrot');
+    vi.mocked(resolve).mockReturnValue('__no_match__');
+    vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
+    vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
+    // Return a candidate that will fail validateCandidate on the fixture
+    rederiveMock.mockResolvedValue([{ selector: '__bad_selector_xyz__', rationale: 'bad' }]);
+
+    const outcomes = await triggerHeal(container);
+
+    const SUB_ELEMENT = new Set(['SPONSORED_MARKER', 'AUTHOR_HEADLINE', 'CONNECTION_DEGREE',
+      'COMMENT_EXPAND_BUTTON', 'COMMENT_TEXT', 'OPEN_TO_WORK_MARKER']);
+    const subFailed = outcomes.filter((o) => SUB_ELEMENT.has(o.target) && o.result === 'failed');
+    expect(subFailed.length).toBeGreaterThan(0);
+    for (const o of subFailed) {
+      expect(o.reason).toBe('no valid candidate');
     }
   });
 });

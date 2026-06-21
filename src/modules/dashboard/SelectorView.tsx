@@ -302,6 +302,22 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#dc2626',
     background: '#fef2f2',
   },
+  rateLimitedBadge: {
+    fontSize: 10,
+    padding: '2px 6px',
+    borderRadius: 10,
+    color: '#d97706',
+    background: '#fffbeb',
+  },
+  healResultReason: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginLeft: 4,
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  },
   healResultsContainer: {
     marginTop: 8,
   },
@@ -564,11 +580,18 @@ export default function SelectorView({
                     ? s.healedBadge
                     : outcome.result === 'failed'
                     ? s.failedBadge
+                    : outcome.result === 'rate-limited'
+                    ? s.rateLimitedBadge
                     : s.unchangedBadge;
                 return (
                   <div key={outcome.target} style={s.healResultRow}>
                     <div style={s.healResultTarget}>{outcome.target}</div>
                     <div style={badgeStyle}>{outcome.result}</div>
+                    {outcome.reason && (
+                      <div style={s.healResultReason} title={outcome.reason}>
+                        {outcome.reason}
+                      </div>
+                    )}
                   </div>
                 );
               })}

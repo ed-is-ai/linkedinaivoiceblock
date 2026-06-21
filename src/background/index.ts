@@ -121,11 +121,15 @@ const REDERIVE_DAILY_CAP = 5;
 
 /**
  * ADAPT-05: rate-limit check read fresh from storage every call (SW is stateless).
- * Refuses when the single-flight latch is held, inside the 5-min cool-off, or at the
- * daily cap. Returns todayKey/callsToday so the caller can acquire the latch without
- * a second storage read.
+ * Refuses when the single-flight latch is held, at the daily cap, or (for automatic heals
+ * only) inside the 5-min cool-off. Returns todayKey/callsToday so the caller can acquire
+ * the latch without a second storage read.
+ *
+ * @param manual - When true (dashboard-initiated), the 5-minute cool-off is skipped so
+ *                 one manual click can attempt all stale targets. The daily cap
+ *                 (REDERIVE_DAILY_CAP) and single-flight latch are still enforced.
  */
-async function checkRateLimit(): Promise<{
+async function checkRateLimit(manual = false): Promise<{
   allowed: boolean;
   reason?: string;
   todayKey: string;
@@ -148,15 +152,18 @@ async function checkRateLimit(): Promise<{
     return { allowed: false, reason: 'single-flight latch held', todayKey, callsToday };
   }
 
-  // 5-minute cool-off
-  const lastMs = (result.llbRederiveLastCallMs as number | undefined) ?? 0;
-  const sinceLast = Date.now() - lastMs;
-  if (sinceLast < REDERIVE_COOLOFF_MS) {
-    const remaining = Math.round((REDERIVE_COOLOFF_MS - sinceLast) / 1000);
-    return { allowed: false, reason: `cooloff: ${remaining}s remaining`, todayKey, callsToday };
+  // 5-minute cool-off — skipped for manual (dashboard-initiated) heals so one click
+  // can attempt all stale targets. Automatic (observer-triggered) heals keep the cool-off.
+  if (!manual) {
+    const lastMs = (result.llbRederiveLastCallMs as number | undefined) ?? 0;
+    const sinceLast = Date.now() - lastMs;
+    if (sinceLast < REDERIVE_COOLOFF_MS) {
+      const remaining = Math.round((REDERIVE_COOLOFF_MS - sinceLast) / 1000);
+      return { allowed: false, reason: `cooloff: ${remaining}s remaining`, todayKey, callsToday };
+    }
   }
 
-  // Daily cap (date-rollover resets the count via callsToday above)
+  // Daily cap (date-rollover resets the count via callsToday above) — always enforced
   if (callsToday >= REDERIVE_DAILY_CAP) {
     return {
       allowed: false,
@@ -223,8 +230,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message?.type === 'REDERIVE_SELECTOR') {
     // ADAPT-05: rate-limit BEFORE fetch; acquire latch before the call; always release.
+    // message.manual (boolean, default false) — when true, skips the cool-off check.
     (async () => {
-      const rl = await checkRateLimit();
+      const manual = (message.manual as boolean | undefined) ?? false;
+      const rl = await checkRateLimit(manual);
       if (!rl.allowed) {
         sendResponse({ error: `rate-limited: ${rl.reason}` });
         return;
