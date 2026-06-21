@@ -50,13 +50,13 @@ const s: Record<string, JSX.CSSProperties> = {
     transition: 'transform 0.2s',
   },
   cardHeading: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 600,
     color: '#374151',
     margin: 0,
   },
   headingStale: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 600,
     color: '#374151',
     margin: 0,

@@ -396,7 +396,7 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
     padding: '20px 24px', marginBottom: 16,
   },
-  statLabel: { fontSize: 13, color: '#6b7280', marginBottom: 6 },
+  statLabel: { fontSize: 14, fontWeight: 600, color: '#6b7280', marginBottom: 6 },
   statValue: { fontSize: 40, fontWeight: 700, color: '#0a66c2', lineHeight: 1.1 },
   statSub: { fontSize: 12, color: '#9ca3af', marginTop: 4 },
   metricLabel: { fontSize: 12, color: '#6b7280', marginBottom: 6 },
@@ -410,7 +410,7 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
   barAI: { background: '#0a66c2' },
   barBot: { background: '#f59e0b' },
   barCount: { fontSize: 12, width: 140, textAlign: 'right' as const, flexShrink: 0 },
-  cardHeading: { fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 12 },
+  cardHeading: { fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 12 },
   errorMsg: { fontSize: 12, color: '#dc2626', marginBottom: 8 },
   actionBtn: {
     padding: '6px 16px', border: '1px solid #d1d5db', borderRadius: 6,
