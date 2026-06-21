@@ -10,6 +10,8 @@ It runs in 2 modes:
 > **fully local and free by default** (heuristic scoring, no network calls). 
 >Add an Anthropic API key and it upgrades to **Claude-powered detection** for higher accuracy using Sonnet.
 
+If you want to share some love back then https://buymeacoffee.com/ed.is.ai
+
 ---
 
 ## Key Features
