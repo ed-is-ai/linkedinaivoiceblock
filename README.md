@@ -27,7 +27,7 @@ It runs in 2 modes:
 - **Feed Health dashboard** — a full-page view of net AI-voice posts over time, all-time
   hidden count, flag/bot rates, and a **Selector Health** panel that tracks whether each
   DOM selector is still matching the live LinkedIn markup.
-- **Self-healing selectors** — The extension uses semantic selctors to reduce the natural fragility of a DOM-based scraping approach.  LinkedIn rebuilds its class names on frequently, self-healing capabilty using Claude updates these when it does without a code change.
+- **Self-healing selectors** — The extension uses semantic selectors to reduce the natural fragility of a DOM-based scraping approach.  LinkedIn rebuilds its class names on frequently, self-healing capabilty using Claude updates these when it does without a code change.
 - **Data export & eval tooling** — export matched behaviour (JSON), blocked posts (CSV), and
   LLM call traces; a built-in evals page allows user to run Evals against performance - measures detector accuracy against their own labelled data.
 - **Privacy-first** — uses the Chrome sandbox to mainatin privacy.  All state lives in `chrome.storage.local`. There is no backend, no
