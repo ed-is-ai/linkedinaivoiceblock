@@ -67,7 +67,7 @@ Net-new scope for milestone v11.2. Pure dashboard/observability polish — no de
 
 ### Selector Health Accuracy
 
-- [ ] **SHA-01**: Contextual selectors record a real `lastMatchedAt` when they match a live element during normal browsing — `SPONSORED_MARKER` and `COMPANY_PAGE_MARKER` from their exclusion-check match sites, and `CONNECTION_DEGREE`, `AUTHOR_HEADLINE`, `OPEN_TO_WORK_MARKER`, `COMMENT_TEXT`, `COMMENT_EXPAND_BUTTON` from their signal match sites — via the existing fire-and-forget `SelectorRegistry.updateCandidate()` pattern (off the critical path; only `SelectorRegistry` writes selectors, CLAUDE.md #1). The Selector Health "Last matched" column then shows an actual date for these targets instead of a permanent "—".
+- [x] **SHA-01**: Contextual selectors record a real `lastMatchedAt` when they match a live element during normal browsing — `SPONSORED_MARKER` and `COMPANY_PAGE_MARKER` from their exclusion-check match sites, and `CONNECTION_DEGREE`, `AUTHOR_HEADLINE`, `OPEN_TO_WORK_MARKER`, `COMMENT_TEXT`, `COMMENT_EXPAND_BUTTON` from their signal match sites — via the existing fire-and-forget `SelectorRegistry.updateCandidate()` pattern (off the critical path; only `SelectorRegistry` writes selectors, CLAUDE.md #1). The Selector Health "Last matched" column then shows an actual date for these targets instead of a permanent "—".
 - [ ] **SHA-02**: The Selector Health table rows are visually aligned across all columns, including the long `COMMENT_EXPAND_BUTTON` target name which currently nudges its row out of alignment.
 
 ### Data Management Labels
@@ -106,7 +106,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CFG-01 | Phase 29 | Complete |
 | TOOL-01 | Phase 32 | Complete |
 | TOOL-02 | Phase 32 | Complete |
-| SHA-01 | Phase 35 | Pending |
+| SHA-01 | Phase 35 | Complete |
 | SHA-02 | Phase 35 | Pending |
 | EXPORT-01 | Phase 35 | Pending |
 | EXPORT-02 | Phase 35 | Pending |

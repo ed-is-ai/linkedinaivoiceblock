@@ -248,7 +248,7 @@ Plans:
 
 **Wave 1** *(both plans run in parallel — zero files_modified overlap)*
 
-- [ ] 35-01-PLAN.md — SHA-01: fire-and-forget updateCandidate() telemetry at the 7 contextual selector match sites (3 live exclusion skills + profile.ts + comment-expand.ts); exclusions.ts untouched
+- [x] 35-01-PLAN.md — SHA-01: fire-and-forget updateCandidate() telemetry at the 7 contextual selector match sites (3 live exclusion skills + profile.ts + comment-expand.ts); exclusions.ts untouched
 - [ ] 35-02-PLAN.md — SHA-02 row alignment + EXPORT-01/02 button labels & posts.length gate + BRAND-01 header/subtitle/tab-title (src/modules/dashboard only); human-verify
 
 ---
@@ -571,4 +571,4 @@ Plans:
 | 32. Tool Abstraction Layer | v10.0 | 3/3 | Complete    | 2026-06-16 |
 | 33. Improve Modularity | v11.0 | 4/4 | Complete    | 2026-06-17 |
 | 34. Manual Self-Healing Trigger | v11.1 | 4/4 | Complete    | 2026-06-21 |
-| 35. Dashboard Polish & Feed Health | v11.2 | —/— | Planning    | — |
+| 35. Dashboard Polish & Feed Health | v11.2 | 1/2 | In Progress|  |
