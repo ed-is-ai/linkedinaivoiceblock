@@ -335,7 +335,7 @@ function App() {
             <button style={s.actionBtn} onClick={handleExportJson}>Export matching behaviour</button>
           )}
           {posts.length > 0 && (
-            <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts seen ({posts.length})</button>
+            <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts blocked ({posts.length})</button>
           )}
           <button
             style={traces.length === 0 ? { ...s.actionBtn, opacity: 0.5, cursor: 'not-allowed' } : s.actionBtn}
