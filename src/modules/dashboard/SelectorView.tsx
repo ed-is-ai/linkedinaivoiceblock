@@ -82,16 +82,19 @@ const s: Record<string, JSX.CSSProperties> = {
     marginBottom: 4,
   },
   columnHeaderTarget: {
-    flex: '0 0 30%',
+    flex: '0 0 27%',
   },
   columnHeaderSelector: {
-    flex: '0 0 40%',
+    flex: '0 0 32%',
   },
   columnHeaderSource: {
-    flex: '0 0 15%',
+    flex: '0 0 13%',
   },
   columnHeaderLastMatched: {
-    flex: '0 0 15%',
+    flex: '0 0 13%',
+  },
+  columnHeaderHeal: {
+    flex: '0 0 13%',
   },
   row: {
     display: 'flex',
@@ -111,12 +114,12 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#dc2626',
   },
   target: {
-    flex: '0 0 30%',
+    flex: '0 0 27%',
     fontSize: 13,
     fontWeight: 400,
   },
   selector: {
-    flex: '0 0 40%',
+    flex: '0 0 32%',
     fontSize: 12,
     fontWeight: 400,
     overflow: 'hidden',
@@ -125,7 +128,7 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#374151',
   },
   selectorStale: {
-    flex: '0 0 40%',
+    flex: '0 0 32%',
     fontSize: 12,
     fontWeight: 400,
     overflow: 'hidden',
@@ -134,7 +137,7 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#dc2626',
   },
   source: {
-    flex: '0 0 15%',
+    flex: '0 0 13%',
   },
   badge: {
     fontSize: 10,
@@ -158,16 +161,22 @@ const s: Record<string, JSX.CSSProperties> = {
     background: '#f3f4f6',
   },
   lastMatched: {
-    flex: '0 0 15%',
+    flex: '0 0 13%',
     fontSize: 12,
     fontWeight: 400,
     color: '#6b7280',
   },
   lastMatchedStaleContextual: {
-    flex: '0 0 15%',
+    flex: '0 0 13%',
     fontSize: 12,
     fontWeight: 400,
     color: '#9ca3af',
+  },
+  healCell: {
+    flex: '0 0 13%',
+    display: 'flex',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   notSeenAnnotation: {
     fontSize: 11,
@@ -269,18 +278,6 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#dc2626',
     marginTop: 8,
   },
-  healResultRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '4px 0',
-    borderBottom: '1px solid #f3f4f6',
-  },
-  healResultTarget: {
-    flex: '0 0 50%',
-    fontSize: 12,
-    color: '#374151',
-  },
   healedBadge: {
     fontSize: 10,
     padding: '2px 6px',
@@ -315,18 +312,6 @@ const s: Record<string, JSX.CSSProperties> = {
     borderRadius: 10,
     color: '#9ca3af',
     background: '#f3f4f6',
-  },
-  healResultReason: {
-    fontSize: 10,
-    color: '#6b7280',
-    marginLeft: 4,
-    flex: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-  },
-  healResultsContainer: {
-    marginTop: 8,
   },
 };
 
@@ -462,6 +447,27 @@ export default function SelectorView({
     { candidates: Array<{ value: string; source: string; lastMatchedAt: string | null }> }
   ][];
 
+  // Index the most recent heal outcomes by target so each row can show its own status inline.
+  const healByTarget = new Map<SelectorTarget, HealOutcome>(
+    (healResults ?? []).map((o) => [o.target, o])
+  );
+
+  // Map a heal outcome to its badge style + label (shared by the inline per-row cell).
+  const healBadge = (outcome: HealOutcome): { style: JSX.CSSProperties; label: string } => {
+    const style =
+      outcome.result === 'healed'
+        ? s.healedBadge
+        : outcome.result === 'failed'
+        ? s.failedBadge
+        : outcome.result === 'rate-limited'
+        ? s.rateLimitedBadge
+        : outcome.result === 'not-found'
+        ? s.notFoundBadge
+        : s.unchangedBadge;
+    const label = outcome.result === 'not-found' ? 'not on page' : outcome.result;
+    return { style, label };
+  };
+
   return (
     <div style={s.card}>
       {renderHeading(trafficLightColor)}
@@ -474,6 +480,7 @@ export default function SelectorView({
             <div style={s.columnHeaderSelector}>Active selector</div>
             <div style={s.columnHeaderSource}>Source</div>
             <div style={s.columnHeaderLastMatched}>Last matched</div>
+            <div style={s.columnHeaderHeal}>Heal</div>
           </div>
 
           {/* Data rows */}
@@ -522,6 +529,18 @@ export default function SelectorView({
                   {isMissing && !isEssential && (
                     <span style={s.notSeenAnnotation}>(not seen this session)</span>
                   )}
+                </div>
+                <div style={s.healCell}>
+                  {(() => {
+                    const outcome = healByTarget.get(target);
+                    if (!outcome) return null;
+                    const { style: badgeStyle, label } = healBadge(outcome);
+                    return (
+                      <div style={badgeStyle} title={outcome.reason ?? label}>
+                        {label}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             );
@@ -580,32 +599,9 @@ export default function SelectorView({
             <div style={s.healHint}>Nothing stale — all selectors are current.</div>
           )}
           {healResults !== null && healResults.length > 0 && (
-            <div style={s.healResultsContainer}>
-              {healResults.map((outcome) => {
-                const badgeStyle =
-                  outcome.result === 'healed'
-                    ? s.healedBadge
-                    : outcome.result === 'failed'
-                    ? s.failedBadge
-                    : outcome.result === 'rate-limited'
-                    ? s.rateLimitedBadge
-                    : outcome.result === 'not-found'
-                    ? s.notFoundBadge
-                    : s.unchangedBadge;
-                const badgeLabel =
-                  outcome.result === 'not-found' ? 'not on page' : outcome.result;
-                return (
-                  <div key={outcome.target} style={s.healResultRow}>
-                    <div style={s.healResultTarget}>{outcome.target}</div>
-                    <div style={badgeStyle}>{badgeLabel}</div>
-                    {outcome.reason && (
-                      <div style={s.healResultReason} title={outcome.reason}>
-                        {outcome.reason}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div style={s.healHint}>
+              Healed {healResults.length} target{healResults.length === 1 ? '' : 's'} — see the Heal
+              column above for each outcome.
             </div>
           )}
         </>
