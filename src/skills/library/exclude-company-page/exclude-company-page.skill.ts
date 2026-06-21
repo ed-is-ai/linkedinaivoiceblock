@@ -13,7 +13,7 @@
  * the strict priority order of checkExclusions().
  */
 
-import { resolve } from '../../../content/selector-registry';
+import { resolve, updateCandidate } from '../../../content/selector-registry';
 import type { ExclusionSkill } from '../../../shared/skills/types';
 import type { PostData } from '../../../shared/types';
 
@@ -21,8 +21,11 @@ export const companyPageExclusionSkill: ExclusionSkill = {
   kind: 'exclusion',
   id: 'company-page',
   check(postData: PostData, _postNode: Element) {
-    return postData.authorProfileUrl.includes(resolve('COMPANY_PAGE_MARKER'))
-      ? { excluded: true, reason: 'company-page' as const }
-      : { excluded: false };
+    const marker = resolve('COMPANY_PAGE_MARKER');
+    if (postData.authorProfileUrl.includes(marker)) {
+      updateCandidate('COMPANY_PAGE_MARKER', marker).catch(() => {});
+      return { excluded: true, reason: 'company-page' as const };
+    }
+    return { excluded: false };
   },
 };

@@ -454,7 +454,7 @@ export default function SelectorView({
 
   // Map a heal outcome to its badge style + label (shared by the inline per-row cell).
   const healBadge = (outcome: HealOutcome): { style: JSX.CSSProperties; label: string } => {
-    const style =
+    const style = (
       outcome.result === 'healed'
         ? s.healedBadge
         : outcome.result === 'failed'
@@ -463,7 +463,8 @@ export default function SelectorView({
         ? s.rateLimitedBadge
         : outcome.result === 'not-found'
         ? s.notFoundBadge
-        : s.unchangedBadge;
+        : s.unchangedBadge
+    ) as JSX.CSSProperties;
     const label = outcome.result === 'not-found' ? 'not on page' : outcome.result;
     return { style, label };
   };

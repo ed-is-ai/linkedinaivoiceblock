@@ -12,8 +12,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getExclusionSkills } from '../skill-registry';
 import type { PostData, ExclusionResult } from '../../shared/types';
 
-// Mock resolve() from selector-registry so JSDOM querySelector calls find or miss
-// marker elements deterministically, without needing real chrome.storage.
+// Mock resolve() and updateCandidate() from selector-registry so JSDOM querySelector
+// calls find or miss marker elements deterministically, without needing real chrome.storage.
 vi.mock('../selector-registry', () => ({
   resolve: vi.fn((target: string) => {
     // Return simple attribute selectors that JSDOM can match
@@ -22,6 +22,8 @@ vi.mock('../selector-registry', () => ({
     if (target === 'OPEN_TO_WORK_MARKER') return '[data-test-open-to-work]';
     return `[data-unknown-${target.toLowerCase()}]`;
   }),
+  // Fire-and-forget telemetry — must be present in the mock so skills can call it
+  updateCandidate: vi.fn(() => Promise.resolve()),
 }));
 
 /**

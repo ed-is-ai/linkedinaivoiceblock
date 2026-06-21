@@ -12,7 +12,7 @@
  * and open-to-work, matching the strict priority order of checkExclusions().
  */
 
-import { resolve } from '../../../content/selector-registry';
+import { resolve, updateCandidate } from '../../../content/selector-registry';
 import type { ExclusionSkill } from '../../../shared/skills/types';
 import type { PostData } from '../../../shared/types';
 
@@ -20,8 +20,11 @@ export const sponsoredExclusionSkill: ExclusionSkill = {
   kind: 'exclusion',
   id: 'sponsored',
   check(_postData: PostData, postNode: Element) {
-    return postNode.querySelector(resolve('SPONSORED_MARKER'))
-      ? { excluded: true, reason: 'sponsored' as const }
-      : { excluded: false };
+    const sponsoredSelector = resolve('SPONSORED_MARKER');
+    if (postNode.querySelector(sponsoredSelector)) {
+      updateCandidate('SPONSORED_MARKER', sponsoredSelector).catch(() => {});
+      return { excluded: true, reason: 'sponsored' as const };
+    }
+    return { excluded: false };
   },
 };

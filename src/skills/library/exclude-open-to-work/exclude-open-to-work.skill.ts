@@ -20,7 +20,7 @@
  * reaches this branch when the other three do not short-circuit.
  */
 
-import { resolve } from '../../../content/selector-registry';
+import { resolve, updateCandidate } from '../../../content/selector-registry';
 import type { ExclusionSkill } from '../../../shared/skills/types';
 import type { PostData } from '../../../shared/types';
 
@@ -30,9 +30,11 @@ export const openToWorkExclusionSkill: ExclusionSkill = {
   check(_postData: PostData, postNode: Element) {
     // Always excluded:false — this is a metadata passthrough, NOT an exclusion.
     // The caller (Plan 05 runner) reads openToWork and applies the +20 threshold penalty.
-    return {
-      excluded: false,
-      openToWork: !!postNode.querySelector(resolve('OPEN_TO_WORK_MARKER')),
-    };
+    const otwSelector = resolve('OPEN_TO_WORK_MARKER');
+    const matched = !!postNode.querySelector(otwSelector);
+    if (matched) {
+      updateCandidate('OPEN_TO_WORK_MARKER', otwSelector).catch(() => {});
+    }
+    return { excluded: false, openToWork: matched };
   },
 };
