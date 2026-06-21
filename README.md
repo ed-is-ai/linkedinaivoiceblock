@@ -1,7 +1,6 @@
 # LinkedIn AIVoice Blocker
 
-I can't be the only one that's been annoyed by how much of LinkedIn is written by bots and people lazy-writing posts with AI.  I hark back to the days when the platform was genuninely an interesting place to hang out.  
-This project is something I built to help me enjoy LinkedIn again.  
+I can't be the only one that's been annoyed by how much of LinkedIn is written by bots and people lazy-writing posts with AI.  I hark back to the days when the platform was genuninely an interesting place to hang out.  So this project is something I built to help me enjoy LinkedIn again.  
 
 Basically a Chrome extension that detects and hides AI-generated "AI voice" posts on LinkedIn before you see them — flags the accounts behind them for review, and tracks the health of your feed so you can see if it is improving.
 
