@@ -68,6 +68,14 @@ function App() {
   const [engine, setEngine] = useState<'heuristic' | 'llm'>('heuristic');
   const [runStatus, setRunStatus] = useState<RunStatus>({ phase: 'idle' });
 
+  // ---------------------------------------------------------------------------
+  // Right-rail collapsible section state (D-07)
+  // Default: sweep expanded, error expanded, compare collapsed
+  // ---------------------------------------------------------------------------
+  const [sweepCollapsed, setSweepCollapsed] = useState(false);
+  const [errorCollapsed, setErrorCollapsed] = useState(false);
+  const [compareCollapsed, setCompareCollapsed] = useState(true);
+
   // Ref used by the run loop to honour cancellation without stale closure issues
   const cancelRef = useRef(false);
 
@@ -452,138 +460,169 @@ function App() {
           />
         </div>
 
-        {/* RIGHT RAIL: Threshold sweep, Error analysis, Compare-to-previous */}
+        {/* RIGHT RAIL: Threshold sweep, Error analysis, Compare-to-previous (all collapsible D-07) */}
         <div style={s.rail}>
 
           {/* ------------------------------------------------------------------ */}
-          {/* THRESHOLD SWEEP                                                      */}
+          {/* THRESHOLD SWEEP — collapsible, 4-column rail-fit subset (D-07, D-11) */}
           {/* ------------------------------------------------------------------ */}
-          <div style={s.card}>
-            <div style={s.cardHeading}>Threshold sweep</div>
-            {currentRun && currentRun.thresholds.length > 0 ? (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 8 }}>
-                <thead>
-                  <tr>
-                    {(['Threshold', 'Precision', 'Recall', 'F1', 'Accuracy', 'FP', 'FN'] as const).map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRun.thresholds.map(row => {
-                    const isBest = row.threshold === currentRun.bestF1Threshold;
-                    return (
-                      <tr
-                        key={row.threshold}
-                        style={isBest ? { background: '#eff6ff', fontWeight: 600 } : {}}
-                      >
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                          {row.threshold}{isBest ? ' ◀ best' : ''}
-                        </td>
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.precision != null ? row.precision.toFixed(2) : '—'}</td>
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.recall != null ? row.recall.toFixed(2) : '—'}</td>
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.f1 != null ? row.f1.toFixed(2) : '—'}</td>
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.accuracy.toFixed(2)}</td>
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fp}</td>
-                        <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fn}</td>
+          <div style={s.railSection}>
+            <button
+              style={s.railSectionHeader}
+              onClick={() => setSweepCollapsed(c => !c)}
+              aria-expanded={!sweepCollapsed}
+            >
+              <span style={s.cardHeading}>Threshold sweep</span>
+              <span style={s.railCaret}>{sweepCollapsed ? '▸' : '▾'}</span>
+            </button>
+            {!sweepCollapsed && (
+              <div style={s.railSectionBody}>
+                {currentRun && currentRun.thresholds.length > 0 ? (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 8 }}>
+                    <thead>
+                      <tr>
+                        {(['Threshold', 'F1', 'FP', 'FN'] as const).map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
+                        ))}
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            ) : (
-              <div style={s.sub}>Run an eval to see the threshold sweep table.</div>
+                    </thead>
+                    <tbody>
+                      {currentRun.thresholds.map(row => {
+                        const isBest = row.threshold === currentRun.bestF1Threshold;
+                        return (
+                          <tr
+                            key={row.threshold}
+                            style={isBest ? { background: '#eff6ff', fontWeight: 600 } : {}}
+                          >
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
+                              {row.threshold}{isBest ? ' ◀ best' : ''}
+                            </td>
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.f1 != null ? row.f1.toFixed(2) : '—'}</td>
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fp}</td>
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fn}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div style={s.sub}>Run an eval to see the threshold sweep table.</div>
+                )}
+              </div>
             )}
           </div>
 
           {/* ------------------------------------------------------------------ */}
-          {/* ERROR ANALYSIS — FP/FN cards with signal pills                       */}
+          {/* ERROR ANALYSIS — collapsible, FP/FN cards with signal pills (D-07)  */}
           {/* ------------------------------------------------------------------ */}
-          <div style={s.card}>
-            <div style={s.cardHeading}>Error analysis</div>
-            {currentRun && (currentRun.errorAnalysis.falsePositives.length > 0 || currentRun.errorAnalysis.falseNegatives.length > 0) ? (
-              <>
-                <div style={{ ...s.sub, marginBottom: 12 }}>
-                  {currentRun.errorAnalysis.falsePositives.length} FP / {currentRun.errorAnalysis.falseNegatives.length} FN @ threshold {currentRun.errorAnalysis.threshold}
-                  {isPartial && <span style={s.partialBadge}>partial</span>}
-                </div>
-
-                {currentRun.errorAnalysis.falsePositives.length > 0 && (
+          <div style={s.railSection}>
+            <button
+              style={s.railSectionHeader}
+              onClick={() => setErrorCollapsed(c => !c)}
+              aria-expanded={!errorCollapsed}
+            >
+              <span style={s.cardHeading}>Error analysis</span>
+              <span style={s.railCaret}>{errorCollapsed ? '▸' : '▾'}</span>
+            </button>
+            {!errorCollapsed && (
+              <div style={s.railSectionBody}>
+                {currentRun && (currentRun.errorAnalysis.falsePositives.length > 0 || currentRun.errorAnalysis.falseNegatives.length > 0) ? (
                   <>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>
-                      False Positives — true Human, predicted AI ({currentRun.errorAnalysis.falsePositives.length})
+                    <div style={{ ...s.sub, marginBottom: 12 }}>
+                      {currentRun.errorAnalysis.falsePositives.length} FP / {currentRun.errorAnalysis.falseNegatives.length} FN @ threshold {currentRun.errorAnalysis.threshold}
+                      {isPartial && <span style={s.partialBadge}>partial</span>}
                     </div>
-                    {currentRun.errorAnalysis.falsePositives.map((post, idx) => (
-                      <ErrorCard key={idx} post={post} type="fp" />
-                    ))}
-                  </>
-                )}
 
-                {currentRun.errorAnalysis.falseNegatives.length > 0 && (
-                  <>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#92400e', marginTop: 12, marginBottom: 8 }}>
-                      False Negatives — true AI, predicted Human ({currentRun.errorAnalysis.falseNegatives.length})
-                    </div>
-                    {currentRun.errorAnalysis.falseNegatives.map((post, idx) => (
-                      <ErrorCard key={idx} post={post} type="fn" />
-                    ))}
+                    {currentRun.errorAnalysis.falsePositives.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>
+                          False Positives — true Human, predicted AI ({currentRun.errorAnalysis.falsePositives.length})
+                        </div>
+                        {currentRun.errorAnalysis.falsePositives.map((post, idx) => (
+                          <ErrorCard key={idx} post={post} type="fp" />
+                        ))}
+                      </>
+                    )}
+
+                    {currentRun.errorAnalysis.falseNegatives.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#92400e', marginTop: 12, marginBottom: 8 }}>
+                          False Negatives — true AI, predicted Human ({currentRun.errorAnalysis.falseNegatives.length})
+                        </div>
+                        {currentRun.errorAnalysis.falseNegatives.map((post, idx) => (
+                          <ErrorCard key={idx} post={post} type="fn" />
+                        ))}
+                      </>
+                    )}
                   </>
+                ) : currentRun ? (
+                  <div style={s.sub}>No FP or FN at threshold {currentRun.errorAnalysis.threshold}.</div>
+                ) : (
+                  <div style={s.sub}>Run an eval to see false positives and false negatives.</div>
                 )}
-              </>
-            ) : currentRun ? (
-              <div style={s.sub}>No FP or FN at threshold {currentRun.errorAnalysis.threshold}.</div>
-            ) : (
-              <div style={s.sub}>Run an eval to see false positives and false negatives.</div>
+              </div>
             )}
           </div>
 
           {/* ------------------------------------------------------------------ */}
-          {/* COMPARE TO PREVIOUS — Δ table via compareRuns                        */}
+          {/* COMPARE TO PREVIOUS — collapsible, Δ table via compareRuns (D-07)   */}
           {/* ------------------------------------------------------------------ */}
           {comparison && (
-            <div style={s.card}>
-              <div style={s.cardHeading}>
-                Compare to previous {comparison.baseline.engine} run ({comparison.baseline.datasetLabel})
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 8 }}>
-                <thead>
-                  <tr>
-                    {(['Metric', 'Current', 'Baseline', 'Δ'] as const).map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { name: 'F1',        d: comparison.f1 },
-                    { name: 'Precision', d: comparison.precision },
-                    { name: 'Recall',    d: comparison.recall },
-                    { name: 'Cost (est. USD)',   d: comparison.cost },
-                  ].map(({ name, d }) => (
-                    <tr key={name}>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', fontWeight: 600 }}>{name}</td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                        {d.current != null ? d.current.toFixed(4) : '—'}
-                      </td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                        {d.baseline != null ? d.baseline.toFixed(4) : '—'}
-                      </td>
-                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: deltaColor(d.delta, name) }}>
-                        {d.delta != null ? (d.delta >= 0 ? '+' : '') + d.delta.toFixed(4) : '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={s.railSection}>
+              <button
+                style={s.railSectionHeader}
+                onClick={() => setCompareCollapsed(c => !c)}
+                aria-expanded={!compareCollapsed}
+              >
+                <span style={s.cardHeading}>Compare to previous</span>
+                <span style={s.railCaret}>{compareCollapsed ? '▸' : '▾'}</span>
+              </button>
+              {!compareCollapsed && (
+                <div style={s.railSectionBody}>
+                  <div style={{ ...s.sub, marginBottom: 8 }}>
+                    vs. {comparison.baseline.engine} run ({comparison.baseline.datasetLabel})
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 4 }}>
+                    <thead>
+                      <tr>
+                        {(['Metric', 'Current', 'Baseline', 'Δ'] as const).map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { name: 'F1',        d: comparison.f1 },
+                        { name: 'Precision', d: comparison.precision },
+                        { name: 'Recall',    d: comparison.recall },
+                        { name: 'Cost (est. USD)',   d: comparison.cost },
+                      ].map(({ name, d }) => (
+                        <tr key={name}>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', fontWeight: 600 }}>{name}</td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
+                            {d.current != null ? d.current.toFixed(4) : '—'}
+                          </td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
+                            {d.baseline != null ? d.baseline.toFixed(4) : '—'}
+                          </td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: deltaColor(d.delta, name) }}>
+                            {d.delta != null ? (d.delta >= 0 ? '+' : '') + d.delta.toFixed(4) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-              {/* Results summary sub-line */}
-              {currentRun && currentBestRow && (
-                <div style={{ ...s.sub, marginTop: 8 }}>
-                  {currentSummary
-                    ? `${currentRun.counts.scored} posts scored · ${currentSummary.fpCount} FP · ${currentSummary.fnCount} FN`
-                      + (currentSummary.costUsd != null ? ` · est. $${currentSummary.costUsd.toFixed(4)}` : ' · free (heuristic)')
-                    : ''}
-                  {isPartial ? ' · metrics on partial data' : ''}
+                  {/* Results summary sub-line */}
+                  {currentRun && currentBestRow && (
+                    <div style={{ ...s.sub, marginTop: 8 }}>
+                      {currentSummary
+                        ? `${currentRun.counts.scored} posts scored · ${currentSummary.fpCount} FP · ${currentSummary.fnCount} FN`
+                          + (currentSummary.costUsd != null ? ` · est. $${currentSummary.costUsd.toFixed(4)}` : ' · free (heuristic)')
+                        : ''}
+                      {isPartial ? ' · metrics on partial data' : ''}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -866,6 +905,34 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 0,
+  },
+  // Collapsible rail section (D-07): card-shaped container with a toggle header
+  railSection: {
+    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 8,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  railSectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '14px 20px',
+    textAlign: 'left' as const,
+  },
+  railSectionBody: {
+    padding: '0 20px 16px',
+  },
+  railCaret: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginLeft: 8,
+    flexShrink: 0,
   },
   card: {
     background: '#fff',
