@@ -68,6 +68,14 @@ function App() {
   const [engine, setEngine] = useState<'heuristic' | 'llm'>('heuristic');
   const [runStatus, setRunStatus] = useState<RunStatus>({ phase: 'idle' });
 
+  // ---------------------------------------------------------------------------
+  // Right-rail collapsible section state (D-07)
+  // Default: sweep expanded, error expanded, compare collapsed
+  // ---------------------------------------------------------------------------
+  const [sweepCollapsed, setSweepCollapsed] = useState(false);
+  const [errorCollapsed, setErrorCollapsed] = useState(false);
+  const [compareCollapsed, setCompareCollapsed] = useState(true);
+
   // Ref used by the run loop to honour cancellation without stale closure issues
   const cancelRef = useRef(false);
 
@@ -318,30 +326,57 @@ function App() {
 
   const currentSummary = currentRun ? summarize(currentRun) : null;
 
+  // ---------------------------------------------------------------------------
+  // Metric strip values — null-safe, falling back to '—' for zero-run state
+  // ---------------------------------------------------------------------------
+
+  const stripF1 = currentBestRow?.f1 != null ? currentBestRow.f1.toFixed(2) : '—';
+  const stripPrecision = currentBestRow?.precision != null ? currentBestRow.precision.toFixed(2) : '—';
+  const stripRecall = currentBestRow?.recall != null ? currentBestRow.recall.toFixed(2) : '—';
+  const stripAccuracy = currentBestRow?.accuracy != null ? currentBestRow.accuracy.toFixed(2) : '—';
+  const stripCost = currentSummary?.costUsd != null
+    ? `$${currentSummary.costUsd.toFixed(4)}`
+    : 'Free';
+
   return (
     <div style={s.page}>
-      <h1 style={s.heading}>LinkedIn Blocker — Evals</h1>
-      <div style={s.crumb}>One scrollable console — labeling, eval runs, results, error analysis.</div>
+      <h1 style={s.heading}>LinkedIn AIVoice blocker — Evals</h1>
 
       {loadError && <div style={s.errorMsg}>{loadError}</div>}
 
       {/* ------------------------------------------------------------------ */}
-      {/* RUN CONTROLS                                                         */}
+      {/* METRIC STRIP (D-06): metrics + toggle + Run in one horizontal row   */}
       {/* ------------------------------------------------------------------ */}
-      <div style={s.card}>
-        <div style={s.cardHeading}>Run an eval</div>
-        <div style={s.label}>Dataset</div>
-        <div style={{ marginBottom: 14, fontSize: 13, color: '#374151' }}>
-          chrome.storage.local ({labeledCount} labeled / {totalPosts - labeledCount} unlabeled)
+      <div style={s.strip}>
+        <div style={s.stripMetric}>
+          <div style={s.stripMetricValue}>{stripF1}</div>
+          <div style={s.stripMetricKey}>F1</div>
         </div>
-        <div style={s.label}>Engine</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 14 }}>
+        <div style={s.stripMetric}>
+          <div style={s.stripMetricValue}>{stripPrecision}</div>
+          <div style={s.stripMetricKey}>Precision</div>
+        </div>
+        <div style={s.stripMetric}>
+          <div style={s.stripMetricValue}>{stripRecall}</div>
+          <div style={s.stripMetricKey}>Recall</div>
+        </div>
+        <div style={s.stripMetric}>
+          <div style={s.stripMetricValue}>{stripAccuracy}</div>
+          <div style={s.stripMetricKey}>Accuracy</div>
+        </div>
+        <div style={s.stripMetric}>
+          <div style={s.stripMetricValue}>{stripCost}</div>
+          <div style={s.stripMetricKey}>Est. cost</div>
+        </div>
+
+        {/* Engine toggle + Run button — pushed right */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const }}>
           <button
             style={engine === 'heuristic' ? s.toggleActive : s.toggle}
             onClick={() => setEngine('heuristic')}
             disabled={runStatus.phase === 'running' || runStatus.phase === 'confirm'}
           >
-            Heuristic (free)
+            Heuristic
           </button>
           <button
             style={engine === 'llm' ? s.toggleActive : s.toggle}
@@ -350,54 +385,7 @@ function App() {
           >
             LLM (Claude · ~${(labeledCount * AVG_USD_PER_POST).toFixed(3)})
           </button>
-        </div>
-
-        {/* ---- Confirm modal (LLM D-05) ---- */}
-        {runStatus.phase === 'confirm' && (
-          <div style={s.confirmBox}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-              Confirm LLM eval
-            </div>
-            <div style={{ fontSize: 12, color: '#374151', marginBottom: 12 }}>
-              ~{runStatus.postCount} posts · est. ${runStatus.estimatedUsd.toFixed(3)} · This will send each post to Claude via the extension relay (no API key stored in the page).
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={s.primaryBtn} onClick={handleConfirmApprove}>
-                Run
-              </button>
-              <button style={s.actionBtn} onClick={handleConfirmCancel}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ---- Running progress (D-06) ---- */}
-        {runStatus.phase === 'running' && (
-          <div style={s.progressBox}>
-            <div style={{ fontSize: 12, color: '#374151', marginBottom: 8 }}>
-              {runStatus.scored}/{runStatus.total} scored
-              {engine === 'llm' && runStatus.runningUsd > 0
-                ? ` · ~$${runStatus.runningUsd.toFixed(4)} so far (estimate)`
-                : ''}
-            </div>
-            <div style={s.progressBar}>
-              <div
-                style={{
-                  ...s.progressFill,
-                  width: `${runStatus.total > 0 ? (runStatus.scored / runStatus.total) * 100 : 0}%`,
-                }}
-              />
-            </div>
-            <button style={{ ...s.actionBtn, marginTop: 8 }} onClick={handleRunCancel}>
-              Cancel
-            </button>
-          </div>
-        )}
-
-        {/* ---- Run button (idle / done) ---- */}
-        {(runStatus.phase === 'idle' || runStatus.phase === 'done') && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          {(runStatus.phase === 'idle' || runStatus.phase === 'done') && (
             <button
               style={labeledCount === 0 ? s.primaryBtnDisabled : s.primaryBtn}
               disabled={labeledCount === 0}
@@ -405,195 +393,262 @@ function App() {
             >
               {labeledCount === 0 ? 'No labeled posts' : '▶ Run eval'}
             </button>
-            {lastRun ? (
-              <span style={s.sub}>
-                Last run: {lastRun.runAt.slice(0, 10)} · {lastRun.engine} · F1{' '}
-                {lastRunBestRow?.f1 != null ? lastRunBestRow.f1.toFixed(2) : '—'}
-              </span>
-            ) : (
-              <span style={s.sub}>No eval runs yet</span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* METRICS GRID                                                         */}
-      {/* ------------------------------------------------------------------ */}
-      <div style={s.card}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <div style={s.cardHeading}>
-            Results{currentRun ? ` — ${currentRun.engine} · best-F1 threshold ${currentRun.bestF1Threshold}` : ''}
-          </div>
-          {isPartial && (
-            <span style={s.partialBadge}>partial</span>
+          )}
+          {lastRun && (runStatus.phase === 'idle' || runStatus.phase === 'done') && (
+            <span style={s.sub}>
+              Last: {lastRun.runAt.slice(0, 10)} · {lastRun.engine} · F1{' '}
+              {lastRunBestRow?.f1 != null ? lastRunBestRow.f1.toFixed(2) : '—'}
+            </span>
           )}
         </div>
-        {currentRun && currentBestRow ? (
-          <>
-            <div style={s.metricsGrid}>
-              <div style={s.metric}>
-                <div style={s.metricValue}>{currentBestRow.f1 != null ? currentBestRow.f1.toFixed(2) : '—'}</div>
-                <div style={s.metricKey}>F1</div>
-              </div>
-              <div style={s.metric}>
-                <div style={s.metricValue}>{currentBestRow.precision != null ? currentBestRow.precision.toFixed(2) : '—'}</div>
-                <div style={s.metricKey}>Precision</div>
-              </div>
-              <div style={s.metric}>
-                <div style={s.metricValue}>{currentBestRow.recall != null ? currentBestRow.recall.toFixed(2) : '—'}</div>
-                <div style={s.metricKey}>Recall</div>
-              </div>
-              <div style={s.metric}>
-                <div style={s.metricValue}>{currentBestRow.accuracy.toFixed(2)}</div>
-                <div style={s.metricKey}>Accuracy</div>
-              </div>
-            </div>
-            <div style={{ ...s.sub, marginTop: 8 }}>
-              {currentSummary
-                ? `${currentRun.counts.scored} posts scored · ${currentSummary.fpCount} FP · ${currentSummary.fnCount} FN`
-                  + (currentSummary.costUsd != null ? ` · est. $${currentSummary.costUsd.toFixed(4)}` : ' · free (heuristic)')
-                : ''}
-              {isPartial ? ' · metrics on partial data' : ''}
-            </div>
-          </>
-        ) : (
-          <div style={s.sub}>No results yet — run an eval above.</div>
-        )}
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* THRESHOLD SWEEP                                                      */}
-      {/* ------------------------------------------------------------------ */}
-      <div style={s.card}>
-        <div style={s.cardHeading}>Threshold sweep</div>
-        {currentRun && currentRun.thresholds.length > 0 ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 8 }}>
-            <thead>
-              <tr>
-                {(['Threshold', 'Precision', 'Recall', 'F1', 'Accuracy', 'FP', 'FN'] as const).map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {currentRun.thresholds.map(row => {
-                const isBest = row.threshold === currentRun.bestF1Threshold;
-                return (
-                  <tr
-                    key={row.threshold}
-                    style={isBest ? { background: '#eff6ff', fontWeight: 600 } : {}}
-                  >
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                      {row.threshold}{isBest ? ' ◀ best' : ''}
-                    </td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.precision != null ? row.precision.toFixed(2) : '—'}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.recall != null ? row.recall.toFixed(2) : '—'}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.f1 != null ? row.f1.toFixed(2) : '—'}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.accuracy.toFixed(2)}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fp}</td>
-                    <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fn}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        ) : (
-          <div style={s.sub}>Run an eval to see the threshold sweep table.</div>
-        )}
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* ERROR ANALYSIS — FP/FN cards with signal pills                       */}
-      {/* ------------------------------------------------------------------ */}
-      <div style={s.card}>
-        <div style={s.cardHeading}>Error analysis</div>
-        {currentRun && (currentRun.errorAnalysis.falsePositives.length > 0 || currentRun.errorAnalysis.falseNegatives.length > 0) ? (
-          <>
-            <div style={{ ...s.sub, marginBottom: 12 }}>
-              {currentRun.errorAnalysis.falsePositives.length} FP / {currentRun.errorAnalysis.falseNegatives.length} FN @ threshold {currentRun.errorAnalysis.threshold}
-              {isPartial && <span style={s.partialBadge}>partial</span>}
-            </div>
-
-            {currentRun.errorAnalysis.falsePositives.length > 0 && (
-              <>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>
-                  False Positives — true Human, predicted AI ({currentRun.errorAnalysis.falsePositives.length})
-                </div>
-                {currentRun.errorAnalysis.falsePositives.map((post, idx) => (
-                  <ErrorCard key={idx} post={post} type="fp" />
-                ))}
-              </>
-            )}
-
-            {currentRun.errorAnalysis.falseNegatives.length > 0 && (
-              <>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#92400e', marginTop: 12, marginBottom: 8 }}>
-                  False Negatives — true AI, predicted Human ({currentRun.errorAnalysis.falseNegatives.length})
-                </div>
-                {currentRun.errorAnalysis.falseNegatives.map((post, idx) => (
-                  <ErrorCard key={idx} post={post} type="fn" />
-                ))}
-              </>
-            )}
-          </>
-        ) : currentRun ? (
-          <div style={s.sub}>No FP or FN at threshold {currentRun.errorAnalysis.threshold}.</div>
-        ) : (
-          <div style={s.sub}>Run an eval to see false positives and false negatives.</div>
-        )}
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* COMPARE TO PREVIOUS — Δ table via compareRuns                        */}
-      {/* ------------------------------------------------------------------ */}
-      {comparison && (
-        <div style={s.card}>
-          <div style={s.cardHeading}>
-            Compare to previous {comparison.baseline.engine} run ({comparison.baseline.datasetLabel})
+      {/* ---- Confirm modal (LLM D-05) — full-width banner beneath strip ---- */}
+      {runStatus.phase === 'confirm' && (
+        <div style={s.confirmBox}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+            Confirm LLM eval
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 8 }}>
-            <thead>
-              <tr>
-                {(['Metric', 'Current', 'Baseline', 'Δ'] as const).map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { name: 'F1',        d: comparison.f1 },
-                { name: 'Precision', d: comparison.precision },
-                { name: 'Recall',    d: comparison.recall },
-                { name: 'Cost (est. USD)',   d: comparison.cost },
-              ].map(({ name, d }) => (
-                <tr key={name}>
-                  <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', fontWeight: 600 }}>{name}</td>
-                  <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                    {d.current != null ? d.current.toFixed(4) : '—'}
-                  </td>
-                  <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
-                    {d.baseline != null ? d.baseline.toFixed(4) : '—'}
-                  </td>
-                  <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: deltaColor(d.delta, name) }}>
-                    {d.delta != null ? (d.delta >= 0 ? '+' : '') + d.delta.toFixed(4) : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ fontSize: 12, color: '#374151', marginBottom: 12 }}>
+            ~{runStatus.postCount} posts · est. ${runStatus.estimatedUsd.toFixed(3)} · This will send each post to Claude via the extension relay (no API key stored in the page).
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={s.primaryBtn} onClick={handleConfirmApprove}>
+              Run
+            </button>
+            <button style={s.actionBtn} onClick={handleConfirmCancel}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Running progress (D-06) — full-width banner beneath strip ---- */}
+      {runStatus.phase === 'running' && (
+        <div style={s.progressBox}>
+          <div style={{ fontSize: 12, color: '#374151', marginBottom: 8 }}>
+            {runStatus.scored}/{runStatus.total} scored
+            {engine === 'llm' && runStatus.runningUsd > 0
+              ? ` · ~$${runStatus.runningUsd.toFixed(4)} so far (estimate)`
+              : ''}
+          </div>
+          <div style={s.progressBar}>
+            <div
+              style={{
+                ...s.progressFill,
+                width: `${runStatus.total > 0 ? (runStatus.scored / runStatus.total) * 100 : 0}%`,
+              }}
+            />
+          </div>
+          <button style={{ ...s.actionBtn, marginTop: 8 }} onClick={handleRunCancel}>
+            Cancel
+          </button>
         </div>
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* LABELING SECTION                                                     */}
+      {/* TWO-COLUMN SHELL: board (1fr) + rail (~320px)                       */}
       {/* ------------------------------------------------------------------ */}
-      <LabelingSection
-        posts={posts}
-        unflagged={unflagged}
-        setPosts={setPosts}
-        setUnflagged={setUnflagged}
-      />
+      <div style={s.shell}>
+        {/* LEFT: Labeling board */}
+        <div>
+          <LabelingSection
+            posts={posts}
+            unflagged={unflagged}
+            setPosts={setPosts}
+            setUnflagged={setUnflagged}
+          />
+        </div>
+
+        {/* RIGHT RAIL: Threshold sweep, Error analysis, Compare-to-previous (all collapsible D-07) */}
+        <div style={s.rail}>
+
+          {/* ------------------------------------------------------------------ */}
+          {/* THRESHOLD SWEEP — collapsible, 4-column rail-fit subset (D-07, D-11) */}
+          {/* ------------------------------------------------------------------ */}
+          <div style={s.railSection}>
+            <button
+              style={s.railSectionHeader}
+              onClick={() => setSweepCollapsed(c => !c)}
+              aria-expanded={!sweepCollapsed}
+            >
+              <span style={s.cardHeading}>Threshold sweep</span>
+              <span style={s.railCaret}>{sweepCollapsed ? '▸' : '▾'}</span>
+            </button>
+            {!sweepCollapsed && (
+              <div style={s.railSectionBody}>
+                {currentRun && currentRun.thresholds.length > 0 ? (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 8 }}>
+                    <thead>
+                      <tr>
+                        {(['Threshold', 'F1', 'FP', 'FN'] as const).map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentRun.thresholds.map(row => {
+                        const isBest = row.threshold === currentRun.bestF1Threshold;
+                        return (
+                          <tr
+                            key={row.threshold}
+                            style={isBest ? { background: '#eff6ff', fontWeight: 600 } : {}}
+                          >
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
+                              {row.threshold}{isBest ? ' ◀ best' : ''}
+                            </td>
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.f1 != null ? row.f1.toFixed(2) : '—'}</td>
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fp}</td>
+                            <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>{row.fn}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div style={s.sub}>Run an eval to see the threshold sweep table.</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ------------------------------------------------------------------ */}
+          {/* ERROR ANALYSIS — collapsible, FP/FN cards with signal pills (D-07)  */}
+          {/* ------------------------------------------------------------------ */}
+          <div style={s.railSection}>
+            <button
+              style={s.railSectionHeader}
+              onClick={() => setErrorCollapsed(c => !c)}
+              aria-expanded={!errorCollapsed}
+            >
+              <span style={s.cardHeading}>Error analysis</span>
+              <span style={s.railCaret}>{errorCollapsed ? '▸' : '▾'}</span>
+            </button>
+            {!errorCollapsed && (
+              <div style={s.railSectionBody}>
+                {currentRun && (currentRun.errorAnalysis.falsePositives.length > 0 || currentRun.errorAnalysis.falseNegatives.length > 0) ? (
+                  <>
+                    <div style={{ ...s.sub, marginBottom: 12 }}>
+                      {currentRun.errorAnalysis.falsePositives.length} FP / {currentRun.errorAnalysis.falseNegatives.length} FN @ threshold {currentRun.errorAnalysis.threshold}
+                      {isPartial && <span style={s.partialBadge}>partial</span>}
+                    </div>
+
+                    {currentRun.errorAnalysis.falsePositives.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#991b1b', marginBottom: 8 }}>
+                          False Positives — true Human, predicted AI ({currentRun.errorAnalysis.falsePositives.length})
+                        </div>
+                        {currentRun.errorAnalysis.falsePositives.map((post, idx) => (
+                          <ErrorCard key={idx} post={post} type="fp" />
+                        ))}
+                      </>
+                    )}
+
+                    {currentRun.errorAnalysis.falseNegatives.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#92400e', marginTop: 12, marginBottom: 8 }}>
+                          False Negatives — true AI, predicted Human ({currentRun.errorAnalysis.falseNegatives.length})
+                        </div>
+                        {currentRun.errorAnalysis.falseNegatives.map((post, idx) => (
+                          <ErrorCard key={idx} post={post} type="fn" />
+                        ))}
+                      </>
+                    )}
+                  </>
+                ) : currentRun ? (
+                  <div style={s.sub}>No FP or FN at threshold {currentRun.errorAnalysis.threshold}.</div>
+                ) : (
+                  <div style={s.sub}>Run an eval to see false positives and false negatives.</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ------------------------------------------------------------------ */}
+          {/* COMPARE TO PREVIOUS — collapsible, Δ table via compareRuns (D-07)   */}
+          {/* ------------------------------------------------------------------ */}
+          {comparison && (
+            <div style={s.railSection}>
+              <button
+                style={s.railSectionHeader}
+                onClick={() => setCompareCollapsed(c => !c)}
+                aria-expanded={!compareCollapsed}
+              >
+                <span style={s.cardHeading}>Compare to previous</span>
+                <span style={s.railCaret}>{compareCollapsed ? '▸' : '▾'}</span>
+              </button>
+              {!compareCollapsed && (
+                <div style={s.railSectionBody}>
+                  <div style={{ ...s.sub, marginBottom: 8 }}>
+                    vs. {comparison.baseline.engine} run ({comparison.baseline.datasetLabel})
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginTop: 4 }}>
+                    <thead>
+                      <tr>
+                        {(['Metric', 'Current', 'Baseline', 'Δ'] as const).map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontWeight: 600 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { name: 'F1',        d: comparison.f1 },
+                        { name: 'Precision', d: comparison.precision },
+                        { name: 'Recall',    d: comparison.recall },
+                        { name: 'Cost (est. USD)',   d: comparison.cost },
+                      ].map(({ name, d }) => (
+                        <tr key={name}>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', fontWeight: 600 }}>{name}</td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
+                            {d.current != null ? d.current.toFixed(4) : '—'}
+                          </td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6' }}>
+                            {d.baseline != null ? d.baseline.toFixed(4) : '—'}
+                          </td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid #f3f4f6', color: deltaColor(d.delta, name) }}>
+                            {d.delta != null ? (d.delta >= 0 ? '+' : '') + d.delta.toFixed(4) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Results summary sub-line */}
+                  {currentRun && currentBestRow && (
+                    <div style={{ ...s.sub, marginTop: 8 }}>
+                      {currentSummary
+                        ? `${currentRun.counts.scored} posts scored · ${currentSummary.fpCount} FP · ${currentSummary.fnCount} FN`
+                          + (currentSummary.costUsd != null ? ` · est. $${currentSummary.costUsd.toFixed(4)}` : ' · free (heuristic)')
+                        : ''}
+                      {isPartial ? ' · metrics on partial data' : ''}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Results summary card (when no comparison available but run exists) */}
+          {currentRun && currentBestRow && !comparison && (
+            <div style={s.card}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <div style={s.cardHeading}>
+                  Results — {currentRun.engine} · best-F1 @{currentRun.bestF1Threshold}
+                </div>
+                {isPartial && <span style={s.partialBadge}>partial</span>}
+              </div>
+              <div style={s.sub}>
+                {currentSummary
+                  ? `${currentRun.counts.scored} posts · ${currentSummary.fpCount} FP · ${currentSummary.fnCount} FN`
+                    + (currentSummary.costUsd != null ? ` · est. $${currentSummary.costUsd.toFixed(4)}` : ' · free (heuristic)')
+                  : ''}
+                {isPartial ? ' · partial data' : ''}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 }
@@ -655,8 +710,73 @@ function ErrorCard({ post, type }: ErrorCardProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Labeling section — extracted so the App component is focused on layout
+// Labeling section — 3-column board (AI / Unlabelled / Human)
 // ---------------------------------------------------------------------------
+
+type BoardPostRow = { urn: string; text: string; label?: string };
+
+/**
+ * Single post card in the labeling board.
+ * Declared at module scope (not inside LabelingSection) so each card's
+ * expand/clamp state survives parent re-renders instead of remounting on
+ * every label change (WR-02). Labeling is delegated via the onLabel prop.
+ */
+function PostCard({ post, onLabel }: {
+  readonly post: BoardPostRow;
+  readonly onLabel: (urn: string, label: 'ai' | 'human') => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [clampable, setClampable] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  // Detect whether the clamped text actually overflows (3+ lines) so the
+  // Show more/less control only appears on truncated posts. The 3-line clamp is
+  // width-dependent, so re-measure on column resize via ResizeObserver (WR-05).
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    const measure = () => {
+      if (!expanded) setClampable(el.scrollHeight > el.clientHeight + 1);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [post.text, expanded]);
+
+  return (
+    <div style={s.boardPost}>
+      {/* Post text — wraps and line-clamps; click toggles full expansion in place
+          (D-05 / T-36-01: JSX children only, no dangerouslySetInnerHTML) */}
+      <p
+        ref={textRef}
+        style={expanded ? s.boardPostTextExpanded : s.boardPostText}
+        onClick={() => setExpanded(e => !e)}
+      >
+        {post.text}
+      </p>
+      {(clampable || expanded) && (
+        <button style={s.expandToggle} onClick={() => setExpanded(e => !e)}>
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+      <div style={s.seg}>
+        <button
+          style={post.label === 'ai' ? s.segBtnAiSelected : s.segBtnAi}
+          onClick={() => onLabel(post.urn, 'ai')}
+        >
+          AI
+        </button>
+        <button
+          style={post.label === 'human' ? s.segBtnHumanSelected : s.segBtnHuman}
+          onClick={() => onLabel(post.urn, 'human')}
+        >
+          Human
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface LabelingSectionProps {
   readonly posts: StoredPost[];
@@ -666,7 +786,7 @@ interface LabelingSectionProps {
 }
 
 function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingSectionProps) {
-  type PostRow = { urn: string; text: string; label?: string };
+  type PostRow = BoardPostRow;
 
   const allPosts: PostRow[] = [
     ...posts.map(p => ({ urn: p.urn, text: p.text, label: p.label })),
@@ -675,6 +795,11 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
 
   const labeled = countLabeled(allPosts);
   const total = allPosts.length;
+
+  // Derive 3 buckets from existing label field (D-04: UI-only grouping)
+  const aiPosts = allPosts.filter(p => p.label === 'ai');
+  const humanPosts = allPosts.filter(p => p.label === 'human');
+  const unlabeledPosts = allPosts.filter(p => p.label !== 'ai' && p.label !== 'human');
 
   async function handleLabelClick(urn: string, label: 'ai' | 'human'): Promise<void> {
     await labelPost(urn, label);
@@ -691,41 +816,71 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
 
   return (
     <div style={s.card}>
+      {/* Full-width labeled-count heading above the board */}
       <div style={s.cardHeading}>
         Label posts ({labeled} labeled of {total} posts)
       </div>
+
       {allPosts.length === 0 ? (
         <div style={s.sub}>
           No posts yet — browse LinkedIn to collect posts, then label them here.
         </div>
       ) : (
-        allPosts.map(post => (
-          <div key={post.urn} style={s.lblRow}>
-            <span style={s.lblText}>{post.text}</span>
-            <span style={s.seg}>
-              <button
-                style={post.label === 'ai' ? s.segBtnAiSelected : s.segBtnAi}
-                onClick={() => handleLabelClick(post.urn, 'ai')}
-              >
-                AI
-              </button>
-              <button
-                style={post.label === 'human' ? s.segBtnHumanSelected : s.segBtnHuman}
-                onClick={() => handleLabelClick(post.urn, 'human')}
-              >
-                Human
-              </button>
-            </span>
+        <>
+          {/* 3-column board */}
+          <div style={s.board}>
+            {/* AI column */}
+            <div style={s.boardColAi}>
+              <div style={s.boardColHead}>
+                <span>AI</span>
+                <span style={s.boardColCount}>{aiPosts.length}</span>
+              </div>
+              {aiPosts.map(post => (
+                <PostCard key={post.urn} post={post} onLabel={handleLabelClick} />
+              ))}
+              {aiPosts.length === 0 && (
+                <div style={s.boardColEmpty}>No AI-labeled posts yet</div>
+              )}
+            </div>
+
+            {/* Unlabelled column */}
+            <div style={s.boardColUn}>
+              <div style={s.boardColHead}>
+                <span>Unlabelled</span>
+                <span style={s.boardColCount}>{unlabeledPosts.length}</span>
+              </div>
+              {unlabeledPosts.map(post => (
+                <PostCard key={post.urn} post={post} onLabel={handleLabelClick} />
+              ))}
+              {unlabeledPosts.length === 0 && (
+                <div style={s.boardColEmpty}>All posts are labeled</div>
+              )}
+            </div>
+
+            {/* Human column */}
+            <div style={s.boardColHuman}>
+              <div style={s.boardColHead}>
+                <span>Human</span>
+                <span style={s.boardColCount}>{humanPosts.length}</span>
+              </div>
+              {humanPosts.map(post => (
+                <PostCard key={post.urn} post={post} onLabel={handleLabelClick} />
+              ))}
+              {humanPosts.length === 0 && (
+                <div style={s.boardColEmpty}>No Human-labeled posts yet</div>
+              )}
+            </div>
           </div>
-        ))
+
+          {/* Full-width bulk-seed row below the board */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' as const, marginTop: 12 }}>
+            <button style={s.actionBtn} onClick={handleBulkSeed}>
+              Bulk: flagged→AI, unflagged→Human
+            </button>
+            <span style={s.sub}>Writes label back to storage (skips already-labeled posts)</span>
+          </div>
+        </>
       )}
-      <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '16px 0' }} />
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <button style={s.actionBtn} onClick={handleBulkSeed}>
-          Bulk: flagged→AI, unflagged→Human
-        </button>
-        <span style={s.sub}>Writes label back to storage (skips already-labeled posts)</span>
-      </div>
     </div>
   );
 }
@@ -743,14 +898,84 @@ export { labelPost, seedLabels, countLabeled } from './evalsLabeling';
 
 const s: Record<string, import('preact').JSX.CSSProperties> = {
   page: {
-    maxWidth: 760,
+    maxWidth: 1280,
     margin: '40px auto',
     padding: '0 24px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     color: '#1a1a1a',
   },
-  heading: { fontSize: 22, fontWeight: 700, margin: '0 0 6px' },
-  crumb: { fontSize: 13, color: '#6b7280', marginBottom: 24 },
+  heading: { fontSize: 22, fontWeight: 700, margin: '0 0 16px' },
+  // Metric strip — horizontal row: five metric cells + right-side controls
+  strip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0,
+    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 8,
+    padding: '12px 20px',
+    marginBottom: 12,
+    flexWrap: 'wrap' as const,
+  },
+  stripMetric: {
+    padding: '4px 20px 4px 0',
+    marginRight: 12,
+    borderRight: '1px solid #e5e7eb',
+    minWidth: 70,
+  },
+  stripMetricValue: {
+    fontSize: 20,
+    fontWeight: 700,
+    color: '#0a66c2',
+    lineHeight: 1.1,
+  },
+  stripMetricKey: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginTop: 2,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.03em',
+  },
+  // Two-column shell: board (1fr) + rail (320px)
+  shell: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 320px',
+    gap: 16,
+    alignItems: 'start',
+  },
+  rail: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 0,
+  },
+  // Collapsible rail section (D-07): card-shaped container with a toggle header
+  railSection: {
+    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 8,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  railSectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '14px 20px',
+    textAlign: 'left' as const,
+  },
+  railSectionBody: {
+    padding: '0 20px 16px',
+  },
+  railCaret: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginLeft: 8,
+    flexShrink: 0,
+  },
   card: {
     background: '#fff',
     border: '1px solid #e5e7eb',
@@ -758,7 +983,7 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     padding: '20px 24px',
     marginBottom: 16,
   },
-  cardHeading: { fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 0 },
+  cardHeading: { fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 0 },
   label: { fontSize: 13, color: '#6b7280', marginBottom: 6 },
   sub: { fontSize: 12, color: '#9ca3af', marginTop: 4 },
   toggle: {
@@ -813,13 +1038,13 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     border: '1px solid #fde68a',
     borderRadius: 8,
     padding: '14px 16px',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   progressBox: {
     background: '#f3f4f6',
     borderRadius: 8,
     padding: '12px 14px',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   progressBar: {
     background: '#e5e7eb',
@@ -915,20 +1140,113 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     background: '#fee2e2',
     color: '#991b1b',
   },
-  lblRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '8px 0',
-    borderBottom: '1px solid #f3f4f6',
+  // Board container — 3-column grid
+  board: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 12,
+    marginTop: 16,
   },
-  lblText: {
-    flex: 1,
+  // Column base styles (shared via spread in JSX)
+  boardColBase: {
+    background: '#f9fafb',
+    borderRadius: 8,
+    padding: '12px',
+    minHeight: 120,
+  },
+  boardColAi: {
+    background: '#f9fafb',
+    borderRadius: 8,
+    padding: '12px',
+    minHeight: 120,
+    borderTop: '3px solid #0a66c2',
+  },
+  boardColUn: {
+    background: '#f9fafb',
+    borderRadius: 8,
+    padding: '12px',
+    minHeight: 120,
+    borderTop: '3px solid #9ca3af',
+  },
+  boardColHuman: {
+    background: '#f9fafb',
+    borderRadius: 8,
+    padding: '12px',
+    minHeight: 120,
+    borderTop: '3px solid #059669',
+  },
+  boardColHead: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#374151',
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottom: '1px solid #e5e7eb',
+  },
+  boardColCount: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#e5e7eb',
+    color: '#374151',
+    fontSize: 11,
+    fontWeight: 700,
+    borderRadius: 10,
+    padding: '1px 8px',
+    minWidth: 22,
+  },
+  boardColEmpty: {
+    fontSize: 11,
+    color: '#9ca3af',
+    padding: '8px 4px',
+    textAlign: 'center' as const,
+  },
+  // Board post card
+  boardPost: {
+    background: '#fff',
+    border: '1px solid #e5e7eb',
+    borderRadius: 6,
+    padding: '10px',
+    marginBottom: 8,
+  },
+  // Post card text — wraps and line-clamps (NOT nowrap/ellipsis — D-05).
+  // Click toggles to boardPostTextExpanded (full text in place).
+  boardPostText: {
     fontSize: 12,
     color: '#374151',
-    whiteSpace: 'nowrap' as const,
+    margin: '0 0 8px',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical' as const,
+    WebkitLineClamp: 3,
     overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    whiteSpace: 'pre-wrap' as const,
+    overflowWrap: 'break-word' as const,
+    cursor: 'pointer' as const,
+  },
+  // Expanded post card text — full text, no clamp (click toggles back).
+  // pre-wrap preserves the post's original line breaks.
+  boardPostTextExpanded: {
+    fontSize: 12,
+    color: '#374151',
+    margin: '0 0 8px',
+    whiteSpace: 'pre-wrap' as const,
+    overflowWrap: 'break-word' as const,
+    cursor: 'pointer' as const,
+  },
+  // Show more / Show less affordance under clamped post text
+  expandToggle: {
+    display: 'block',
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    margin: '0 0 8px',
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#0a66c2',
+    cursor: 'pointer' as const,
   },
   seg: {
     display: 'inline-flex',
@@ -967,6 +1285,22 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     padding: '4px 10px',
     fontSize: 11,
     cursor: 'pointer',
+  },
+  // Retained from old layout (used by ResultsSummary line)
+  lblRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '8px 0',
+    borderBottom: '1px solid #f3f4f6',
+  },
+  lblText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#374151',
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
 };
 
