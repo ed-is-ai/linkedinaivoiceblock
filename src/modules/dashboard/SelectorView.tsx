@@ -309,6 +309,13 @@ const s: Record<string, JSX.CSSProperties> = {
     color: '#d97706',
     background: '#fffbeb',
   },
+  notFoundBadge: {
+    fontSize: 10,
+    padding: '2px 6px',
+    borderRadius: 10,
+    color: '#9ca3af',
+    background: '#f3f4f6',
+  },
   healResultReason: {
     fontSize: 10,
     color: '#6b7280',
@@ -582,11 +589,15 @@ export default function SelectorView({
                     ? s.failedBadge
                     : outcome.result === 'rate-limited'
                     ? s.rateLimitedBadge
+                    : outcome.result === 'not-found'
+                    ? s.notFoundBadge
                     : s.unchangedBadge;
+                const badgeLabel =
+                  outcome.result === 'not-found' ? 'not on page' : outcome.result;
                 return (
                   <div key={outcome.target} style={s.healResultRow}>
                     <div style={s.healResultTarget}>{outcome.target}</div>
-                    <div style={badgeStyle}>{outcome.result}</div>
+                    <div style={badgeStyle}>{badgeLabel}</div>
                     {outcome.reason && (
                       <div style={s.healResultReason} title={outcome.reason}>
                         {outcome.reason}

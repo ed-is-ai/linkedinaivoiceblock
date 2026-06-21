@@ -211,8 +211,8 @@ export async function triggerHeal(container: Element, manual = false): Promise<H
       }
 
       if (!healed) {
-        console.warn('[LLB] heal: all LLM candidates failed for', target);
-        outcomes.push({ target, result: 'failed', reason: 'no valid candidate' });
+        console.warn('[LLB] heal: no LLM candidate matched live DOM for', target, '(element likely not on page)');
+        outcomes.push({ target, result: 'not-found', reason: 'not found on current page' });
       }
     } catch (err) {
       // Per-target error — distinguish rate-limited from genuine failure (D-06 / T-34-05)

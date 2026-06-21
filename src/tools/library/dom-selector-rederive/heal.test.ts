@@ -269,12 +269,12 @@ describe('triggerHeal — generalized multi-target heal (HEAL-03)', () => {
     expect(llmOutcomes.length).toBeGreaterThan(0);
   });
 
-  it('yields "failed" for stale sub-element with API key when all rederive candidates fail validation', async () => {
+  it('yields "not-found" for stale sub-element with API key when all rederive candidates fail validation (element not on page)', async () => {
     const container = mount('feed-broken-classrot');
     vi.mocked(resolve).mockReturnValue('__no_match__'); // all stale
     vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
     vi.mocked(storageGet).mockResolvedValue({ anthropicApiKey: 'sk-ant-test' });
-    // Return only invalid candidates
+    // Return only invalid candidates — LLM ran but no candidate matched live DOM
     rederiveMock.mockResolvedValue([{ selector: '__bad_selector_xyz__', rationale: 'bad' }]);
 
     const outcomes = await triggerHeal(container);
@@ -284,8 +284,9 @@ describe('triggerHeal — generalized multi-target heal (HEAL-03)', () => {
     );
     expect(subElementOutcomes.length).toBeGreaterThan(0);
     for (const o of subElementOutcomes) {
-      expect(o.result).toBe('failed');
-      expect(o.reason).toBe('no valid candidate');
+      // 'not-found' = LLM ran but no candidate matched the live DOM (not a pipeline failure)
+      expect(o.result).toBe('not-found');
+      expect(o.reason).toBe('not found on current page');
     }
   });
 });
@@ -364,7 +365,7 @@ describe('triggerHeal — manual flag + per-target reasons (fix_2 / fix_3)', () 
     }
   });
 
-  it('populates reason="no valid candidate" for sub-element targets when all rederive candidates fail validation', async () => {
+  it('populates reason="not found on current page" for sub-element targets when all rederive candidates fail validation', async () => {
     const container = mount('feed-broken-classrot');
     vi.mocked(resolve).mockReturnValue('__no_match__');
     vi.mocked(deriveHeuristicCandidates).mockReturnValue([]);
@@ -376,10 +377,11 @@ describe('triggerHeal — manual flag + per-target reasons (fix_2 / fix_3)', () 
 
     const SUB_ELEMENT = new Set(['SPONSORED_MARKER', 'AUTHOR_HEADLINE', 'CONNECTION_DEGREE',
       'COMMENT_EXPAND_BUTTON', 'COMMENT_TEXT', 'OPEN_TO_WORK_MARKER']);
-    const subFailed = outcomes.filter((o) => SUB_ELEMENT.has(o.target) && o.result === 'failed');
-    expect(subFailed.length).toBeGreaterThan(0);
-    for (const o of subFailed) {
-      expect(o.reason).toBe('no valid candidate');
+    // After the soften: candidates-but-none-validated → 'not-found' (not 'failed')
+    const subNotFound = outcomes.filter((o) => SUB_ELEMENT.has(o.target) && o.result === 'not-found');
+    expect(subNotFound.length).toBeGreaterThan(0);
+    for (const o of subNotFound) {
+      expect(o.reason).toBe('not found on current page');
     }
   });
 });

@@ -32,17 +32,23 @@ export const TRIGGER_HEAL = 'TRIGGER_HEAL' as const;
 export const HEAL_BUSY = 'busy' as const;
 
 /** Per-target outcome of a single triggerHeal run. */
-export type HealResult = 'healed' | 'unchanged' | 'failed' | 'rate-limited';
+export type HealResult = 'healed' | 'unchanged' | 'failed' | 'rate-limited' | 'not-found';
 
 /**
  * Outcome for one target within a triggerHeal invocation.
  *
  * - `healed`       — selector was stale and successfully replaced.
  * - `unchanged`    — selector was stale but no API key configured (graceful degrade).
- * - `failed`       — selector was stale but all candidates failed validation, or a
- *                    non-rate-limit error occurred.  `reason` carries a short description.
+ * - `failed`       — selector was stale and a non-rate-limit error was thrown (e.g. API 500).
+ *                    Also used for card-shaped targets (POST_CARD/POST_BODY_TEXT) when all
+ *                    heuristic candidates fail — a missing card IS a real failure.
+ *                    `reason` carries a short description.
  * - `rate-limited` — the background rate-limiter refused the rederive call (daily cap or
  *                    single-flight latch).  `reason` carries the rejection message.
+ * - `not-found`    — LLM ran but no returned candidate matched the live DOM.  The target
+ *                    element is likely not rendered on the current page (e.g. COMMENT_TEXT
+ *                    when comments are collapsed, CONNECTION_DEGREE when no graded-connection
+ *                    badge is visible).  This is NOT a pipeline failure.
  */
 export interface HealOutcome {
   target: SelectorTarget;
