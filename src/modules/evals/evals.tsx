@@ -753,11 +753,10 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
     const [expanded, setExpanded] = useState(false);
     return (
       <div style={s.boardPost}>
-        {/* Post text — wraps and line-clamps; hover shows full text (title), click toggles full expansion
+        {/* Post text — wraps and line-clamps; click toggles full expansion in place
             (D-05 / T-36-01: JSX children only, no dangerouslySetInnerHTML) */}
         <p
           style={expanded ? s.boardPostTextExpanded : s.boardPostText}
-          title={post.text}
           onClick={() => setExpanded(e => !e)}
         >
           {post.text}
@@ -1179,7 +1178,7 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     marginBottom: 8,
   },
   // Post card text — wraps and line-clamps (NOT nowrap/ellipsis — D-05).
-  // Hover shows full text via title attr; click toggles to boardPostTextExpanded.
+  // Click toggles to boardPostTextExpanded (full text in place).
   boardPostText: {
     fontSize: 12,
     color: '#374151',
