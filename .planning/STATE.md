@@ -1,8 +1,8 @@
 ---
 gsd_state_version: 1.0
-milestone: v10.0
-milestone_name: Skill-Based Detection & Tool Abstraction
-status: verifying
+milestone: v11.1
+milestone_name: Manual Self-Healing Trigger
+status: complete
 last_updated: "2026-06-21T00:22:25.963Z"
 last_activity: 2026-06-21
 progress:
@@ -26,15 +26,15 @@ See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 ## Current Position
 
-Phase: 34 (manual-self-healing-trigger-from-dashboard) — COMPLETE
+Phase: 34 (manual-self-healing-trigger-from-dashboard) — COMPLETE & VERIFIED
 Plan: 4 of 4 (all plans complete)
-Status: Phase complete — ready for verification
+Status: Phase complete — verified 6/6 must-haves (34-VERIFICATION.md); code review clean (34-REVIEW.md, fixes applied)
 Last activity: 2026-06-21
 
 ### Progress Bar
 
 ```
-v10.0: [███████████████░░░░░] 75% (3/4 phases)
+v11.1: [████████████████████] 100% (1/1 phase) — Phase 34 complete & verified
 ```
 
 ## Accumulated Context
@@ -111,8 +111,9 @@ None.
 ## Session Continuity
 
 **Last updated:** 2026-06-21
-**Last action:** Phase 34 Plan 04 complete — manual heal button, TRIGGER_HEAL transport, 'not-found' outcome softening, manual cool-off exemption; 36 test files 450 tests all pass. Phase 34 fully complete.
-**Next action:** v10.0 milestone verification (`/gsd-verify-work`).
+**Last action:** Phase 34 fully complete & verified — manual heal button + inline per-target Heal column, TRIGGER_HEAL transport, manual cool-off exemption (daily cap + single-flight retained), stop_sequences 400 fix, 'not-found' outcome softening. Verifier 6/6 must-haves (34-VERIFICATION.md); code review clean after WR-01/02/03 fixes (34-REVIEW.md). 36 test files / 450 tests pass. v11.1 milestone complete.
+**Next action:** No further phases planned in v11.1. Define the next milestone (`/gsd-new-milestone`) or pick up follow-up todos (.planning/todos/pending: lastMatched instrumentation, production DEBUG flag, manual-heal coverage for RESHARE_INDICATOR/POST_AUTHOR_LINK).
+**Open question (Phase 33):** ROADMAP marks v11.0/Phase 33 "shipped", but Phase 33's history notes "awaiting human-verify" (commit ba9b0fa). Confirm Phase 33 verification before treating v11.0 as truly done.
 
 ## Performance Metrics
 
@@ -144,7 +145,9 @@ None.
 
 ## Operator Next Steps
 
-- `/gsd-execute-phase 32` — execute Phase 32
+- Phase 34 (v11.1) complete & verified — no phases pending.
+- `/gsd-new-milestone` — scope the next milestone, or triage `.planning/todos/pending`.
+- Confirm Phase 33 (v11.0) human-verify status before treating v11.0 as fully shipped.
 
 ## Decisions
 
