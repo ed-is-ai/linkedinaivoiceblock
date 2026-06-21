@@ -25,37 +25,37 @@ describe('injectTombstone', () => {
     expect(parent.children[1]).toBe(postNode);
   });
 
-  it('sets textContent to the correct hidden format (D-08/D-09)', () => {
+  it('shows the ship logo, pirate copy, score, and a random pirate line', () => {
     injectTombstone(postNode, 'Jane Smith', 74);
     const tombstone = parent.children[0] as HTMLElement;
-    expect(tombstone.textContent).toBe('Post by Jane Smith hidden (74/100)');
+    const text = tombstone.textContent ?? '';
+    expect(tombstone.querySelector('svg')).not.toBeNull();
+    expect(text).toContain('Flying false colours');
+    expect(text).toContain('Jane Smith');
+    expect(text).toContain('Score: 74/100');
+    expect(PIRATE_LINES.some(line => text.includes(line))).toBe(true);
   });
 
-  it('sets role="button" on the tombstone (accessibility)', () => {
+  it('renders a reveal button with the author name in its aria-label', () => {
     injectTombstone(postNode, 'Jane Smith', 74);
-    const tombstone = parent.children[0] as HTMLElement;
-    expect(tombstone.getAttribute('role')).toBe('button');
+    const reveal = (parent.children[0] as HTMLElement).querySelector('.llb-tombstone__reveal');
+    expect(reveal).not.toBeNull();
+    expect(reveal?.getAttribute('aria-label')).toContain('Jane Smith');
   });
 
-  it('click removes llb-hidden class from postNode and removes tombstone from DOM', () => {
+  it('reveal button removes llb-hidden from postNode and removes tombstone from DOM', () => {
     // Give postNode the hidden class first (as content/index.ts would)
     postNode.classList.add('llb-hidden');
     injectTombstone(postNode, 'Jane Smith', 74);
 
     const tombstone = parent.children[0] as HTMLElement;
+    const reveal = tombstone.querySelector('.llb-tombstone__reveal') as HTMLButtonElement;
     expect(postNode.classList.contains('llb-hidden')).toBe(true);
 
-    // Simulate click
-    tombstone.click();
+    reveal.click();
 
     expect(postNode.classList.contains('llb-hidden')).toBe(false);
     expect(tombstone.parentNode).toBeNull();
-  });
-
-  it('aria-label on tombstone includes author name', () => {
-    injectTombstone(postNode, 'Jane Smith', 74);
-    const tombstone = parent.children[0] as HTMLElement;
-    expect(tombstone.getAttribute('aria-label')).toContain('Jane Smith');
   });
 });
 
