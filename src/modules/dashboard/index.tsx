@@ -250,7 +250,8 @@ function App() {
 
   return (
     <div style={s.page}>
-      <h1 style={s.heading}>LinkedIn Blocker — Feed Health</h1>
+      <h1 style={s.heading}>LinkedIn AIVoice blocker - Feed Health</h1>
+      <div style={s.subtitle}>because your brain deserves better</div>
 
       <div style={s.toggleRow}>
         <button
@@ -331,10 +332,10 @@ function App() {
         )}
         <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
           {(accounts.length > 0 || posts.length > 0 || unflagged.length > 0) && (
-            <button style={s.actionBtn} onClick={handleExportJson}>Export JSON</button>
+            <button style={s.actionBtn} onClick={handleExportJson}>Export matching behaviour</button>
           )}
-          {accounts.length > 0 && (
-            <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts CSV</button>
+          {posts.length > 0 && (
+            <button style={s.actionBtn} onClick={handleExportPostsCsv}>Export Posts seen ({posts.length})</button>
           )}
           <button
             style={traces.length === 0 ? { ...s.actionBtn, opacity: 0.5, cursor: 'not-allowed' } : s.actionBtn}
@@ -381,7 +382,8 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     color: '#1a1a1a',
   },
-  heading: { fontSize: 22, fontWeight: 700, marginBottom: 24 },
+  heading: { fontSize: 22, fontWeight: 700, marginBottom: 4 },
+  subtitle: { fontSize: 13, color: '#6b7280', marginBottom: 24 },
   toggleRow: { display: 'flex', gap: 8, marginBottom: 24 },
   toggle: {
     padding: '6px 16px', border: '1px solid #d1d5db', borderRadius: 20,
