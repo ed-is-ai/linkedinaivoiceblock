@@ -2,7 +2,7 @@
 
 I can't be the only one that's been annoyed by how much of LinkedIn is written by bots and people lazy-writing posts with AI.  I hark back to the days when the platform was genuninely an interesting place to hang out.  So this project is something I built to help me enjoy LinkedIn again.  
 
-Basically a Chrome extension that detects and hides AI-generated "AI voice" posts on LinkedIn before you see them — flags the accounts behind them for review, and tracks the health of your feed so you can see if it is improving.
+Basically a Chrome extension that detects and hides AI-generated "AI voice" posts on LinkedIn before you see them — replacing with a random pirate quote for my own amusement — flags the accounts behind them for review, and tracks the health of your feed so you can see if it is improving.
 
 Some experimental features that I'm still trying to perfect.  Uses browser-sandboxed detection engine built on an agent-style architecture — composable skills and a tools registry — using Claude for classification and self-healing DOM selectors (this part is definitely alpha at best).
 
