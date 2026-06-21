@@ -106,11 +106,15 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CFG-01 | Phase 29 | Complete |
 | TOOL-01 | Phase 32 | Complete |
 | TOOL-02 | Phase 32 | Complete |
+| SHA-01 | Phase 35 | Pending |
+| SHA-02 | Phase 35 | Pending |
+| EXPORT-01 | Phase 35 | Pending |
+| EXPORT-02 | Phase 35 | Pending |
+| BRAND-01 | Phase 35 | Pending |
 
 **Coverage:**
-- v10.0 requirements: 8 total
-- Mapped to phases: 8 (roadmap complete)
-- Unmapped: 0 ✓
+- v10.0 requirements: 8 total — mapped to phases: 8 (roadmap complete), unmapped: 0 ✓
+- v11.2 requirements: 5 total (SHA-01, SHA-02, EXPORT-01, EXPORT-02, BRAND-01) — all mapped to Phase 35, unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-15*

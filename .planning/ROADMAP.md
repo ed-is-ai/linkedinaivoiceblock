@@ -22,6 +22,7 @@
 - ✅ **v10.0 Skill-Based Detection & Tool Abstraction** — Phases 29–32 (shipped 2026-06-16)
 - ✅ **v11.0 Modularity & Maintainability** — Phase 33 (shipped 2026-06-17)
 - ✅ **v11.1 Manual Self-Healing Trigger** — Phase 34 (shipped 2026-06-21)
+- 🚧 **v11.2 Dashboard Polish & Feed Health** — Phase 35 (in progress)
 
 ---
 
@@ -150,6 +151,10 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 - [x] **Phase 34: Manual Self-Healing Trigger from Dashboard** — Dashboard "Heal selectors now" button gated on feed-tab presence, TRIGGER_HEAL transport via chrome.tabs.sendMessage, per-target healed/unchanged/failed/rate-limited/not-found result rows, manual cool-off exemption, whitespace stop_sequences fix, 'not-found' outcome softening
  (completed 2026-06-21)
 
+**v11.2 Dashboard Polish & Feed Health (Phase 35)**
+
+- [ ] **Phase 35: Dashboard Polish & Feed Health** — Wire contextual selectors into the observer/exclusion/signal match paths so Selector Health "Last matched" reflects reality; fix COMMENT_EXPAND_BUTTON row alignment; relabel data-management buttons (Export JSON → "Export matching behaviour", Export Posts CSV → "Export Posts seen (N)"); rebrand the dashboard header (title + subtitle)
+
 ---
 
 ## Phase Details
@@ -219,6 +224,25 @@ Plans:
 
 - [x] 34-03-PLAN.md — HEAL-02/HEAL-05: content-side TRIGGER_HEAL listener + shared single-flight guard
 - [x] 34-04-PLAN.md — HEAL-01/HEAL-04: dashboard heal button + chrome.tabs enablement + per-target results
+
+---
+
+### Phase 35: Dashboard Polish & Feed Health
+
+**Goal**: The dashboard is accurate and on-brand — Selector Health "Last matched" reflects real matches for contextual selectors (no permanent "—"), the table rows are aligned, the data-management buttons are clearly labeled, and the header carries the new branding. Pure dashboard/observability polish with no detection-logic or new-scraping changes.
+**Depends on**: Phase 22 (SelectorRegistry / updateCandidate), Phase 33 (modules/ layout), Phase 34 (Selector Health Heal column)
+**Requirements**: SHA-01, SHA-02, EXPORT-01, EXPORT-02, BRAND-01
+**Success Criteria** (what must be TRUE):
+
+  1. After browsing a feed where the relevant content appears, the Selector Health "Last matched" column shows a real date (not "—") for the contextual selectors — `SPONSORED_MARKER` and `COMPANY_PAGE_MARKER` (recorded from their exclusion-check match sites) and `CONNECTION_DEGREE`, `AUTHOR_HEADLINE`, `OPEN_TO_WORK_MARKER`, `COMMENT_TEXT`, `COMMENT_EXPAND_BUTTON` (recorded from their signal match sites), via the existing fire-and-forget `SelectorRegistry.updateCandidate()` pattern
+  2. The recording is off the critical path (fire-and-forget, no `await` in the detection/exclusion hot path) and only `SelectorRegistry` writes selectors — detection behavior and scores are unchanged
+  3. The Selector Health table rows are visually aligned across all columns, including the long `COMMENT_EXPAND_BUTTON` target name
+  4. The data-management "Export JSON" button reads "Export matching behaviour" and the "Export Posts CSV" button reads "Export Posts seen (N)" where N is the live count of stored posts; both still export the same data as before
+  5. The dashboard header shows the title "LinkedIn AIVoice blocker - Feed Health" and the subtitle "because your brain deserves better"
+
+**UI hint**: yes
+
+**Plans**: TBD (created by /gsd-plan-phase 35)
 
 ---
 
@@ -538,3 +562,6 @@ Plans:
 | 30. Skill Registry Architecture | v10.0 | 5/5 | Complete    | 2026-06-16 |
 | 31. Skill Library Alignment | v10.0 | 4/4 | Complete    | 2026-06-16 |
 | 32. Tool Abstraction Layer | v10.0 | 3/3 | Complete    | 2026-06-16 |
+| 33. Improve Modularity | v11.0 | 4/4 | Complete    | 2026-06-17 |
+| 34. Manual Self-Healing Trigger | v11.1 | 4/4 | Complete    | 2026-06-21 |
+| 35. Dashboard Polish & Feed Health | v11.2 | —/— | Planning    | — |
