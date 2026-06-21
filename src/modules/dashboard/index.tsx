@@ -265,8 +265,7 @@ function App() {
       </div>
 
       <div style={s.card}>
-        <div style={s.statLabel}>Net AI voice posts in feed — last {timeWindow} days</div>
-        <div style={s.categoryNote}>Posts seen minus posts hidden by detector</div>
+        <div style={s.statLabel}>Tracking LinkedIn Posts seen (minus hidden ones)</div>
         <div style={{ marginTop: 12 }}>
           <NetPostsChart stats={stats} timeWindow={timeWindow} />
         </div>
