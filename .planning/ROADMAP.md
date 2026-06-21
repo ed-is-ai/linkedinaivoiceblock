@@ -242,7 +242,14 @@ Plans:
 
 **UI hint**: yes
 
-**Plans**: TBD (created by /gsd-plan-phase 35)
+**Plans**: 2 plans
+
+Plans:
+
+**Wave 1** *(both plans run in parallel — zero files_modified overlap)*
+
+- [ ] 35-01-PLAN.md — SHA-01: fire-and-forget updateCandidate() telemetry at the 7 contextual selector match sites (3 live exclusion skills + profile.ts + comment-expand.ts); exclusions.ts untouched
+- [ ] 35-02-PLAN.md — SHA-02 row alignment + EXPORT-01/02 button labels & posts.length gate + BRAND-01 header/subtitle/tab-title (src/modules/dashboard only); human-verify
 
 ---
 
