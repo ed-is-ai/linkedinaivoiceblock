@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-06-15 after v9.0)
 
 ## Current Position
 
-Phase: 34 (manual-self-healing-trigger-from-dashboard) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-06-20
+Phase: 34 (manual-self-healing-trigger-from-dashboard) — COMPLETE
+Plan: 4 of 4 (all plans complete)
+Status: Phase complete — all plans executed and verified
+Last activity: 2026-06-21
 
 ### Progress Bar
 
@@ -53,6 +53,13 @@ v10.0: [███████████████░░░░░] 75% (3/4 p
 - Post-32 refactor (2026-06-16): detection skills made self-contained (commit 901ce95) — each `detect-*` folder now owns its pure function + co-located unit test; 9 signal functions moved out of `src/content/detector/signals/` into their skill folders, wrappers import via `./`, the 263-line aggregate `signals.test.ts` split into 6 per-signal tests. Zero behavior change (36 test files / 433 tests).
 - Post-32 refactor (2026-06-16): `detect-llm` → `detect-aiwriting-llm` (commit da0ee5c) — moved `classifier.ts`+test into the LLM skill folder; relocated `AnthropicUsage` to `src/shared/types.ts` (neutral, so the rederive tool/background don't import from a skill). `detectionConfig` deliberately left in shared at that time.
 - Post-32 refactor (2026-06-17): `detect-heuristic` → `detect-aiwriting-heuristic` (commit aaf3aa1) — the heuristic detector now owns its config (`detectionConfig.ts` moved into the folder root; consumers content/index, pattern-runner, eval repointed by full path) and the 8 signal skills it orchestrates (collapsed under `detect-aiwriting-heuristic/signals/<name>/`, since signals are only invoked via the registry, never directly). Codegen extended to resolve nested skill-order entries (leaf-name derivation). `exclude-*` stay top-level. Zero behavior change (36 files / 433 tests).
+
+### Key Decisions (Phase 34 additions)
+
+| Decision | Outcome | Phase |
+|----------|---------|-------|
+| Manual heal cool-off exemption | manual=true bypasses 5-min cool-off throughout call chain; daily cap (5/day) and single-flight latch unchanged | Phase 34 |
+| 'not-found' vs 'failed' outcome semantics | LLM ran but no candidate matched live DOM → 'not-found' (grey neutral); API/pipeline exception → 'failed' (red); card-path heuristic failure stays 'failed' | Phase 34 |
 
 ### Key Decisions
 
@@ -103,9 +110,9 @@ None.
 
 ## Session Continuity
 
-**Last updated:** 2026-06-16
-**Last action:** Phase 31 Plan 04 complete — order-pinning + kind-drift-guard tests, CI stale-check workflow, AUTHORING.md; 29 test files 422 tests all pass. Phase 31 fully complete.
-**Next action:** Execute Phase 32.
+**Last updated:** 2026-06-21
+**Last action:** Phase 34 Plan 04 complete — manual heal button, TRIGGER_HEAL transport, 'not-found' outcome softening, manual cool-off exemption; 36 test files 450 tests all pass. Phase 34 fully complete.
+**Next action:** v10.0 milestone verification (`/gsd-verify-work`).
 
 ## Performance Metrics
 
@@ -133,7 +140,7 @@ None.
 | Phase 34 P01 | 4m | 1 tasks | 3 files |
 | Phase 34 P02 | 8m | 2 tasks | 3 files |
 | Phase 34 P03 | 5m | 2 tasks | 2 files |
-| Phase 34 P04 | 12min | 2 tasks | 2 files |
+| Phase 34 P04 | 35min | 3 tasks + 4 fixes | 9 files |
 
 ## Operator Next Steps
 

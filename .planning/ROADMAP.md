@@ -20,7 +20,8 @@
 - ✅ **v8.0 Observability** — Phases 24–25 (shipped 2026-06-14)
 - ✅ **v9.0 Eval Harness** — Phases 25.1–28 (shipped 2026-06-15)
 - ✅ **v10.0 Skill-Based Detection & Tool Abstraction** — Phases 29–32 (shipped 2026-06-16)
-- 🚧 **v11.0 Modularity & Maintainability** — Phase 33 (in progress)
+- ✅ **v11.0 Modularity & Maintainability** — Phase 33 (shipped 2026-06-17)
+- ✅ **v11.1 Manual Self-Healing Trigger** — Phase 34 (shipped 2026-06-21)
 
 ---
 
@@ -143,6 +144,11 @@ Labeled-dataset eval of classifier quality: opt-in negatives capture, symmetric 
 
 - [x] **Phase 33: Improve Modularity** — Finish the skill/tool migration the Phase 29–32 refactors started: pull skill/tool-owned logic out of `src/content/`, finish the `dom-selector-registry` tool migration, unify the registry codegen, reorganize `src/shared/` by concern, and split the UX surfaces into self-contained `src/modules/` modules; zero behavior change
  (completed 2026-06-17)
+
+**v11.1 Manual Self-Healing Trigger (Phase 34)**
+
+- [x] **Phase 34: Manual Self-Healing Trigger from Dashboard** — Dashboard "Heal selectors now" button gated on feed-tab presence, TRIGGER_HEAL transport via chrome.tabs.sendMessage, per-target healed/unchanged/failed/rate-limited/not-found result rows, manual cool-off exemption, whitespace stop_sequences fix, 'not-found' outcome softening
+ (completed 2026-06-21)
 
 ---
 
