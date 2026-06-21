@@ -751,16 +751,34 @@ function LabelingSection({ posts, unflagged, setPosts, setUnflagged }: LabelingS
 
   function PostCard({ post }: { post: PostRow }) {
     const [expanded, setExpanded] = useState(false);
+    const [clampable, setClampable] = useState(false);
+    const textRef = useRef<HTMLParagraphElement>(null);
+
+    // Detect whether the clamped text is actually overflowing (3+ lines), so the
+    // Show more/less control only appears on posts that are truncated.
+    useEffect(() => {
+      const el = textRef.current;
+      if (el && !expanded) {
+        setClampable(el.scrollHeight > el.clientHeight + 1);
+      }
+    }, [post.text, expanded]);
+
     return (
       <div style={s.boardPost}>
         {/* Post text — wraps and line-clamps; click toggles full expansion in place
             (D-05 / T-36-01: JSX children only, no dangerouslySetInnerHTML) */}
         <p
+          ref={textRef}
           style={expanded ? s.boardPostTextExpanded : s.boardPostText}
           onClick={() => setExpanded(e => !e)}
         >
           {post.text}
         </p>
+        {(clampable || expanded) && (
+          <button style={s.expandToggle} onClick={() => setExpanded(e => !e)}>
+            {expanded ? 'Show less' : 'Show more'}
+          </button>
+        )}
         <div style={s.seg}>
           <button
             style={post.label === 'ai' ? s.segBtnAiSelected : s.segBtnAi}
@@ -1198,6 +1216,18 @@ const s: Record<string, import('preact').JSX.CSSProperties> = {
     margin: '0 0 8px',
     whiteSpace: 'normal' as const,
     overflowWrap: 'break-word' as const,
+    cursor: 'pointer' as const,
+  },
+  // Show more / Show less affordance under clamped post text
+  expandToggle: {
+    display: 'block',
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    margin: '0 0 8px',
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#0a66c2',
     cursor: 'pointer' as const,
   },
   seg: {
