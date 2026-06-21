@@ -96,6 +96,57 @@ export function pickPirateLine(): string {
   return PIRATE_LINES[Math.floor(Math.random() * PIRATE_LINES.length)]!;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+let pirateLogoSeq = 0;
+
+/**
+ * Build a black skull-and-crossbones (Jolly Roger) logo on a transparent
+ * background. Constructed entirely via the DOM (no innerHTML) — the markup is
+ * static and trusted, but DOM construction keeps us clear of inner-HTML usage.
+ * Eye/nose holes are carved with a <mask> so the skull shape reads clearly.
+ */
+function buildPirateLogo(): SVGSVGElement {
+  const maskId = `llb-skull-${pirateLogoSeq++}`;
+  const make = (name: string, attrs: Record<string, string | number>): SVGElement => {
+    const e = document.createElementNS(SVG_NS, name);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    return e;
+  };
+
+  const svg = make('svg', {
+    viewBox: '0 0 64 64', width: 30, height: 30,
+    fill: '#000', 'aria-hidden': 'true', focusable: 'false',
+  }) as SVGSVGElement;
+  svg.style.flexShrink = '0';
+
+  // Mask: white = visible skull, black = transparent cut-outs (eyes + nose).
+  const defs = make('defs', {});
+  const mask = make('mask', { id: maskId });
+  mask.appendChild(make('rect', { width: 64, height: 64, fill: '#fff' }));
+  mask.appendChild(make('circle', { cx: 24, cy: 24, r: 5, fill: '#000' }));
+  mask.appendChild(make('circle', { cx: 40, cy: 24, r: 5, fill: '#000' }));
+  mask.appendChild(make('path', { d: 'M32 29 l-3.5 8 h7 z', fill: '#000' }));
+  defs.appendChild(mask);
+  svg.appendChild(defs);
+
+  // Crossed bones behind the skull, with knobs at each end.
+  const bones = make('g', { stroke: '#000', 'stroke-width': 5, 'stroke-linecap': 'round' });
+  bones.appendChild(make('line', { x1: 12, y1: 46, x2: 52, y2: 64 }));
+  bones.appendChild(make('line', { x1: 52, y1: 46, x2: 12, y2: 64 }));
+  svg.appendChild(bones);
+  for (const [cx, cy] of [[12, 46], [52, 64], [52, 46], [12, 64]] as const) {
+    svg.appendChild(make('circle', { cx, cy, r: 4 }));
+  }
+
+  // Skull (cranium + jaw) with eye/nose holes via the mask.
+  const skull = make('g', { mask: `url(#${maskId})` });
+  skull.appendChild(make('ellipse', { cx: 32, cy: 24, rx: 16, ry: 15 }));
+  skull.appendChild(make('rect', { x: 24, y: 33, width: 16, height: 13, rx: 4 }));
+  svg.appendChild(skull);
+
+  return svg;
+}
+
 /**
  * Injects a "blocked account" tombstone as a sibling before postNode.
  *
@@ -117,11 +168,15 @@ export function injectBlockedTombstone(
   tombstone.className = 'llb-tombstone llb-tombstone--blocked';
   tombstone.setAttribute('role', 'status');
 
-  // Pirate logo + humorous copy. textContent only — never the inner-HTML
-  // property (D-09 / T-02-09 XSS mitigation; authorName is untrusted DOM text).
+  // Pirate logo + humorous copy. authorName set via textContent only — never the
+  // inner-HTML property (D-09 / T-02-09 XSS mitigation; authorName is untrusted
+  // DOM text). The logo is a DOM-built SVG (no innerHTML anywhere).
   const line1 = document.createElement('div');
-  line1.style.cssText = 'font-weight:600';
-  line1.textContent = `🏴‍☠️ Made to walk the plank: ${authorName}`;
+  line1.style.cssText = 'display:flex;align-items:center;gap:8px;font-weight:600';
+  line1.appendChild(buildPirateLogo());
+  const title = document.createElement('span');
+  title.textContent = `Made to walk the plank: ${authorName}`;
+  line1.appendChild(title);
 
   const line2 = document.createElement('div');
   line2.style.cssText = 'font-size:11px;margin-top:2px;opacity:0.8';

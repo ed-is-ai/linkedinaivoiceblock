@@ -78,10 +78,10 @@ describe('injectBlockedTombstone', () => {
     expect(parent.children[1]).toBe(postNode);
   });
 
-  it('shows pirate-themed humour with the author name and scores', () => {
+  it('shows the skull logo, pirate copy, author name, and scores', () => {
     injectBlockedTombstone(postNode, 'Filipa Lobão', 62, 0);
     const tombstone = parent.children[0] as HTMLElement;
-    expect(tombstone.textContent).toContain('🏴‍☠️');
+    expect(tombstone.querySelector('svg')).not.toBeNull();
     expect(tombstone.textContent).toContain('walk the plank');
     expect(tombstone.textContent).toContain('Filipa Lobão');
     expect(tombstone.textContent).toContain('Post score: 62');
